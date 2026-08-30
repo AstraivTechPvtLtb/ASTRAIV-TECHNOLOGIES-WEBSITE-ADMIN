@@ -1,0 +1,78 @@
+# Production Deployment CI/CD Workflow for Vercel
+# This workflow runs linting, unit tests, build checks, and deploys the prebuilt application to Vercel Production.
+# It is triggered automatically when a push occurs on the main branch.
+
+name: Vercel Production Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+# Set permissions for GitHub token to least-privilege (read-only for repository contents)
+permissions:
+  contents: read
+
+jobs:
+  ci-and-deploy:
+    name: Lint, Test, Build, and Deploy
+    runs-on: ubuntu-latest
+    
+    # Ensure environment variables are passed to Vercel CLI commands
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      # Step 1: Checkout the code
+      # Official GitHub Action to checkout repository contents.
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js environment
+      # Setup Node.js with the specified version: 20.20.2.
+      # Utilizes native package manager caching for npm to cache node_modules.
+      - name: Setup Node.js (20.20.2)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.20.2'
+          cache: 'npm'
+
+      # Step 3: Install dependencies
+      # Use `npm ci` for deterministic, clean installs based on package-lock.json.
+      - name: Install Dependencies
+        run: npm ci
+
+      # Step 4: Run Linter
+      # Fail workflow if ESLint detects any errors.
+      - name: Run Linting Checks
+        run: npm run lint
+
+      # Step 5: Run Unit Tests
+      # Fail workflow if any unit tests fail.
+      - name: Run Unit Tests
+        run: npm run test
+
+      # Step 6: Install Vercel CLI
+      # Install official Vercel CLI globally on the runner.
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      # Step 7: Pull Vercel Environment Information
+      # Pull production environment details, system environment variables, and project settings from Vercel.
+      # This generates the .vercel/project.json and .vercel/.env.production.local configuration files.
+      - name: Pull Vercel Environment Configuration
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      # Step 8: Build Vercel Project Artifacts
+      # Compile code and generate production build artifacts locally in the runner.
+      # This produces the prebuilt output in `.vercel/output`.
+      # Next.js build errors, TypeScript errors, or Prisma errors will cause this step to fail.
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      # Step 9: Deploy Prebuilt Artifacts to Vercel
+      # Deploy the local `.vercel/output` prebuilt folder directly to Vercel Production.
+      # --prod flags this deployment as a production release.
+      - name: Deploy Prebuilt Artifacts to Vercel Production
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
