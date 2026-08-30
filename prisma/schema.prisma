@@ -1,0 +1,236 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// User role enum equivalent
+enum Role {
+  ADMIN
+  PROJECT_MANAGER
+  CLIENT
+  USER
+}
+
+// Better Auth standard models with added Role support
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean
+  image         String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      Session[]
+  accounts      Account[]
+  
+  // Custom platform relations
+  posts            BlogPost[]
+  tickets          ClientTicket[]  @relation("ClientTickets")
+  assignedTickets  ClientTicket[]  @relation("AssignedTickets")
+  projects         Project[]       @relation("ClientProjects")
+  managedProjects  Project[]       @relation("ManagedProjects")
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+// Blog System (CMS)
+model BlogPost {
+  id            String       @id @default(uuid())
+  title         String
+  slug          String       @unique
+  content       String       @db.Text
+  summary       String       @db.Text
+  published     Boolean      @default(false)
+  featuredImage String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  authorId      String
+  author        User         @relation(fields: [authorId], references: [id])
+  categoryId    String
+  category      BlogCategory @relation(fields: [categoryId], references: [id])
+
+  @@map("blog_post")
+}
+
+model BlogCategory {
+  id        String     @id @default(uuid())
+  name      String
+  slug      String     @unique
+  posts     BlogPost[]
+
+  @@map("blog_category")
+}
+
+// Portfolio
+model PortfolioProject {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  description String   @db.Text
+  content     String   @db.Text
+  imageUrl    String?
+  projectUrl  String?
+  tags        String[]
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("portfolio_project")
+}
+
+// Client Support System (Ticket System)
+model ClientTicket {
+  id           String   @id @default(uuid())
+  subject      String
+  description  String   @db.Text
+  status       String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  priority     String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  clientId     String
+  client       User     @relation("ClientTickets", fields: [clientId], references: [id])
+  assignedToId String?
+  assignedTo   User?    @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("client_ticket")
+}
+
+// Project Management System
+model Project {
+  id          String    @id @default(uuid())
+  name        String
+  description String?   @db.Text
+  status      String    @default("PLANNING") // PLANNING, ACTIVE, COMPLETED, ON_HOLD
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Float?
+  clientId    String
+  client      User      @relation("ClientProjects", fields: [clientId], references: [id])
+  managerId   String?
+  manager     User?     @relation("ManagedProjects", fields: [managerId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("project")
+}
+
+// CRM Lead Management
+model CRMLead {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  status    String   @default("NEW") // NEW, CONTACTED, QUALIFIED, PROPOSAL_SENT, WON, LOST
+  source    String?  // WEBSITE, REFERRAL, SOCIAL_MEDIA, OUTREACH
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("crm_lead")
+}
+
+// Contact Form Submissions
+model ContactSubmission {
+  id        String   @id @default(uuid())
+  name      String
+  company   String?
+  email     String
+  phone     String?
+  service   String   @default("General Inquiry")
+  message   String   @db.Text
+  status    String   @default("pending") // pending, contacted, closed, spam
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("contact_submissions")
+}
+
+// Client Reviews & Testimonials
+model Review {
+  id          String    @id @default(uuid())
+  reviewId    String?   @map("review_id")
+  clientName  String    @map("client_name")
+  company     String?
+  designation String?
+  review      String    @db.Text
+  rating      Int       @default(5)
+  imageUrl    String?   @map("image_url")
+  status      String    @default("pending") // pending, approved, rejected
+  featured    Boolean   @default(false)
+  adminNote   String?   @map("admin_note") @db.Text
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("reviews")
+}
+
+// Services Management
+model ServiceItem {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  category    String   @default("Development")
+  shortDesc   String   @map("short_desc") @db.Text
+  fullDesc    String   @map("full_desc") @db.Text
+  features    String[]
+  badge       String?
+  icon        String   @default("Code2")
+  active      Boolean  @default(true)
+  orderIndex  Int      @default(0) @map("order_index")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("services")
+}
+
