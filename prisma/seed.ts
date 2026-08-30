@@ -1,6 +1,6 @@
 import { Role } from '@prisma/client';
 import { hashPassword } from 'better-auth/crypto';
-import { db as prisma } from '../src/db/prisma';
+import { db as prisma } from '../src/models/db';
 
 async function main() {
   console.log('🌱 Starting database seeding...');
