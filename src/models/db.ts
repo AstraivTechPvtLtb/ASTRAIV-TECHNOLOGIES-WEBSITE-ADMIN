@@ -11,7 +11,7 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:Akashindia123%40@localhost:5432/astraiv_tech?schema=public';
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:Akashindia123@localhost:5432/astraiv_tech?schema=public';
 
 const pool = new pg.Pool({ connectionString });
 const adapter = new PrismaPg(pool);

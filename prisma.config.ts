@@ -8,6 +8,6 @@ export default defineConfig({
     seed: "npx tsx prisma/seed.ts",
   },
   datasource: {
-    url: process.env.DATABASE_URL || "postgresql://postgres:Akashindia123%40@localhost:5432/astraiv_tech?schema=public",
+    url: process.env.DATABASE_URL || "postgresql://postgres:Akashindia123@localhost:5432/astraiv_tech?schema=public",
   },
 });
