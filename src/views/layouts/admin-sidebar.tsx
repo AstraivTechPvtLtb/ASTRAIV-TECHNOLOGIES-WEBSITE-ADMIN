@@ -6,7 +6,7 @@
  */
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   MessageSquare,
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/views/ui/button';
+import { logoutAdmin } from '@/controllers/auth.controller';
 
 interface AdminSidebarProps {
   user?: {
@@ -32,6 +33,13 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ user }: AdminSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await logoutAdmin();
+    router.push('/login');
+    router.refresh();
+  };
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -59,44 +67,50 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
           </div>
         </div>
 
-        {/* Navigation Items */}
-        <div className="p-4 space-y-1.5">
-          <div className="px-3 py-2 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+        {/* Navigation links */}
+        <nav className="p-4 space-y-1.5">
+          <div className="px-3 py-2 text-[10px] font-bold text-slate-400 tracking-wider uppercase">
             Operations
           </div>
+
           {navigation.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
             const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
 
             return (
               <Link
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150',
+                  'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 group',
                   isActive
-                    ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20'
-                    : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900'
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20 font-bold'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
                 )}
               >
-                <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-white' : 'text-slate-400')} />
+                <Icon
+                  className={cn(
+                    'h-4 w-4 transition-colors',
+                    isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
+                  )}
+                />
                 <span>{item.name}</span>
               </Link>
             );
           })}
-        </div>
+        </nav>
       </div>
 
-      {/* Footer Profile & Switcher */}
+      {/* Bottom Footer Section */}
       <div className="p-4 border-t border-slate-800/80 space-y-3">
-        {/* View Client Site shortcut */}
+        {/* Quick Link to Client Portal */}
         <a
-          href="http://localhost:3000"
+          href="https://astraivtechnologies.com"
           target="_blank"
-          rel="noreferrer"
-          className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800 text-slate-300 text-xs font-medium transition-colors"
+          rel="noopener noreferrer"
+          className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800 text-xs text-slate-400 hover:text-slate-200 transition-colors"
         >
-          <span>Live Client Website</span>
+          <span className="truncate">Live Client Website</span>
           <ExternalLink className="h-3.5 w-3.5 text-slate-500" />
         </a>
 
@@ -116,16 +130,15 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
             </div>
           </div>
 
-          <Link href="/login">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-500/10"
-              title="Sign Out"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </Link>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={handleSignOut}
+            className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-500/10"
+            title="Sign Out"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </aside>
