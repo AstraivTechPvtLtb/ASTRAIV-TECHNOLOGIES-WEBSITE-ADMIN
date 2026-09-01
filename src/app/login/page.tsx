@@ -14,8 +14,8 @@ import { Input } from '@/views/ui/input';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@astraiv.com');
-  const [password, setPassword] = useState('Password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -25,7 +25,7 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      const res = await loginAdmin(email);
+      const res = await loginAdmin(email, password);
       if (res.success) {
         router.push('/dashboard');
         router.refresh();

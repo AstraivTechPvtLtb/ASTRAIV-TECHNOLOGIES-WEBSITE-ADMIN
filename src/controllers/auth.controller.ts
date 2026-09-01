@@ -8,41 +8,30 @@
 import { db } from '@/models/db';
 import { AdminUserSession, AdminActionResponse } from '@/models/types';
 import { cookies } from 'next/headers';
+import { verifyPassword } from 'better-auth/crypto';
 
 /**
- * Verifies admin session. In local development or standalone mode,
- * verifies presence of admin role or local development admin.
+ * Verifies active admin session strictly from the session cookie.
  */
 export async function getAdminUser(): Promise<AdminUserSession | null> {
   try {
     const cookieStore = await cookies();
     const adminSessionCookie = cookieStore.get('astraiv_admin_session');
 
-    if (adminSessionCookie?.value) {
-      const user = await db.user.findUnique({
-        where: { id: adminSessionCookie.value },
-      });
-      if (user && user.role === 'ADMIN') {
-        return {
-          id: user.id,
-          email: user.email,
-          fullName: user.name,
-          role: user.role,
-        };
-      }
+    if (!adminSessionCookie?.value) {
+      return null;
     }
 
-    // Default admin fallback for local dev environment
-    const defaultAdmin = await db.user.findFirst({
-      where: { role: 'ADMIN' },
+    const user = await db.user.findUnique({
+      where: { id: adminSessionCookie.value },
     });
 
-    if (defaultAdmin) {
+    if (user && user.role === 'ADMIN') {
       return {
-        id: defaultAdmin.id,
-        email: defaultAdmin.email,
-        fullName: defaultAdmin.name,
-        role: defaultAdmin.role,
+        id: user.id,
+        email: user.email,
+        fullName: user.name,
+        role: user.role,
       };
     }
 
@@ -54,16 +43,40 @@ export async function getAdminUser(): Promise<AdminUserSession | null> {
 }
 
 /**
- * Logs in an administrator and sets session cookie.
+ * Authenticates an administrator with email & password and sets session cookie.
  */
-export async function loginAdmin(email: string): Promise<AdminActionResponse> {
+export async function loginAdmin(email: string, password?: string): Promise<AdminActionResponse> {
   try {
+    const trimmedEmail = email?.trim().toLowerCase();
+    if (!trimmedEmail || !password) {
+      return { success: false, error: 'Email and password are required.' };
+    }
+
     const user = await db.user.findUnique({
-      where: { email },
+      where: { email: trimmedEmail },
+      include: {
+        accounts: {
+          where: { providerId: 'credential' },
+        },
+      },
     });
 
     if (!user || user.role !== 'ADMIN') {
-      return { success: false, error: 'Unauthorized: Admin privileges required.' };
+      return { success: false, error: 'Invalid credentials or administrator access required.' };
+    }
+
+    const account = user.accounts[0];
+    if (!account?.password) {
+      return { success: false, error: 'No password credential found for this account.' };
+    }
+
+    const isPasswordValid = await verifyPassword({
+      hash: account.password,
+      password: password,
+    });
+
+    if (!isPasswordValid) {
+      return { success: false, error: 'Invalid email or password.' };
     }
 
     const cookieStore = await cookies();
@@ -77,7 +90,7 @@ export async function loginAdmin(email: string): Promise<AdminActionResponse> {
     return { success: true };
   } catch (error) {
     console.error('[Login Admin Error]:', error);
-    return { success: false, error: 'Failed to sign in' };
+    return { success: false, error: 'Failed to sign in. Database connection error.' };
   }
 }
 
