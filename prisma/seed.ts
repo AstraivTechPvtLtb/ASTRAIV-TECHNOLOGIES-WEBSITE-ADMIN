@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Role } from '@prisma/client';
 import { hashPassword } from 'better-auth/crypto';
 import { db as prisma } from '../src/models/db';
