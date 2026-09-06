@@ -109,9 +109,15 @@ export interface AdminService {
   id: string;
   title: string;
   slug: string;
-  description: string;
+  category?: string;
+  short_desc: string;
+  full_desc: string;
+  description?: string; // backwards compatibility alias for short_desc
+  features?: string[];
+  badge?: string | null;
   icon: string;
   status: 'active' | 'draft' | 'archived';
+  active?: boolean;
   display_order: number;
   created_at?: string;
   updated_at?: string;
@@ -141,7 +147,12 @@ export interface AdminProjectInput {
 export interface AdminServiceInput {
   title: string;
   slug: string;
-  description: string;
+  category?: string;
+  short_desc?: string;
+  full_desc?: string;
+  description?: string; // alias for short_desc
+  features?: string[];
+  badge?: string;
   icon: string;
   status: 'active' | 'draft' | 'archived';
   display_order?: number;
