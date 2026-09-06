@@ -25,9 +25,15 @@ export async function getServices(): Promise<{ data: AdminService[]; error?: str
         id: s.id,
         title: s.title,
         slug: s.slug,
+        category: s.category,
+        short_desc: s.shortDesc,
+        full_desc: s.fullDesc,
         description: s.shortDesc,
+        features: s.features,
+        badge: s.badge,
         icon: s.icon,
         status: s.active ? 'active' : 'draft',
+        active: s.active,
         display_order: s.orderIndex,
         created_at: s.createdAt.toISOString(),
         updated_at: s.updatedAt.toISOString(),
@@ -40,7 +46,26 @@ export async function getServices(): Promise<{ data: AdminService[]; error?: str
     const { data, error } = await supabase.from('services').select('*').order('display_order', { ascending: true });
 
     if (error) throw error;
-    return { data: (data as AdminService[]) || [] };
+    
+    const mapped: AdminService[] = (data || []).map((s: any) => ({
+      id: s.id,
+      title: s.title,
+      slug: s.slug,
+      category: s.category || 'Engineering',
+      short_desc: s.short_desc || s.description || '',
+      full_desc: s.full_desc || s.description || '',
+      description: s.short_desc || s.description || '',
+      features: s.features || [],
+      badge: s.badge || null,
+      icon: s.icon || 'Cpu',
+      status: s.status || (s.active ? 'active' : 'draft'),
+      active: s.status === 'active' || s.active === true,
+      display_order: s.display_order ?? s.order_index ?? 0,
+      created_at: s.created_at,
+      updated_at: s.updated_at,
+    }));
+
+    return { data: mapped };
   } catch (error) {
     console.error('[Get Services Controller Error]:', error);
     return { data: [], error: 'Failed to fetch services' };
@@ -52,22 +77,35 @@ export async function getServices(): Promise<{ data: AdminService[]; error?: str
  */
 export async function createService(data: AdminServiceInput): Promise<AdminActionResponse<AdminService>> {
   try {
+    const briefDesc = data.short_desc || data.description || '';
+    const largeDesc = data.full_desc || briefDesc;
+    const isActive = data.status === 'active';
+    const displayOrder = data.display_order ?? 0;
+    const cleanSlug = (data.slug || data.title)
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
     if (!isSupabaseConfigured()) {
       const created = await db.serviceItem.create({
         data: {
-          title: data.title,
-          slug: data.slug,
-          shortDesc: data.description,
-          fullDesc: data.description,
-          icon: data.icon || 'Code2',
-          active: data.status === 'active',
-          orderIndex: data.display_order ?? 0,
-          features: [],
+          title: data.title.trim(),
+          slug: cleanSlug,
+          category: data.category?.trim() || 'Engineering',
+          shortDesc: briefDesc.trim(),
+          fullDesc: largeDesc.trim(),
+          features: data.features || [],
+          badge: data.badge?.trim() || null,
+          icon: data.icon?.trim() || 'Cpu',
+          active: isActive,
+          orderIndex: displayOrder,
         },
       });
 
       revalidatePath('/services');
       revalidatePath('/dashboard');
+      revalidatePath('/');
 
       return {
         success: true,
@@ -75,9 +113,15 @@ export async function createService(data: AdminServiceInput): Promise<AdminActio
           id: created.id,
           title: created.title,
           slug: created.slug,
+          category: created.category,
+          short_desc: created.shortDesc,
+          full_desc: created.fullDesc,
           description: created.shortDesc,
+          features: created.features,
+          badge: created.badge,
           icon: created.icon,
           status: created.active ? 'active' : 'draft',
+          active: created.active,
           display_order: created.orderIndex,
         },
       };
@@ -87,12 +131,17 @@ export async function createService(data: AdminServiceInput): Promise<AdminActio
     const { data: created, error } = await supabase
       .from('services')
       .insert({
-        title: data.title,
-        slug: data.slug,
-        description: data.description,
-        icon: data.icon,
+        title: data.title.trim(),
+        slug: cleanSlug,
+        category: data.category?.trim() || 'Engineering',
+        short_desc: briefDesc.trim(),
+        full_desc: largeDesc.trim(),
+        description: briefDesc.trim(),
+        features: data.features || [],
+        badge: data.badge?.trim() || null,
+        icon: data.icon?.trim() || 'Cpu',
         status: data.status,
-        display_order: data.display_order ?? 0,
+        display_order: displayOrder,
       })
       .select()
       .single();
@@ -100,10 +149,28 @@ export async function createService(data: AdminServiceInput): Promise<AdminActio
     if (error) throw error;
     revalidatePath('/services');
     revalidatePath('/dashboard');
-    return { success: true, data: created as AdminService };
-  } catch (error) {
+    revalidatePath('/');
+    return {
+      success: true,
+      data: {
+        id: created.id,
+        title: created.title,
+        slug: created.slug,
+        category: created.category,
+        short_desc: created.short_desc || created.description,
+        full_desc: created.full_desc || created.description,
+        description: created.short_desc || created.description,
+        features: created.features,
+        badge: created.badge,
+        icon: created.icon,
+        status: created.status,
+        active: created.status === 'active',
+        display_order: created.display_order,
+      },
+    };
+  } catch (error: any) {
     console.error('[Create Service Error]:', error);
-    return { success: false, error: 'Failed to create service' };
+    return { success: false, error: error?.message || 'Failed to create service' };
   }
 }
 
@@ -115,16 +182,22 @@ export async function updateService(
   data: Partial<AdminServiceInput>
 ): Promise<AdminActionResponse> {
   try {
+    const briefDesc = data.short_desc !== undefined ? data.short_desc : data.description;
+    const largeDesc = data.full_desc;
+
     if (!isSupabaseConfigured()) {
       const updateData: Prisma.ServiceItemUpdateInput = {};
-      if (data.title) updateData.title = data.title;
-      if (data.slug) updateData.slug = data.slug;
-      if (data.description) {
-        updateData.shortDesc = data.description;
-        updateData.fullDesc = data.description;
+      if (data.title !== undefined) updateData.title = data.title.trim();
+      if (data.slug !== undefined) {
+        updateData.slug = data.slug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
       }
-      if (data.icon) updateData.icon = data.icon;
-      if (data.status) updateData.active = data.status === 'active';
+      if (data.category !== undefined) updateData.category = data.category.trim();
+      if (briefDesc !== undefined) updateData.shortDesc = briefDesc.trim();
+      if (largeDesc !== undefined) updateData.fullDesc = largeDesc.trim();
+      if (data.features !== undefined) updateData.features = data.features;
+      if (data.badge !== undefined) updateData.badge = data.badge?.trim() || null;
+      if (data.icon !== undefined) updateData.icon = data.icon.trim();
+      if (data.status !== undefined) updateData.active = data.status === 'active';
       if (data.display_order !== undefined) updateData.orderIndex = data.display_order;
 
       await db.serviceItem.update({
@@ -134,6 +207,54 @@ export async function updateService(
 
       revalidatePath('/services');
       revalidatePath('/dashboard');
+      revalidatePath('/');
+      return { success: true };
+    }
+
+    const supabase = await createSupabaseClient();
+    const updatePayload: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (data.title !== undefined) updatePayload.title = data.title.trim();
+    if (data.slug !== undefined) updatePayload.slug = data.slug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+    if (data.category !== undefined) updatePayload.category = data.category.trim();
+    if (briefDesc !== undefined) {
+      updatePayload.short_desc = briefDesc.trim();
+      updatePayload.description = briefDesc.trim();
+    }
+    if (largeDesc !== undefined) updatePayload.full_desc = largeDesc.trim();
+    if (data.features !== undefined) updatePayload.features = data.features;
+    if (data.badge !== undefined) updatePayload.badge = data.badge?.trim() || null;
+    if (data.icon !== undefined) updatePayload.icon = data.icon.trim();
+    if (data.status !== undefined) updatePayload.status = data.status;
+    if (data.display_order !== undefined) updatePayload.display_order = data.display_order;
+
+    const { error } = await supabase.from('services').update(updatePayload).eq('id', id);
+
+    if (error) throw error;
+    revalidatePath('/services');
+    revalidatePath('/dashboard');
+    revalidatePath('/');
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Update Service Error]:', error);
+    return { success: false, error: error?.message || 'Failed to update service' };
+  }
+}
+
+/**
+ * Quick toggle for service active/inactive status.
+ */
+export async function toggleServiceStatus(id: string, active: boolean): Promise<AdminActionResponse> {
+  try {
+    if (!isSupabaseConfigured()) {
+      await db.serviceItem.update({
+        where: { id },
+        data: { active },
+      });
+      revalidatePath('/services');
+      revalidatePath('/dashboard');
+      revalidatePath('/');
       return { success: true };
     }
 
@@ -141,7 +262,7 @@ export async function updateService(
     const { error } = await supabase
       .from('services')
       .update({
-        ...data,
+        status: active ? 'active' : 'draft',
         updated_at: new Date().toISOString(),
       })
       .eq('id', id);
@@ -149,10 +270,11 @@ export async function updateService(
     if (error) throw error;
     revalidatePath('/services');
     revalidatePath('/dashboard');
+    revalidatePath('/');
     return { success: true };
-  } catch (error) {
-    console.error('[Update Service Error]:', error);
-    return { success: false, error: 'Failed to update service' };
+  } catch (error: any) {
+    console.error('[Toggle Service Status Error]:', error);
+    return { success: false, error: error?.message || 'Failed to toggle service status' };
   }
 }
 
@@ -167,6 +289,7 @@ export async function deleteService(id: string): Promise<AdminActionResponse> {
       });
       revalidatePath('/services');
       revalidatePath('/dashboard');
+      revalidatePath('/');
       return { success: true };
     }
 
@@ -176,9 +299,10 @@ export async function deleteService(id: string): Promise<AdminActionResponse> {
     if (error) throw error;
     revalidatePath('/services');
     revalidatePath('/dashboard');
+    revalidatePath('/');
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Delete Service Error]:', error);
-    return { success: false, error: 'Failed to delete service' };
+    return { success: false, error: error?.message || 'Failed to delete service' };
   }
 }
