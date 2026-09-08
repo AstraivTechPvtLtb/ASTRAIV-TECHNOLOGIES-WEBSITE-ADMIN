@@ -12,6 +12,8 @@ import {
   updateService,
   deleteService,
   toggleServiceStatus,
+  swapServiceOrder,
+  updateServiceOrder,
 } from '@/controllers/services.controller';
 import {
   Plus,
@@ -24,6 +26,8 @@ import {
   EyeOff,
   AlertCircle,
   Sparkles,
+  ChevronUp,
+  ChevronDown,
   Bot,
   Terminal,
   Cpu,
@@ -293,6 +297,28 @@ export function ServicesTable({ initialData }: ServicesTableProps) {
     }
   };
 
+  const handleMoveOrder = async (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= data.length) return;
+
+    const currentItem = data[index];
+    const targetItem = data[targetIndex];
+
+    const currentOrder = currentItem.display_order ?? (index + 1);
+    const targetOrder = targetItem.display_order ?? (targetIndex + 1);
+
+    const newCurrentOrder = currentOrder === targetOrder ? (direction === 'up' ? targetOrder - 1 : targetOrder + 1) : targetOrder;
+    const newTargetOrder = currentOrder;
+
+    const updated = [...data];
+    updated[index] = { ...currentItem, display_order: newCurrentOrder };
+    updated[targetIndex] = { ...targetItem, display_order: newTargetOrder };
+    updated.sort((a, b) => a.display_order - b.display_order);
+    setData(updated);
+
+    await swapServiceOrder(currentItem.id, newCurrentOrder, targetItem.id, newTargetOrder);
+  };
+
   const activeCount = data.filter((s) => s.status === 'active' || s.active).length;
 
   return (
@@ -325,7 +351,7 @@ export function ServicesTable({ initialData }: ServicesTableProps) {
         <table className="w-full text-left text-xs text-slate-300">
           <thead className="bg-slate-950/70 border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
             <tr>
-              <th className="py-3.5 px-4 w-16">Order</th>
+              <th className="py-3.5 px-4 w-24">Order</th>
               <th className="py-3.5 px-4">Service & Icon</th>
               <th className="py-3.5 px-4">Brief Description (Card)</th>
               <th className="py-3.5 px-4">Large Description (Detail Page)</th>
@@ -341,12 +367,34 @@ export function ServicesTable({ initialData }: ServicesTableProps) {
                 </td>
               </tr>
             ) : (
-              data.map((srv) => {
+              data.map((srv, idx) => {
                 const isActive = srv.status === 'active' || srv.active === true;
                 return (
                   <tr key={srv.id} className="hover:bg-slate-800/40 transition-colors">
                     <td className="py-4 px-4 font-mono font-bold text-slate-400">
-                      #{srv.display_order}
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-6">#{srv.display_order}</span>
+                        <div className="flex flex-col">
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            onClick={() => handleMoveOrder(idx, 'up')}
+                            className="text-slate-500 hover:text-blue-400 disabled:opacity-20 disabled:hover:text-slate-500 p-0.5 rounded-sm hover:bg-slate-800 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                            title="Move Up"
+                          >
+                            <ChevronUp className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === data.length - 1}
+                            onClick={() => handleMoveOrder(idx, 'down')}
+                            className="text-slate-500 hover:text-blue-400 disabled:opacity-20 disabled:hover:text-slate-500 p-0.5 rounded-sm hover:bg-slate-800 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                            title="Move Down"
+                          >
+                            <ChevronDown className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
                     </td>
 
                     <td className="py-4 px-4">

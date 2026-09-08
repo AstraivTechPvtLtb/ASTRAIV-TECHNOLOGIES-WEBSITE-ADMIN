@@ -234,3 +234,33 @@ model ServiceItem {
   @@map("services")
 }
 
+// Footer & Company Information Configuration
+model FooterSetting {
+  id            String   @id @default(uuid())
+  brandTagline  String   @default("Your trusted partner for AI, enterprise software, and scalable cloud systems.") @map("brand_tagline") @db.Text
+  phone         String   @default("+91 8167409664")
+  email         String   @default("info@astraivtechnologies.com")
+  address       String   @default("Ashoknagar, Kolkata")
+  mapUrl        String?  @default("https://maps.google.com/?q=Ashoknagar,+Kolkata") @map("map_url")
+  copyrightText String?  @default("Astraiv Technologies. All rights reserved.") @map("copyright_text")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("footer_settings")
+}
+
+// Social Media Links
+model SocialLink {
+  id          String   @id @default(uuid())
+  platform    String   // e.g. "twitter", "linkedin", "github", "whatsapp", "facebook", "instagram", "youtube", "discord", "telegram", etc.
+  name        String   // e.g. "Twitter", "LinkedIn", "GitHub", "WhatsApp", "Facebook", "Instagram"
+  url         String   // destination URL e.g. "https://wa.me/918167409664"
+  icon        String   @default("globe")
+  active      Boolean  @default(true)
+  orderIndex  Int      @default(0) @map("order_index")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("social_links")
+}
+

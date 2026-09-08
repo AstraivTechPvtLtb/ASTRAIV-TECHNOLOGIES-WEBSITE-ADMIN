@@ -14,6 +14,7 @@ import {
   FolderKanban,
   Cpu,
   FileText,
+  PanelBottom,
   Settings,
   Shield,
   LogOut,
@@ -48,6 +49,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
     { name: 'Projects CMS', href: '/projects', icon: FolderKanban },
     { name: 'Services Catalog', href: '/services', icon: Cpu },
     { name: 'Blog Articles', href: '/blog', icon: FileText },
+    { name: 'Footer Section', href: '/footer', icon: PanelBottom },
     { name: 'Settings & Sync', href: '/settings', icon: Settings },
   ];
 
