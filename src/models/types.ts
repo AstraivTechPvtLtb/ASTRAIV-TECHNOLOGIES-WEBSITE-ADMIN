@@ -187,3 +187,50 @@ export interface AdminUserSession {
   fullName: string;
   role: string;
 }
+
+/**
+ * Footer & Company Contact Configuration.
+ */
+export interface AdminFooterSettings {
+  id?: string;
+  brand_tagline: string;
+  phone: string;
+  email: string;
+  address: string;
+  map_url?: string | null;
+  copyright_text?: string | null;
+  updated_at?: string;
+}
+
+export interface AdminFooterSettingsInput {
+  brand_tagline: string;
+  phone: string;
+  email: string;
+  address: string;
+  map_url?: string;
+  copyright_text?: string;
+}
+
+/**
+ * Social Network Link representation.
+ */
+export interface AdminSocialLink {
+  id: string;
+  platform: string;
+  name: string;
+  url: string;
+  icon: string;
+  active: boolean;
+  order_index: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface AdminSocialLinkInput {
+  platform: string;
+  name: string;
+  url: string;
+  icon?: string;
+  active?: boolean;
+  order_index?: number;
+}

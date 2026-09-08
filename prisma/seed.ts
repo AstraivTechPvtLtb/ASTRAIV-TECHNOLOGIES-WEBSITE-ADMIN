@@ -1,7 +1,18 @@
 import 'dotenv/config';
-import { Role } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import { hashPassword } from 'better-auth/crypto';
-import { db as prisma } from '../src/models/db';
+
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:Akashindia123@localhost:5432/astraiv_tech?schema=public';
+const isLocalhost = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
+
+const pool = new Pool({
+  connectionString,
+  ssl: isLocalhost ? false : { rejectUnauthorized: false },
+});
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('🌱 Starting database seeding...');
@@ -19,6 +30,8 @@ async function main() {
   await prisma.contactSubmission.deleteMany();
   await prisma.review.deleteMany();
   await prisma.serviceItem.deleteMany();
+  await prisma.footerSetting.deleteMany();
+  await prisma.socialLink.deleteMany();
   await prisma.user.deleteMany();
 
   console.log('🗑️  Cleaned existing database tables.');
@@ -395,6 +408,72 @@ async function main() {
     ],
   });
   console.log('⚙️ Seeded Services.');
+
+  // 14. Create Footer Settings & Socials
+  await prisma.footerSetting.create({
+    data: {
+      brandTagline: 'Your trusted partner for AI, enterprise software, and scalable cloud systems.',
+      phone: '+91 8167409664',
+      email: 'info@astraivtechnologies.com',
+      address: 'Ashoknagar, Kolkata',
+      mapUrl: 'https://maps.google.com/?q=Ashoknagar,+Kolkata',
+      copyrightText: 'Astraiv Technologies. All rights reserved.',
+    },
+  });
+
+  await prisma.socialLink.createMany({
+    data: [
+      {
+        platform: 'twitter',
+        name: 'Twitter / X',
+        url: 'https://twitter.com/astraivtech',
+        icon: 'twitter',
+        active: true,
+        orderIndex: 0,
+      },
+      {
+        platform: 'linkedin',
+        name: 'LinkedIn',
+        url: 'https://linkedin.com/company/astraiv',
+        icon: 'linkedin',
+        active: true,
+        orderIndex: 1,
+      },
+      {
+        platform: 'github',
+        name: 'GitHub',
+        url: 'https://github.com/astraiv',
+        icon: 'github',
+        active: true,
+        orderIndex: 2,
+      },
+      {
+        platform: 'whatsapp',
+        name: 'WhatsApp',
+        url: 'https://wa.me/918167409664',
+        icon: 'whatsapp',
+        active: true,
+        orderIndex: 3,
+      },
+      {
+        platform: 'facebook',
+        name: 'Facebook',
+        url: 'https://facebook.com/astraivtechnologies',
+        icon: 'facebook',
+        active: true,
+        orderIndex: 4,
+      },
+      {
+        platform: 'instagram',
+        name: 'Instagram',
+        url: 'https://instagram.com/astraivtech',
+        icon: 'instagram',
+        active: true,
+        orderIndex: 5,
+      },
+    ],
+  });
+  console.log('🌐 Seeded Footer Settings & Social Links.');
 
   console.log('🎉 Seeding successfully completed!');
 }

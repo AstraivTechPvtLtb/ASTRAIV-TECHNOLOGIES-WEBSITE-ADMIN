@@ -6,9 +6,15 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 export function isSupabaseConfigured(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    url &&
+    key &&
+    !url.includes('placeholder') &&
+    !key.includes('placeholder') &&
+    key !== 'your_anon_key_here' &&
+    !key.startsWith('your_')
   );
 }
 

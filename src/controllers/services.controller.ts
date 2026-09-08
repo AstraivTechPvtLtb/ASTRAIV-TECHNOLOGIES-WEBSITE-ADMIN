@@ -11,6 +11,16 @@ import { isSupabaseConfigured, createClient as createSupabaseClient } from '@/mo
 import { AdminService, AdminServiceInput, AdminActionResponse } from '@/models/types';
 import { Prisma } from '@prisma/client';
 
+function safeRevalidateServices() {
+  try {
+    revalidatePath('/services');
+    revalidatePath('/dashboard');
+    revalidatePath('/');
+  } catch {
+    // Suppress error if called outside of a Next.js Server Action request context
+  }
+}
+
 /**
  * Retrieves all services ordered by display order.
  */
@@ -103,9 +113,7 @@ export async function createService(data: AdminServiceInput): Promise<AdminActio
         },
       });
 
-      revalidatePath('/services');
-      revalidatePath('/dashboard');
-      revalidatePath('/');
+      safeRevalidateServices();
 
       return {
         success: true,
@@ -147,9 +155,7 @@ export async function createService(data: AdminServiceInput): Promise<AdminActio
       .single();
 
     if (error) throw error;
-    revalidatePath('/services');
-    revalidatePath('/dashboard');
-    revalidatePath('/');
+    safeRevalidateServices();
     return {
       success: true,
       data: {
@@ -205,9 +211,7 @@ export async function updateService(
         data: updateData,
       });
 
-      revalidatePath('/services');
-      revalidatePath('/dashboard');
-      revalidatePath('/');
+      safeRevalidateServices();
       return { success: true };
     }
 
@@ -232,9 +236,7 @@ export async function updateService(
     const { error } = await supabase.from('services').update(updatePayload).eq('id', id);
 
     if (error) throw error;
-    revalidatePath('/services');
-    revalidatePath('/dashboard');
-    revalidatePath('/');
+    safeRevalidateServices();
     return { success: true };
   } catch (error: any) {
     console.error('[Update Service Error]:', error);
@@ -252,9 +254,7 @@ export async function toggleServiceStatus(id: string, active: boolean): Promise<
         where: { id },
         data: { active },
       });
-      revalidatePath('/services');
-      revalidatePath('/dashboard');
-      revalidatePath('/');
+      safeRevalidateServices();
       return { success: true };
     }
 
@@ -268,13 +268,81 @@ export async function toggleServiceStatus(id: string, active: boolean): Promise<
       .eq('id', id);
 
     if (error) throw error;
-    revalidatePath('/services');
-    revalidatePath('/dashboard');
-    revalidatePath('/');
+    safeRevalidateServices();
     return { success: true };
   } catch (error: any) {
     console.error('[Toggle Service Status Error]:', error);
     return { success: false, error: error?.message || 'Failed to toggle service status' };
+  }
+}
+
+/**
+ * Swaps or updates display order between services.
+ */
+export async function swapServiceOrder(
+  id1: string,
+  order1: number,
+  id2: string,
+  order2: number
+): Promise<AdminActionResponse> {
+  try {
+    if (!isSupabaseConfigured()) {
+      await db.$transaction([
+        db.serviceItem.update({
+          where: { id: id1 },
+          data: { orderIndex: order2 },
+        }),
+        db.serviceItem.update({
+          where: { id: id2 },
+          data: { orderIndex: order1 },
+        }),
+      ]);
+
+      safeRevalidateServices();
+      return { success: true };
+    }
+
+    const supabase = await createSupabaseClient();
+    await supabase.from('services').update({ display_order: order2 }).eq('id', id1);
+    await supabase.from('services').update({ display_order: order1 }).eq('id', id2);
+
+    safeRevalidateServices();
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Swap Service Order Error]:', error);
+    return { success: false, error: error?.message || 'Failed to update order' };
+  }
+}
+
+/**
+ * Updates a single service's display order.
+ */
+export async function updateServiceOrder(
+  id: string,
+  newOrder: number
+): Promise<AdminActionResponse> {
+  try {
+    if (!isSupabaseConfigured()) {
+      await db.serviceItem.update({
+        where: { id },
+        data: { orderIndex: newOrder },
+      });
+      safeRevalidateServices();
+      return { success: true };
+    }
+
+    const supabase = await createSupabaseClient();
+    const { error } = await supabase
+      .from('services')
+      .update({ display_order: newOrder })
+      .eq('id', id);
+
+    if (error) throw error;
+    safeRevalidateServices();
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Update Service Order Error]:', error);
+    return { success: false, error: error?.message || 'Failed to update order' };
   }
 }
 
@@ -287,9 +355,7 @@ export async function deleteService(id: string): Promise<AdminActionResponse> {
       await db.serviceItem.delete({
         where: { id },
       });
-      revalidatePath('/services');
-      revalidatePath('/dashboard');
-      revalidatePath('/');
+      safeRevalidateServices();
       return { success: true };
     }
 
@@ -297,12 +363,12 @@ export async function deleteService(id: string): Promise<AdminActionResponse> {
     const { error } = await supabase.from('services').delete().eq('id', id);
 
     if (error) throw error;
-    revalidatePath('/services');
-    revalidatePath('/dashboard');
-    revalidatePath('/');
+    safeRevalidateServices();
     return { success: true };
   } catch (error: any) {
     console.error('[Delete Service Error]:', error);
     return { success: false, error: error?.message || 'Failed to delete service' };
   }
 }
+
+
