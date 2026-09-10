@@ -33,7 +33,7 @@ export async function getReviews({
     const offset = (page - 1) * limit;
 
     // 1. Primary PostgreSQL via Prisma ORM
-    if (!isSupabaseConfigured()) {
+    try {
       const where: Prisma.ReviewWhereInput = {};
 
       if (status !== 'all') {
@@ -79,33 +79,40 @@ export async function getReviews({
       }));
 
       return { data: mapped, total };
+    } catch (prismaErr) {
+      console.warn('[Admin Reviews Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
     }
 
     // 2. Supabase Cloud Fallback
-    const supabase = await createSupabaseClient();
-    let query = supabase
-      .from('reviews')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false });
+    if (isSupabaseConfigured()) {
+      const supabase = await createSupabaseClient();
+      let query = supabase
+        .from('reviews')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false });
 
-    if (status !== 'all') {
-      query = query.eq('status', status);
+      if (status !== 'all') {
+        query = query.eq('status', status);
+      }
+
+      if (featuredOnly) {
+        query = query.eq('featured', true);
+      }
+
+      if (search.trim()) {
+        query = query.or(
+          `client_name.ilike.%${search}%,company.ilike.%${search}%,review.ilike.%${search}%,review_id.ilike.%${search}%`
+        );
+      }
+
+      const { data, count, error } = await query.range(offset, offset + limit - 1);
+
+      if (!error && data) {
+        return { data: (data as AdminReview[]) || [], total: count || 0 };
+      }
     }
 
-    if (featuredOnly) {
-      query = query.eq('featured', true);
-    }
-
-    if (search.trim()) {
-      query = query.or(
-        `client_name.ilike.%${search}%,company.ilike.%${search}%,review.ilike.%${search}%,review_id.ilike.%${search}%`
-      );
-    }
-
-    const { data, count, error } = await query.range(offset, offset + limit - 1);
-
-    if (error) throw error;
-    return { data: (data as AdminReview[]) || [], total: count || 0 };
+    return { data: [], total: 0 };
   } catch (error) {
     console.error('[Get Reviews Controller Error]:', error);
     return { data: [], total: 0, error: 'Failed to fetch reviews' };

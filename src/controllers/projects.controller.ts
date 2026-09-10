@@ -30,7 +30,8 @@ export async function getProjects({
   try {
     const offset = (page - 1) * limit;
 
-    if (!isSupabaseConfigured()) {
+    // 1. Primary: Direct PostgreSQL via Prisma ORM
+    try {
       const where: Prisma.PortfolioProjectWhereInput = {};
       if (status !== 'all') {
         where.published = status === 'published';
@@ -69,23 +70,57 @@ export async function getProjects({
       }));
 
       return { data: mapped, total };
+    } catch (prismaErr) {
+      console.warn('[Admin Projects Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
     }
 
-    const supabase = await createSupabaseClient();
-    let query = supabase.from('projects').select('*', { count: 'exact' }).order('created_at', { ascending: false });
+    // 2. Secondary: Supabase client
+    if (isSupabaseConfigured()) {
+      const supabase = await createSupabaseClient();
+      let query = supabase.from('portfolio_project').select('*', { count: 'exact' }).order('created_at', { ascending: false });
 
-    if (status !== 'all') {
-      query = query.eq('status', status);
+      if (status !== 'all') {
+        query = query.eq('published', status === 'published');
+      }
+
+      if (search.trim()) {
+        query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,slug.ilike.%${search}%`);
+      }
+
+      const { data, count, error } = await query.range(offset, offset + limit - 1);
+      if (!error && data) {
+        interface SupabaseProjectRow {
+          id: string;
+          title: string;
+          slug: string;
+          description?: string;
+          content?: string;
+          tags?: string[];
+          published?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        }
+
+        const mapped: AdminProject[] = (data as unknown as SupabaseProjectRow[]).map((p) => ({
+          id: p.id,
+          title: p.title,
+          slug: p.slug,
+          client: 'Direct Partner',
+          industry: 'Software & Cloud',
+          short_description: p.description || '',
+          description: p.content || '',
+          status: p.published ? 'published' : 'draft',
+          featured: false,
+          technologies: p.tags || [],
+          created_at: p.created_at || new Date().toISOString(),
+          updated_at: p.updated_at || new Date().toISOString(),
+        }));
+
+        return { data: mapped, total: count || 0 };
+      }
     }
 
-    if (search.trim()) {
-      query = query.or(`title.ilike.%${search}%,client.ilike.%${search}%,industry.ilike.%${search}%,slug.ilike.%${search}%`);
-    }
-
-    const { data, count, error } = await query.range(offset, offset + limit - 1);
-    if (error) throw error;
-
-    return { data: (data as AdminProject[]) || [], total: count || 0 };
+    return { data: [], total: 0 };
   } catch (error) {
     console.error('[Get Projects Controller Error]:', error);
     return { data: [], total: 0, error: 'Failed to fetch projects' };
