@@ -14,6 +14,5 @@ export * from './tables/projects-table';
 export * from './tables/reviews-table';
 export * from './tables/services-table';
 
-// Cards & Sections
+// Cards
 export * from './cards/admin-stat-card';
-export * from './sections/footer-manager';

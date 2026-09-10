@@ -109,15 +109,13 @@ export interface AdminService {
   id: string;
   title: string;
   slug: string;
-  category?: string;
-  short_desc: string;
-  full_desc: string;
-  description?: string; // backwards compatibility alias for short_desc
-  features?: string[];
+  category: string;
   badge?: string | null;
   icon: string;
+  shortDesc: string;
+  fullDesc: string;
+  features: string[];
   status: 'active' | 'draft' | 'archived';
-  active?: boolean;
   display_order: number;
   created_at?: string;
   updated_at?: string;
@@ -148,13 +146,12 @@ export interface AdminServiceInput {
   title: string;
   slug: string;
   category?: string;
-  short_desc?: string;
-  full_desc?: string;
-  description?: string; // alias for short_desc
+  badge?: string | null;
+  icon?: string;
+  shortDesc?: string;
+  fullDesc?: string;
   features?: string[];
-  badge?: string;
-  icon: string;
-  status: 'active' | 'draft' | 'archived';
+  status?: 'active' | 'draft' | 'archived';
   display_order?: number;
 }
 
@@ -189,30 +186,31 @@ export interface AdminUserSession {
 }
 
 /**
- * Footer & Company Contact Configuration.
+ * Footer & Company Contact Settings
  */
 export interface AdminFooterSettings {
-  id?: string;
-  brand_tagline: string;
+  id: string;
+  brandTagline: string;
   phone: string;
   email: string;
   address: string;
-  map_url?: string | null;
-  copyright_text?: string | null;
-  updated_at?: string;
+  mapUrl: string | null;
+  copyrightText: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AdminFooterSettingsInput {
-  brand_tagline: string;
+  brandTagline: string;
   phone: string;
   email: string;
   address: string;
-  map_url?: string;
-  copyright_text?: string;
+  mapUrl?: string | null;
+  copyrightText?: string | null;
 }
 
 /**
- * Social Network Link representation.
+ * Social Media Account Model
  */
 export interface AdminSocialLink {
   id: string;
@@ -221,16 +219,17 @@ export interface AdminSocialLink {
   url: string;
   icon: string;
   active: boolean;
-  order_index: number;
-  created_at?: string;
-  updated_at?: string;
+  orderIndex: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AdminSocialLinkInput {
   platform: string;
   name: string;
   url: string;
-  icon?: string;
+  icon: string;
   active?: boolean;
-  order_index?: number;
+  orderIndex?: number;
 }
+

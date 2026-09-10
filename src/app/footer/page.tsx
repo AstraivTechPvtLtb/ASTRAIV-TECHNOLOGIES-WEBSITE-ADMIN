@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getAdminUser } from '@/controllers/auth.controller';
-import { getFooterSettings, getSocialLinks } from '@/controllers/footer.controller';
+import { getFooterData } from '@/controllers/footer.controller';
 import { AdminHeader } from '@/views/layouts/admin-header';
 import { FooterManager } from '@/views/sections/footer-manager';
 
@@ -12,24 +12,18 @@ export default async function AdminFooterPage() {
     redirect('/login');
   }
 
-  const [{ data: footerSettings }, { data: socialLinks }] = await Promise.all([
-    getFooterSettings(),
-    getSocialLinks(),
-  ]);
+  const { settings, socials } = await getFooterData();
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
       <AdminHeader
-        title="Footer & Contact Section"
-        subtitle="Manage client website footer branding, social media channel links, official contact info, and legal notices."
-        badge={`${socialLinks.length} Social Channels`}
+        title="Footer Section"
+        subtitle="Manage client website footer socials, phone numbers, email ID, physical address, and map location in real time."
+        badge={`${socials.length} Socials`}
       />
 
       <main className="p-6 md:p-8 max-w-7xl">
-        <FooterManager
-          initialSettings={footerSettings}
-          initialSocials={socialLinks}
-        />
+        <FooterManager initialSettings={settings} initialSocials={socials} />
       </main>
     </div>
   );

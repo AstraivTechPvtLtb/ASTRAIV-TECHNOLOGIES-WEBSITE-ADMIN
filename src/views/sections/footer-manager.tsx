@@ -2,7 +2,7 @@
 
 /**
  * @file admin/src/views/sections/footer-manager.tsx
- * @description [VIEW] Comprehensive interactive manager for client website footer, socials, and contact information.
+ * @description [VIEW] Comprehensive manager for Footer Social Accounts and Company Contact Details.
  */
 
 import { useState, useTransition } from 'react';
@@ -10,15 +10,14 @@ import {
   AdminFooterSettings,
   AdminFooterSettingsInput,
   AdminSocialLink,
-  AdminSocialLinkInput,
 } from '@/models/types';
 import {
   updateFooterSettings,
   createSocialLink,
   updateSocialLink,
   deleteSocialLink,
-  toggleSocialStatus,
-  swapSocialOrder,
+  toggleSocialVisibility,
+  reorderSocialLink,
 } from '@/controllers/footer.controller';
 import {
   Plus,
@@ -26,11 +25,8 @@ import {
   Trash2,
   X,
   Loader2,
-  Check,
   Eye,
   EyeOff,
-  AlertCircle,
-  Sparkles,
   ChevronUp,
   ChevronDown,
   ExternalLink,
@@ -38,246 +34,17 @@ import {
   Mail,
   MapPin,
   Save,
-  Globe,
-  Share2,
-  Info,
   CheckCircle2,
-  RefreshCw,
-  Send,
-  MessageCircle,
+  AlertCircle,
+  Share2,
+  Building2,
+  Link as LinkIcon,
+  Sparkles,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/views/ui/button';
 import { Input } from '@/views/ui/input';
-import { Badge } from '@/views/ui/badge';
-import { Card, CardContent } from '@/views/ui/card';
-
-// Pre-configured platform metadata with SVG icons, branding colors, and URL templates
-export const PRESET_PLATFORMS = [
-  {
-    id: 'whatsapp',
-    name: 'WhatsApp',
-    placeholder: 'https://wa.me/918167409664',
-    bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 group-hover:bg-emerald-500 group-hover:text-slate-950',
-    color: '#25D366',
-  },
-  {
-    id: 'facebook',
-    name: 'Facebook',
-    placeholder: 'https://facebook.com/astraivtechnologies',
-    bg: 'bg-blue-600/10 text-blue-400 border-blue-600/30 group-hover:bg-blue-600 group-hover:text-white',
-    color: '#1877F2',
-  },
-  {
-    id: 'instagram',
-    name: 'Instagram',
-    placeholder: 'https://instagram.com/astraivtech',
-    bg: 'bg-pink-500/10 text-pink-400 border-pink-500/30 group-hover:bg-pink-500 group-hover:text-white',
-    color: '#E4405F',
-  },
-  {
-    id: 'twitter',
-    name: 'Twitter / X',
-    placeholder: 'https://twitter.com/astraivtech',
-    bg: 'bg-slate-800/60 text-slate-200 border-slate-700 group-hover:bg-white group-hover:text-black',
-    color: '#000000',
-  },
-  {
-    id: 'linkedin',
-    name: 'LinkedIn',
-    placeholder: 'https://linkedin.com/company/astraiv',
-    bg: 'bg-blue-500/10 text-blue-400 border-blue-500/30 group-hover:bg-blue-500 group-hover:text-white',
-    color: '#0A66C2',
-  },
-  {
-    id: 'github',
-    name: 'GitHub',
-    placeholder: 'https://github.com/astraiv',
-    bg: 'bg-slate-800/80 text-slate-300 border-slate-700 group-hover:bg-purple-600 group-hover:text-white',
-    color: '#181717',
-  },
-  {
-    id: 'youtube',
-    name: 'YouTube',
-    placeholder: 'https://youtube.com/@astraiv',
-    bg: 'bg-red-500/10 text-red-400 border-red-500/30 group-hover:bg-red-500 group-hover:text-white',
-    color: '#FF0000',
-  },
-  {
-    id: 'discord',
-    name: 'Discord',
-    placeholder: 'https://discord.gg/astraiv',
-    bg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30 group-hover:bg-indigo-500 group-hover:text-white',
-    color: '#5865F2',
-  },
-  {
-    id: 'telegram',
-    name: 'Telegram',
-    placeholder: 'https://t.me/astraiv',
-    bg: 'bg-sky-500/10 text-sky-400 border-sky-500/30 group-hover:bg-sky-500 group-hover:text-white',
-    color: '#26A5E4',
-  },
-  {
-    id: 'reddit',
-    name: 'Reddit',
-    placeholder: 'https://reddit.com/r/astraiv',
-    bg: 'bg-orange-500/10 text-orange-400 border-orange-500/30 group-hover:bg-orange-500 group-hover:text-white',
-    color: '#FF4500',
-  },
-  {
-    id: 'threads',
-    name: 'Threads',
-    placeholder: 'https://threads.net/@astraivtech',
-    bg: 'bg-slate-800 text-slate-200 border-slate-700 group-hover:bg-white group-hover:text-black',
-    color: '#000000',
-  },
-  {
-    id: 'tiktok',
-    name: 'TikTok',
-    placeholder: 'https://tiktok.com/@astraiv',
-    bg: 'bg-teal-500/10 text-teal-400 border-teal-500/30 group-hover:bg-teal-500 group-hover:text-white',
-    color: '#000000',
-  },
-  {
-    id: 'slack',
-    name: 'Slack',
-    placeholder: 'https://astraiv.slack.com',
-    bg: 'bg-amber-500/10 text-amber-400 border-amber-500/30 group-hover:bg-amber-500 group-hover:text-slate-950',
-    color: '#4A154B',
-  },
-  {
-    id: 'medium',
-    name: 'Medium',
-    placeholder: 'https://medium.com/@astraiv',
-    bg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 group-hover:bg-emerald-600 group-hover:text-white',
-    color: '#00AB6C',
-  },
-  {
-    id: 'custom',
-    name: 'Custom / Other',
-    placeholder: 'https://example.com/profile',
-    bg: 'bg-slate-800 text-slate-400 border-slate-700 group-hover:bg-blue-600 group-hover:text-white',
-    color: '#3B82F6',
-  },
-];
-
-// High-fidelity SVG renderers for each social platform
-export function SocialIconRenderer({
-  platform,
-  className = 'h-4 w-4',
-}: {
-  platform: string;
-  className?: string;
-}) {
-  const p = (platform || '').toLowerCase().trim();
-
-  switch (p) {
-    case 'whatsapp':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" />
-          <path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1" />
-        </svg>
-      );
-    case 'facebook':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-        </svg>
-      );
-    case 'instagram':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-          <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-        </svg>
-      );
-    case 'twitter':
-    case 'x':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
-        </svg>
-      );
-    case 'linkedin':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-          <rect width="4" height="12" x="2" y="9" />
-          <circle cx="4" cy="4" r="2" />
-        </svg>
-      );
-    case 'github':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
-          <path d="M9 18c-4.51 2-5-2-7-2" />
-        </svg>
-      );
-    case 'youtube':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
-          <path d="m10 15 5-3-5-3z" fill="currentColor" />
-        </svg>
-      );
-    case 'discord':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <path d="M18 6h0a14.5 14.5 0 0 0-4-1.5 9.8 9.8 0 0 0-.5 1.2 14.5 14.5 0 0 0-3 0 9.8 9.8 0 0 0-.5-1.2A14.5 14.5 0 0 0 6 6C3.5 10 3 14 3.5 18a14.8 14.8 0 0 0 4.5 2.2 11.2 11.2 0 0 0 1-1.6 9.6 9.6 0 0 1-1.6-.8l.4-.3c3.1 1.5 6.5 1.5 9.6 0l.4.3a9.6 9.6 0 0 1-1.6.8c.3.6.6 1.1 1 1.6A14.8 14.8 0 0 0 20.5 18c.6-4.5-.5-8.5-2.5-12z" />
-          <circle cx="8.5" cy="12.5" r="1.5" fill="currentColor" />
-          <circle cx="15.5" cy="12.5" r="1.5" fill="currentColor" />
-        </svg>
-      );
-    case 'telegram':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <path d="m22 2-7 20-4-9-9-4Z" />
-          <path d="M22 2 11 13" />
-        </svg>
-      );
-    case 'reddit':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <circle cx="12" cy="12" r="10" />
-          <circle cx="9" cy="11" r="1" fill="currentColor" />
-          <circle cx="15" cy="11" r="1" fill="currentColor" />
-          <path d="M8 15s1.5 2 4 2 4-2 4-2" />
-        </svg>
-      );
-    case 'threads':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm3.5 12.5c-.8.8-1.9 1.2-3.5 1.2-2.3 0-3.8-1.5-3.8-3.7s1.5-3.7 3.8-3.7c1.4 0 2.5.4 3.2 1.2V7.5h1.8v8.3a4.5 4.5 0 0 1-4.8 4.7c-3.4 0-5.8-2.3-5.8-5.7s2.4-5.7 5.8-5.7c2.1 0 3.7.8 4.6 2.2l-1.4 1c-.6-.9-1.8-1.4-3.2-1.4-2.3 0-4 1.6-4 3.9s1.7 3.9 4 3.9a2.8 2.8 0 0 0 2.6-1.5l1.5 1z" />
-        </svg>
-      );
-    case 'tiktok':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
-        </svg>
-      );
-    case 'slack':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <rect width="3" height="8" x="13" y="2" rx="1.5" />
-          <path d="M19 8.5V10h-1.5A1.5 1.5 0 1 1 19 8.5" />
-          <rect width="8" height="3" x="8" y="13" rx="1.5" />
-          <path d="M5 15.5V14h1.5A1.5 1.5 0 1 1 5 15.5" />
-        </svg>
-      );
-    case 'medium':
-      return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-          <ellipse cx="6.5" cy="12" rx="4.5" ry="6" />
-          <ellipse cx="15" cy="12" rx="2.5" ry="6" />
-          <ellipse cx="20.5" cy="12" rx="1" ry="5.5" />
-        </svg>
-      );
-    default:
-      return <Globe className={className} />;
-  }
-}
+import { AVAILABLE_PLATFORMS, SocialPlatformIcon } from '@/views/ui/icons';
 
 interface FooterManagerProps {
   initialSettings: AdminFooterSettings;
@@ -287,539 +54,481 @@ interface FooterManagerProps {
 export function FooterManager({ initialSettings, initialSocials }: FooterManagerProps) {
   const [activeTab, setActiveTab] = useState<'socials' | 'contact' | 'preview'>('socials');
 
-  // Contact Info State
-  const [contactSettings, setContactSettings] = useState<AdminFooterSettings>(initialSettings);
-  const [isSavingContact, setIsSavingContact] = useState(false);
-  const [contactSuccessMsg, setContactSuccessMsg] = useState<string | null>(null);
-  const [contactErrorMsg, setContactErrorMsg] = useState<string | null>(null);
-
-  // Social Links State
+  // --- SOCIALS STATE ---
   const [socials, setSocials] = useState<AdminSocialLink[]>(initialSocials);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSocialModalOpen, setIsSocialModalOpen] = useState(false);
   const [editingSocial, setEditingSocial] = useState<AdminSocialLink | null>(null);
-  const [deletingSocialId, setDeletingSocialId] = useState<string | null>(null);
-  const [isSocialSubmitting, setIsSocialSubmitting] = useState(false);
-  const [socialErrorMsg, setSocialErrorMsg] = useState<string | null>(null);
-  const [socialSuccessToast, setSocialSuccessToast] = useState<string | null>(null);
+  const [isSubmittingSocial, setIsSubmittingSocial] = useState(false);
+  const [togglingSocialId, setTogglingSocialId] = useState<string | null>(null);
 
-  // Form states for Add/Edit Social Modal
-  const [formPlatform, setFormPlatform] = useState('whatsapp');
-  const [formName, setFormName] = useState('WhatsApp');
-  const [formUrl, setFormUrl] = useState('https://wa.me/918167409664');
-  const [formActive, setFormActive] = useState(true);
+  // Social form fields
+  const [socialPlatform, setSocialPlatform] = useState('linkedin');
+  const [socialName, setSocialName] = useState('');
+  const [socialUrl, setSocialUrl] = useState('');
+  const [socialIcon, setSocialIcon] = useState('linkedin');
+  const [socialActive, setSocialActive] = useState(true);
 
-  const [, startTransition] = useTransition();
+  // --- CONTACT / SETTINGS STATE ---
+  const [settings, setSettings] = useState<AdminFooterSettings>(initialSettings);
+  const [phone, setPhone] = useState(initialSettings.phone || '');
+  const [email, setEmail] = useState(initialSettings.email || '');
+  const [address, setAddress] = useState(initialSettings.address || '');
+  const [mapUrl, setMapUrl] = useState(initialSettings.mapUrl || '');
+  const [brandTagline, setBrandTagline] = useState(initialSettings.brandTagline || '');
+  const [copyrightText, setCopyrightText] = useState(initialSettings.copyrightText || '');
 
-  // Helper to show temporary toast
-  const triggerToast = (msg: string) => {
-    setSocialSuccessToast(msg);
-    setTimeout(() => {
-      setSocialSuccessToast(null);
-    }, 4000);
-  };
+  const [isPendingSettings, startTransition] = useTransition();
+  const [settingsStatus, setSettingsStatus] = useState<{
+    type: 'success' | 'error' | null;
+    message: string;
+  }>({ type: null, message: '' });
 
-  // Open modal for Adding new social
-  const handleOpenAddModal = (presetId?: string) => {
-    const selectedPreset = PRESET_PLATFORMS.find((p) => p.id === (presetId || 'whatsapp')) || PRESET_PLATFORMS[0];
-    setFormPlatform(selectedPreset.id);
-    setFormName(selectedPreset.name);
-    setFormUrl(selectedPreset.placeholder);
-    setFormActive(true);
+  // --- MODAL HANDLERS ---
+  const openCreateModal = () => {
     setEditingSocial(null);
-    setSocialErrorMsg(null);
-    setIsAddModalOpen(true);
+    setSocialPlatform('linkedin');
+    setSocialName('LinkedIn');
+    setSocialUrl('https://linkedin.com/company/astraiv-technologies');
+    setSocialIcon('linkedin');
+    setSocialActive(true);
+    setIsSocialModalOpen(true);
   };
 
-  // Open modal for Editing existing social
-  const handleOpenEditModal = (social: AdminSocialLink) => {
-    setEditingSocial(social);
-    setFormPlatform(social.platform);
-    setFormName(social.name);
-    setFormUrl(social.url);
-    setFormActive(social.active);
-    setSocialErrorMsg(null);
-    setIsAddModalOpen(true);
+  const openEditModal = (item: AdminSocialLink) => {
+    setEditingSocial(item);
+    setSocialPlatform(item.platform);
+    setSocialName(item.name);
+    setSocialUrl(item.url);
+    setSocialIcon(item.icon);
+    setSocialActive(item.active);
+    setIsSocialModalOpen(true);
   };
 
-  // Handle Preset Selection inside Modal
-  const handlePresetSelect = (presetId: string) => {
-    const preset = PRESET_PLATFORMS.find((p) => p.id === presetId);
-    if (preset) {
-      setFormPlatform(preset.id);
-      if (!editingSocial) {
-        setFormName(preset.name);
-        setFormUrl(preset.placeholder);
-      }
+  const handlePlatformSelect = (p: string, label: string) => {
+    setSocialPlatform(p);
+    setSocialIcon(p);
+    if (!editingSocial || socialName === '') {
+      setSocialName(label);
     }
   };
 
-  // Save Social (Create or Update)
-  const handleSaveSocial = async (e: React.FormEvent) => {
+  // --- SUBMIT SOCIAL ---
+  const handleSubmitSocial = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formUrl.trim()) {
-      setSocialErrorMsg('Please provide a valid destination URL');
+    if (!socialName.trim() || !socialUrl.trim()) {
+      alert('Please provide a name and valid URL for the social account.');
       return;
     }
 
-    setIsSocialSubmitting(true);
-    setSocialErrorMsg(null);
-
+    setIsSubmittingSocial(true);
     try {
       if (editingSocial) {
-        // Update
-        const payload: Partial<AdminSocialLinkInput> = {
-          platform: formPlatform,
-          name: formName.trim() || formPlatform,
-          url: formUrl.trim(),
-          icon: formPlatform,
-          active: formActive,
-        };
+        const res = await updateSocialLink(editingSocial.id, {
+          platform: socialPlatform,
+          name: socialName,
+          url: socialUrl,
+          icon: socialIcon,
+          active: socialActive,
+        });
 
-        const res = await updateSocialLink(editingSocial.id, payload);
-        if (!res.success) {
-          setSocialErrorMsg(res.error || 'Failed to update social link');
-          setIsSocialSubmitting(false);
-          return;
+        if (res.success) {
+          setSocials((prev) =>
+            prev.map((s) =>
+              s.id === editingSocial.id
+                ? {
+                    ...s,
+                    platform: socialPlatform.toLowerCase().trim(),
+                    name: socialName.trim(),
+                    url: socialUrl.trim(),
+                    icon: socialIcon.toLowerCase().trim(),
+                    active: socialActive,
+                  }
+                : s
+            )
+          );
+          setIsSocialModalOpen(false);
+        } else {
+          alert(res.error || 'Failed to update social account');
         }
-
-        setSocials((prev) =>
-          prev.map((s) => (s.id === editingSocial.id ? { ...s, ...payload } as AdminSocialLink : s))
-        );
-        triggerToast(`Updated "${formName}" social link`);
       } else {
-        // Create
-        const maxOrder = socials.length > 0 ? Math.max(...socials.map((s) => s.order_index)) : 0;
-        const payload: AdminSocialLinkInput = {
-          platform: formPlatform,
-          name: formName.trim() || formPlatform,
-          url: formUrl.trim(),
-          icon: formPlatform,
-          active: formActive,
-          order_index: maxOrder + 1,
-        };
+        const res = await createSocialLink({
+          platform: socialPlatform,
+          name: socialName,
+          url: socialUrl,
+          icon: socialIcon,
+          active: socialActive,
+        });
 
-        const res = await createSocialLink(payload);
-        if (!res.success || !res.data) {
-          setSocialErrorMsg(res.error || 'Failed to create social link');
-          setIsSocialSubmitting(false);
-          return;
+        if (res.success && res.data) {
+          setSocials((prev) => [...prev, res.data as AdminSocialLink]);
+          setIsSocialModalOpen(false);
+        } else {
+          alert(res.error || 'Failed to create social account');
         }
-
-        setSocials((prev) => [...prev, res.data!]);
-        triggerToast(`Added "${formName}" to footer socials`);
       }
-
-      setIsAddModalOpen(false);
-    } catch (err: any) {
-      setSocialErrorMsg(err?.message || 'An unexpected error occurred');
     } finally {
-      setIsSocialSubmitting(false);
+      setIsSubmittingSocial(false);
     }
   };
 
-  // Delete Social
+  // --- DELETE SOCIAL ---
   const handleDeleteSocial = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete ${name} from the footer?`)) return;
+
     try {
       const res = await deleteSocialLink(id);
       if (res.success) {
         setSocials((prev) => prev.filter((s) => s.id !== id));
-        setDeletingSocialId(null);
-        triggerToast(`Removed "${name}" from socials`);
       } else {
-        alert(res.error || 'Failed to delete social link');
+        alert(res.error || 'Failed to delete social account');
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
+      alert('Network error while deleting social account');
     }
   };
 
-  // Toggle Active/Inactive
-  const handleToggleStatus = async (social: AdminSocialLink) => {
-    const nextState = !social.active;
+  // --- TOGGLE VISIBILITY (HIDE / UNHIDE) ---
+  const handleToggleVisibility = async (id: string, currentActive: boolean) => {
+    setTogglingSocialId(id);
+    const newActive = !currentActive;
+
     // Optimistic update
     setSocials((prev) =>
-      prev.map((s) => (s.id === social.id ? { ...s, active: nextState } : s))
+      prev.map((s) => (s.id === id ? { ...s, active: newActive } : s))
     );
 
-    startTransition(async () => {
-      const res = await toggleSocialStatus(social.id, nextState);
-      if (res.success) {
-        triggerToast(`"${social.name}" is now ${nextState ? 'visible' : 'hidden'} on client website`);
-      } else {
-        // Revert
+    try {
+      const res = await toggleSocialVisibility(id, newActive);
+      if (!res.success) {
+        // Revert on failure
         setSocials((prev) =>
-          prev.map((s) => (s.id === social.id ? { ...s, active: !nextState } : s))
+          prev.map((s) => (s.id === id ? { ...s, active: currentActive } : s))
         );
-        alert(res.error || 'Failed to toggle status');
+        alert(res.error || 'Failed to toggle visibility status.');
       }
-    });
+    } catch {
+      setSocials((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, active: currentActive } : s))
+      );
+      alert('Error updating visibility.');
+    } finally {
+      setTogglingSocialId(null);
+    }
   };
 
-  // Order Swap (Up / Down)
-  const handleSwapOrder = async (index1: number, index2: number) => {
-    if (index1 < 0 || index2 < 0 || index1 >= socials.length || index2 >= socials.length) return;
+  // --- REORDER SOCIAL ---
+  const handleReorderSocial = async (id: string, direction: 'up' | 'down') => {
+    const currentIndex = socials.findIndex((s) => s.id === id);
+    if (currentIndex === -1) return;
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= socials.length) return;
 
-    const item1 = socials[index1];
-    const item2 = socials[index2];
-
-    const updatedSocials = [...socials];
-    updatedSocials[index1] = { ...item2, order_index: item1.order_index };
-    updatedSocials[index2] = { ...item1, order_index: item2.order_index };
-
-    setSocials(updatedSocials);
-
-    startTransition(async () => {
-      await swapSocialOrder(item1.id, item1.order_index, item2.id, item2.order_index);
-    });
-  };
-
-  // Save Contact Settings
-  const handleSaveContact = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSavingContact(true);
-    setContactSuccessMsg(null);
-    setContactErrorMsg(null);
+    // Optimistic swap
+    const reordered = [...socials];
+    const [moved] = reordered.splice(currentIndex, 1);
+    reordered.splice(targetIndex, 0, moved);
+    setSocials(reordered);
 
     try {
-      const payload: AdminFooterSettingsInput = {
-        brand_tagline: contactSettings.brand_tagline,
-        phone: contactSettings.phone,
-        email: contactSettings.email,
-        address: contactSettings.address,
-        map_url: contactSettings.map_url || undefined,
-        copyright_text: contactSettings.copyright_text || undefined,
-      };
+      const res = await reorderSocialLink(id, direction);
+      if (!res.success) {
+        setSocials(socials); // Revert
+        alert(res.error || 'Failed to reorder accounts.');
+      }
+    } catch {
+      setSocials(socials);
+      alert('Error saving order.');
+    }
+  };
 
+  // --- SAVE CONTACT SETTINGS ---
+  const handleSaveSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSettingsStatus({ type: null, message: '' });
+
+    const payload: AdminFooterSettingsInput = {
+      phone: phone.trim(),
+      email: email.trim(),
+      address: address.trim(),
+      mapUrl: mapUrl.trim(),
+      brandTagline: brandTagline.trim(),
+      copyrightText: copyrightText.trim(),
+    };
+
+    startTransition(async () => {
       const res = await updateFooterSettings(payload);
       if (res.success && res.data) {
-        setContactSettings(res.data);
-        setContactSuccessMsg('Company footer contact information updated and synced live!');
-        setTimeout(() => setContactSuccessMsg(null), 4000);
+        setSettings(res.data);
+        setSettingsStatus({
+          type: 'success',
+          message: 'Footer contact info & location successfully updated and synced with client website!',
+        });
       } else {
-        setContactErrorMsg(res.error || 'Failed to update contact settings');
+        setSettingsStatus({
+          type: 'error',
+          message: res.error || 'Failed to save footer settings.',
+        });
       }
-    } catch (err: any) {
-      setContactErrorMsg(err?.message || 'Unexpected error occurred');
-    } finally {
-      setIsSavingContact(false);
-    }
+    });
   };
 
   const activeSocialsCount = socials.filter((s) => s.active).length;
 
   return (
-    <div className="space-y-8">
-      {/* Toast Notification */}
-      {socialSuccessToast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-5 duration-200">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
-          <span className="text-xs font-semibold">{socialSuccessToast}</span>
+    <div className="space-y-6">
+      {/* Top Banner & Client Quick Link */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-white tracking-tight">Footer Management Console</h3>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              Live Sync
+            </span>
+          </div>
+          <p className="text-xs text-slate-400">
+            Control the client footer in real time: social media channels, contact numbers, email, physical address, and maps location.
+          </p>
         </div>
-      )}
 
-      {/* KPI Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-slate-900/80 border-slate-800 text-slate-100">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
-              <Share2 className="h-5 w-5" />
-            </div>
-            <div>
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Total Socials
-              </span>
-              <span className="text-xl font-extrabold text-white">{socials.length} Configured</span>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-3">
+          <a
+            href="http://localhost:3000#footer"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 transition-all duration-150 shadow-xs group"
+          >
+            <span>Preview Client Website</span>
+            <ExternalLink className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-400 transition-colors" />
+          </a>
 
-        <Card className="bg-slate-900/80 border-slate-800 text-slate-100">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <Eye className="h-5 w-5" />
-            </div>
-            <div>
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Active on Website
-              </span>
-              <span className="text-xl font-extrabold text-emerald-400">{activeSocialsCount} Visible</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900/80 border-slate-800 text-slate-100">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-              <Phone className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Direct Line
-              </span>
-              <span className="text-xs font-bold text-slate-200 truncate block">
-                {contactSettings.phone}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900/80 border-slate-800 text-slate-100">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              <Mail className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Support Email
-              </span>
-              <span className="text-xs font-bold text-slate-200 truncate block">
-                {contactSettings.email}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+          {activeTab === 'socials' && (
+            <Button
+              size="sm"
+              onClick={openCreateModal}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-md shadow-blue-600/20 cursor-pointer h-9 px-4"
+            >
+              <Plus className="h-4 w-4" /> Add Social Account
+            </Button>
+          )}
+        </div>
       </div>
 
-      {/* Modern Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+      {/* Tabs Navigation */}
+      <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
         <button
+          type="button"
           onClick={() => setActiveTab('socials')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+          className={cn(
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all',
             activeTab === 'socials'
-              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-          }`}
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+          )}
         >
           <Share2 className="h-4 w-4" />
-          <span>Social Networks ({socials.length})</span>
+          <span>Social Media Accounts</span>
+          <span
+            className={cn(
+              'ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono',
+              activeTab === 'socials'
+                ? 'bg-blue-700 text-blue-100'
+                : 'bg-slate-800 text-slate-400'
+            )}
+          >
+            {activeSocialsCount}/{socials.length}
+          </span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('contact')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+          className={cn(
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all',
             activeTab === 'contact'
-              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-          }`}
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+          )}
         >
-          <MapPin className="h-4 w-4" />
-          <span>Company Contact & Brand Info</span>
+          <Building2 className="h-4 w-4" />
+          <span>Contact Info & Location</span>
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('preview')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+          className={cn(
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all',
             activeTab === 'preview'
-              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
-          }`}
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+          )}
         >
           <Sparkles className="h-4 w-4" />
           <span>Live Footer Preview</span>
         </button>
       </div>
 
-      {/* TAB 1: SOCIAL NETWORKS */}
+      {/* ============================================================ */}
+      {/* TAB 1: SOCIAL MEDIA ACCOUNTS TABLE                          */}
+      {/* ============================================================ */}
       {activeTab === 'socials' && (
-        <div className="space-y-6">
-          {/* Action Header & Quick Presets */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
-            <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Share2 className="h-4 w-4 text-blue-400" />
-                Social Media Channels
-              </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Attach social networks with their official logos. When clicked by clients, they redirect directly to that profile in a new tab.
-              </p>
+        <div className="space-y-4">
+          <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-xl">
+            <div className="p-4 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-white">Configured Social Channels</h4>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Accounts marked as <span className="text-emerald-400 font-semibold">Visible</span> are immediately rendered in the client footer. Use the eye icon to hide or unhide.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                onClick={openCreateModal}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center gap-1.5 text-xs h-8 px-3"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add Account
+              </Button>
             </div>
 
-            <Button
-              onClick={() => handleOpenAddModal()}
-              className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs gap-2 shadow-lg shadow-blue-600/20 shrink-0"
-            >
-              <Plus className="h-4 w-4" />
-              Add Social Media
-            </Button>
-          </div>
-
-          {/* Quick Platform Launchpad */}
-          <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2.5">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
-              Quick Add Popular Networks:
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {PRESET_PLATFORMS.filter((p) => p.id !== 'custom').map((preset) => {
-                const isAlreadyAdded = socials.some((s) => s.platform.toLowerCase() === preset.id);
-                return (
-                  <button
-                    key={preset.id}
-                    onClick={() => handleOpenAddModal(preset.id)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border ${
-                      isAlreadyAdded
-                        ? 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700'
-                        : 'bg-slate-900/80 text-slate-200 border-slate-800 hover:border-blue-500/50 hover:bg-blue-600/10'
-                    }`}
-                  >
-                    <SocialIconRenderer platform={preset.id} className="h-3.5 w-3.5" />
-                    <span>{preset.name}</span>
-                    {isAlreadyAdded && (
-                      <span className="text-[10px] text-emerald-400 font-mono">✓ added</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Socials List Table */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 overflow-hidden shadow-xl">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="border-b border-slate-800 bg-slate-950/80 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-slate-950/80 border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <tr>
                     <th className="py-3.5 px-4 w-16 text-center">Order</th>
-                    <th className="py-3.5 px-4">Social Network & Logo</th>
-                    <th className="py-3.5 px-4">Redirect Destination URL</th>
-                    <th className="py-3.5 px-4 text-center">Status</th>
-                    <th className="py-3.5 px-4 text-right">Actions</th>
+                    <th className="py-3.5 px-4">Platform & Icon</th>
+                    <th className="py-3.5 px-4">Display Label</th>
+                    <th className="py-3.5 px-4 max-w-xs">Destination URL</th>
+                    <th className="py-3.5 px-4 text-center w-28">Visibility</th>
+                    <th className="py-3.5 px-4 text-right w-36">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-medium text-slate-300">
+                <tbody className="divide-y divide-slate-800/60">
                   {socials.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-slate-500">
-                        <Share2 className="h-8 w-8 mx-auto mb-2 opacity-40 text-blue-400" />
-                        <p className="text-sm font-semibold text-slate-400">No social networks added yet.</p>
-                        <p className="text-xs mt-1">Click &quot;Add Social Media&quot; above to connect your first channel.</p>
+                      <td colSpan={6} className="py-12 text-center text-slate-500 font-medium">
+                        No social accounts configured yet. Click &quot;+ Add Social Account&quot; to add one.
                       </td>
                     </tr>
                   ) : (
-                    socials.map((social, idx) => {
-                      return (
-                        <tr
-                          key={social.id}
-                          className="hover:bg-slate-800/30 transition-colors group"
-                        >
-                          {/* Order swapping buttons */}
-                          <td className="py-3 px-4 text-center">
-                            <div className="flex items-center justify-center gap-1">
+                    socials.map((item, idx) => (
+                      <tr
+                        key={item.id}
+                        className={cn(
+                          'hover:bg-slate-800/40 transition-colors',
+                          !item.active && 'opacity-65 bg-slate-950/40'
+                        )}
+                      >
+                        {/* Order & Reorder Controls */}
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <div className="flex flex-col">
                               <button
-                                onClick={() => handleSwapOrder(idx, idx - 1)}
+                                type="button"
+                                onClick={() => handleReorderSocial(item.id, 'up')}
                                 disabled={idx === 0}
-                                className="p-1 rounded text-slate-500 hover:text-slate-200 disabled:opacity-20 hover:bg-slate-800"
+                                className="text-slate-500 hover:text-slate-200 disabled:opacity-20 disabled:cursor-not-allowed p-0.5"
                                 title="Move Up"
                               >
-                                <ChevronUp className="h-3.5 w-3.5" />
+                                <ChevronUp className="h-3 w-3" />
                               </button>
-                              <span className="font-mono text-[11px] text-slate-400 font-bold w-4 text-center">
-                                #{idx + 1}
-                              </span>
                               <button
-                                onClick={() => handleSwapOrder(idx, idx + 1)}
+                                type="button"
+                                onClick={() => handleReorderSocial(item.id, 'down')}
                                 disabled={idx === socials.length - 1}
-                                className="p-1 rounded text-slate-500 hover:text-slate-200 disabled:opacity-20 hover:bg-slate-800"
+                                className="text-slate-500 hover:text-slate-200 disabled:opacity-20 disabled:cursor-not-allowed p-0.5"
                                 title="Move Down"
                               >
-                                <ChevronDown className="h-3.5 w-3.5" />
+                                <ChevronDown className="h-3 w-3" />
                               </button>
                             </div>
-                          </td>
+                            <span className="font-mono text-xs text-slate-400 font-semibold ml-1">
+                              #{idx + 1}
+                            </span>
+                          </div>
+                        </td>
 
-                          {/* Social Logo & Platform Name */}
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-3">
-                              {/* Logo Box matching client website footer styling */}
-                              <div className="h-9 w-9 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-blue-400 shrink-0 shadow-inner group-hover:border-blue-500/40 group-hover:scale-105 transition-all">
-                                <SocialIconRenderer platform={social.platform} className="h-4 w-4" />
-                              </div>
-                              <div>
-                                <span className="font-bold text-slate-100 block text-xs">
-                                  {social.name}
-                                </span>
-                                <span className="text-[10px] text-slate-500 font-mono capitalize">
-                                  {social.platform}
-                                </span>
-                              </div>
+                        {/* Icon & Platform */}
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 shrink-0 shadow-xs">
+                              <SocialPlatformIcon platform={item.platform || item.icon} className="h-4 w-4" />
                             </div>
-                          </td>
-
-                          {/* Redirect Link with external test button */}
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-2 max-w-md">
-                              <span className="truncate font-mono text-[11px] text-slate-400 bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800 select-all">
-                                {social.url}
-                              </span>
-                              <a
-                                href={social.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1 rounded-lg text-slate-500 hover:text-blue-400 hover:bg-slate-800 transition-colors shrink-0"
-                                title="Test Redirect Link"
-                              >
-                                <ExternalLink className="h-3.5 w-3.5" />
-                              </a>
+                            <div>
+                              <div className="font-bold text-white capitalize">{item.platform}</div>
+                              <span className="text-[10px] text-slate-500 font-mono">icon: {item.icon}</span>
                             </div>
-                          </td>
+                          </div>
+                        </td>
 
-                          {/* Active / Hidden Status */}
-                          <td className="py-3 px-4 text-center">
-                            <button
-                              onClick={() => handleToggleStatus(social)}
-                              className="cursor-pointer focus:outline-hidden"
+                        {/* Display Label */}
+                        <td className="py-3 px-4 font-medium text-slate-200">
+                          {item.name}
+                        </td>
+
+                        {/* URL */}
+                        <td className="py-3 px-4 max-w-xs">
+                          <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-blue-400 hover:text-blue-300 truncate max-w-[280px] font-mono text-[11px] hover:underline"
+                            title={item.url}
+                          >
+                            <span className="truncate">{item.url}</span>
+                            <ExternalLink className="h-3 w-3 shrink-0" />
+                          </a>
+                        </td>
+
+                        {/* Visibility (Hide/Unhide) Toggle */}
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleVisibility(item.id, item.active)}
+                            disabled={togglingSocialId === item.id}
+                            className={cn(
+                              'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer border',
+                              item.active
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                                : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+                            )}
+                            title={item.active ? 'Click to Hide from client' : 'Click to Unhide on client'}
+                          >
+                            {togglingSocialId === item.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : item.active ? (
+                              <Eye className="h-3 w-3" />
+                            ) : (
+                              <EyeOff className="h-3 w-3" />
+                            )}
+                            <span>{item.active ? 'Visible' : 'Hidden'}</span>
+                          </button>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditModal(item)}
+                              className="h-8 w-8 p-0 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-lg cursor-pointer"
+                              title="Edit account"
                             >
-                              <Badge
-                                variant="outline"
-                                className={`text-[10px] font-bold capitalize transition-all ${
-                                  social.active
-                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-                                    : 'bg-slate-800/80 text-slate-500 border-slate-700 hover:bg-slate-800'
-                                }`}
-                              >
-                                {social.active ? (
-                                  <span className="flex items-center gap-1">
-                                    <Eye className="h-3 w-3" />
-                                    Active
-                                  </span>
-                                ) : (
-                                  <span className="flex items-center gap-1">
-                                    <EyeOff className="h-3 w-3" />
-                                    Hidden
-                                  </span>
-                                )}
-                              </Badge>
-                            </button>
-                          </td>
-
-                          {/* Actions */}
-                          <td className="py-3 px-4 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleOpenEditModal(social)}
-                                className="h-8 px-2.5 text-xs text-slate-400 hover:text-blue-400 hover:bg-blue-500/10"
-                                title="Edit Social Link"
-                              >
-                                <Edit className="h-3.5 w-3.5 mr-1" />
-                                Edit
-                              </Button>
-
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => setDeletingSocialId(social.id)}
-                                className="h-8 px-2.5 text-xs text-slate-400 hover:text-red-400 hover:bg-red-500/10"
-                                title="Remove Social Link"
-                              >
-                                <Trash2 className="h-3.5 w-3.5 mr-1" />
-                                Remove
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteSocial(item.id, item.name)}
+                              className="h-8 w-8 p-0 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg cursor-pointer"
+                              title="Delete account"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>
@@ -828,573 +537,482 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
         </div>
       )}
 
-      {/* TAB 2: COMPANY CONTACT & BRAND INFO */}
+      {/* ============================================================ */}
+      {/* TAB 2: CONTACT INFORMATION & BRAND FORM                     */}
+      {/* ============================================================ */}
       {activeTab === 'contact' && (
-        <form onSubmit={handleSaveContact} className="space-y-6 max-w-4xl">
-          {contactSuccessMsg && (
-            <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2.5 animate-in fade-in">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-              <span>{contactSuccessMsg}</span>
-            </div>
-          )}
-
-          {contactErrorMsg && (
-            <div className="p-4 rounded-xl bg-red-950/60 border border-red-500/30 text-red-300 text-xs flex items-center gap-2.5 animate-in fade-in">
-              <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
-              <span>{contactErrorMsg}</span>
-            </div>
-          )}
-
-          {/* Contact Details Card */}
-          <Card className="bg-slate-900/80 border-slate-800 text-slate-100">
-            <CardContent className="p-6 space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
-                    <Phone className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-white">Direct Communication Details</h3>
-                    <p className="text-xs text-slate-400">
-                      Synchronized across the footer &quot;Call Us&quot;, &quot;Send Email&quot;, and &quot;Address&quot; sections.
-                    </p>
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Edit Form */}
+          <div className="lg:col-span-2 rounded-2xl bg-slate-900/80 border border-slate-800 p-6 shadow-xl">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+              <div>
+                <h4 className="text-sm font-bold text-white">Client Footer Contact Details</h4>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Update the official phone number, email address, physical location, and Google Maps pin.
+                </p>
               </div>
+              <span className="text-[11px] font-mono text-slate-500">
+                Last updated: {new Date(settings.updatedAt).toLocaleTimeString()}
+              </span>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
-                {/* Contact Phone */}
+            {settingsStatus.type && (
+              <div
+                className={cn(
+                  'p-4 rounded-xl mb-6 flex items-start gap-3 text-xs',
+                  settingsStatus.type === 'success'
+                    ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                    : 'bg-rose-500/10 text-rose-300 border border-rose-500/20'
+                )}
+              >
+                {settingsStatus.type === 'success' ? (
+                  <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-400" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-400" />
+                )}
+                <span>{settingsStatus.message}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveSettings} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Phone / Mobile */}
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                  <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                     <Phone className="h-3.5 w-3.5 text-blue-400" />
-                    Contact Phone Number
+                    <span>Mobile / Phone Number</span>
                   </label>
                   <Input
                     type="text"
-                    value={contactSettings.phone}
-                    onChange={(e) =>
-                      setContactSettings({ ...contactSettings, phone: e.target.value })
-                    }
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
                     placeholder="+91 8167409664"
                     required
-                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs focus:border-blue-500"
+                    className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-10"
                   />
-                  <span className="text-[10px] text-slate-500">
-                    Used for the telephone tap-to-call link (<code className="font-mono">tel:{contactSettings.phone}</code>).
-                  </span>
+                  <p className="text-[10px] text-slate-500">Rendered in the &quot;Call Us&quot; footer card.</p>
                 </div>
 
                 {/* Email Address */}
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                  <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                     <Mail className="h-3.5 w-3.5 text-blue-400" />
-                    Support & Inquiry Email
+                    <span>Email Address</span>
                   </label>
                   <Input
                     type="email"
-                    value={contactSettings.email}
-                    onChange={(e) =>
-                      setContactSettings({ ...contactSettings, email: e.target.value })
-                    }
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="info@astraivtechnologies.com"
                     required
-                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs focus:border-blue-500"
+                    className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-10"
                   />
-                  <span className="text-[10px] text-slate-500">
-                    Used for email redirection (<code className="font-mono">mailto:{contactSettings.email}</code>).
-                  </span>
-                </div>
-
-                {/* Physical Address */}
-                <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5 text-blue-400" />
-                    Office Address
-                  </label>
-                  <Input
-                    type="text"
-                    value={contactSettings.address}
-                    onChange={(e) =>
-                      setContactSettings({ ...contactSettings, address: e.target.value })
-                    }
-                    placeholder="Ashoknagar, Kolkata"
-                    required
-                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs focus:border-blue-500"
-                  />
-                  <span className="text-[10px] text-slate-500">
-                    Displayed prominently on client footer and contact pages.
-                  </span>
-                </div>
-
-                {/* Google Maps Link */}
-                <div className="space-y-1.5 md:col-span-2">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                    <Globe className="h-3.5 w-3.5 text-blue-400" />
-                    Google Maps Link URL (Optional)
-                  </label>
-                  <Input
-                    type="url"
-                    value={contactSettings.map_url || ''}
-                    onChange={(e) =>
-                      setContactSettings({ ...contactSettings, map_url: e.target.value })
-                    }
-                    placeholder="https://maps.google.com/?q=Ashoknagar,+Kolkata"
-                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs focus:border-blue-500"
-                  />
-                  <span className="text-[10px] text-slate-500">
-                    URL opened when clients click on the Address card in the footer.
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Brand Tagline & Copyright Card */}
-          <Card className="bg-slate-900/80 border-slate-800 text-slate-100">
-            <CardContent className="p-6 space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
-                    <Sparkles className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-white">Brand Tagline & Copyright</h3>
-                    <p className="text-xs text-slate-400">
-                      Footer branding description and legal copyright notice.
-                    </p>
-                  </div>
+                  <p className="text-[10px] text-slate-500">Rendered in the &quot;Send Email&quot; footer card.</p>
                 </div>
               </div>
 
-              <div className="space-y-4 text-xs">
-                {/* Tagline */}
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
-                    Footer Brand Tagline (Under Logo)
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={contactSettings.brand_tagline}
-                    onChange={(e) =>
-                      setContactSettings({ ...contactSettings, brand_tagline: e.target.value })
-                    }
-                    placeholder="Your trusted partner for AI, enterprise software, and scalable cloud systems."
-                    required
-                    className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2.5 text-xs text-slate-100 focus:outline-hidden focus:border-blue-500 transition-colors resize-none"
-                  />
-                </div>
-
-                {/* Copyright Text */}
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
-                    Copyright Notice
-                  </label>
-                  <Input
-                    type="text"
-                    value={contactSettings.copyright_text || ''}
-                    onChange={(e) =>
-                      setContactSettings({ ...contactSettings, copyright_text: e.target.value })
-                    }
-                    placeholder="Astraiv Technologies. All rights reserved."
-                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs focus:border-blue-500"
-                  />
-                  <span className="text-[10px] text-slate-500">
-                    The current year is automatically prepended (e.g. &copy; {new Date().getFullYear()} {contactSettings.copyright_text || 'Astraiv Technologies. All rights reserved.'}).
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Submit Button */}
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <Button
-              type="submit"
-              disabled={isSavingContact}
-              className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs gap-2 px-6 shadow-lg shadow-blue-600/20"
-            >
-              {isSavingContact ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Saving Changes...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  Save Contact & Footer Info
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
-      )}
-
-      {/* TAB 3: LIVE INTERACTIVE FOOTER PREVIEW */}
-      {activeTab === 'preview' && (
-        <div className="space-y-4">
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between text-xs text-slate-400">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-blue-400" />
-              <span>
-                Live preview rendering exactly as displayed on{' '}
-                <span className="text-slate-200 font-bold font-mono">www.astraivtechnologies.com</span>
-              </span>
-            </div>
-            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px]">
-              Active & Live
-            </Badge>
-          </div>
-
-          {/* Embedded Footer Mockup */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-950 p-8 text-slate-100 shadow-2xl overflow-hidden relative">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.3fr_0.9fr_0.9fr_0.9fr_1.5fr] gap-8 items-start text-left">
-              {/* Brand Column */}
-              <div className="flex flex-col gap-4 text-left">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center font-black text-white text-xs shadow-md shadow-blue-500/30">
-                    A
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-extrabold text-sm tracking-wider text-white">ASTRAIV</span>
-                    <span className="text-[9px] text-blue-400 font-bold tracking-widest uppercase">
-                      TECHNOLOGIES
-                    </span>
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
-                  {contactSettings.brand_tagline}
-                </p>
-
-                {/* Social Network Icons with branded redirects */}
-                <div className="flex items-center flex-wrap gap-2.5 mt-2">
-                  {socials
-                    .filter((s) => s.active)
-                    .map((social) => (
-                      <a
-                        key={social.id}
-                        href={social.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="h-8 w-8 rounded-lg bg-slate-900 border border-slate-800 hover:border-blue-400 hover:text-blue-400 text-slate-400 flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-xs"
-                        aria-label={social.name}
-                        title={`Redirects to ${social.name} (${social.url})`}
-                      >
-                        <SocialIconRenderer platform={social.platform} className="h-3.5 w-3.5" />
-                      </a>
-                    ))}
-                </div>
-              </div>
-
-              {/* Column 1: Services */}
-              <div className="flex flex-col text-left">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-4 min-h-[20px] flex items-center">
-                  Services
-                </h4>
-                <ul className="flex flex-col gap-3 text-xs text-slate-400">
-                  <li className="hover:text-blue-400 cursor-pointer">AI Solutions & RAG</li>
-                  <li className="hover:text-blue-400 cursor-pointer">SaaS Development</li>
-                  <li className="hover:text-blue-400 cursor-pointer">Custom Systems</li>
-                  <li className="hover:text-blue-400 cursor-pointer">Cloud & Infrastructure</li>
-                </ul>
-              </div>
-
-              {/* Column 2: Platform */}
-              <div className="flex flex-col text-left">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-4 min-h-[20px] flex items-center">
-                  Platform
-                </h4>
-                <ul className="flex flex-col gap-3 text-xs text-slate-400">
-                  <li className="hover:text-blue-400 cursor-pointer">Why Astraiv</li>
-                  <li className="hover:text-blue-400 cursor-pointer">Industries We Serve</li>
-                  <li className="hover:text-blue-400 cursor-pointer">Our Technologies</li>
-                  <li className="hover:text-blue-400 cursor-pointer">AI Capabilities</li>
-                </ul>
-              </div>
-
-              {/* Column 3: Company */}
-              <div className="flex flex-col text-left">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-4 min-h-[20px] flex items-center">
-                  Company
-                </h4>
-                <ul className="flex flex-col gap-3 text-xs text-slate-400">
-                  <li className="hover:text-blue-400 cursor-pointer">Development Process</li>
-                  <li className="hover:text-blue-400 cursor-pointer">Portfolio</li>
-                  <li className="hover:text-blue-400 cursor-pointer">Flexible Pricing</li>
-                  <li className="hover:text-blue-400 cursor-pointer">Frequently Asked Qs</li>
-                </ul>
-              </div>
-
-              {/* Column 4: Contact Us */}
-              <div className="flex flex-col text-left">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-4 min-h-[20px] flex items-center">
-                  Contact Us
-                </h4>
-                <div className="flex flex-col gap-3.5">
-                  {/* Call */}
-                  <a
-                    href={`tel:${contactSettings.phone}`}
-                    className="flex items-center gap-3 group text-left transition-colors"
-                  >
-                    <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-400 border border-blue-500/20 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-105 transition-all shadow-xs">
-                      <Phone className="h-4 w-4" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-200 group-hover:text-blue-400 transition-colors">
-                        Call Us
-                      </span>
-                      <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors font-medium">
-                        {contactSettings.phone}
-                      </span>
-                    </div>
-                  </a>
-
-                  {/* Email */}
-                  <a
-                    href={`mailto:${contactSettings.email}`}
-                    className="flex items-center gap-3 group text-left transition-colors"
-                  >
-                    <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-400 border border-blue-500/20 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-105 transition-all shadow-xs">
-                      <Mail className="h-4 w-4" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-200 group-hover:text-blue-400 transition-colors">
-                        Send Email
-                      </span>
-                      <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors font-medium truncate max-w-[200px]">
-                        {contactSettings.email}
-                      </span>
-                    </div>
-                  </a>
-
-                  {/* Address */}
-                  <a
-                    href={contactSettings.map_url || `https://maps.google.com/?q=${encodeURIComponent(contactSettings.address)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 group text-left transition-colors"
-                  >
-                    <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-400 border border-blue-500/20 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-105 transition-all shadow-xs">
-                      <MapPin className="h-4 w-4" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-200 group-hover:text-blue-400 transition-colors">
-                        Address
-                      </span>
-                      <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors font-medium">
-                        {contactSettings.address}
-                      </span>
-                    </div>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Bar Mockup */}
-            <div className="mt-10 pt-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-              <p>
-                &copy; {new Date().getFullYear()} {contactSettings.copyright_text || 'Astraiv Technologies. All rights reserved.'}
-              </p>
-              <div className="flex items-center gap-6">
-                <span className="hover:text-slate-300 transition-colors cursor-pointer">Privacy Policy</span>
-                <span className="hover:text-slate-300 transition-colors cursor-pointer">Terms of Service</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: ADD / EDIT SOCIAL NETWORK */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-6 space-y-6 text-slate-100">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
-                  <SocialIconRenderer platform={formPlatform} className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-white">
-                    {editingSocial ? 'Edit Social Channel' : 'Add New Social Channel'}
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Attach network logo and target redirect URL.
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setIsAddModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {socialErrorMsg && (
-              <div className="p-3 rounded-xl bg-red-950/60 border border-red-500/30 text-red-300 text-xs flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
-                <span>{socialErrorMsg}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSaveSocial} className="space-y-4 text-xs">
-              {/* Select Platform Presets */}
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
-                  Select Social Platform
-                </label>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto p-1 bg-slate-950/60 rounded-xl border border-slate-800">
-                  {PRESET_PLATFORMS.map((preset) => (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => handlePresetSelect(preset.id)}
-                      className={`flex flex-col items-center justify-center p-2.5 rounded-lg border text-center transition-all ${
-                        formPlatform === preset.id
-                          ? 'bg-blue-600/20 border-blue-500 text-white font-bold shadow-xs'
-                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
-                      }`}
-                    >
-                      <SocialIconRenderer platform={preset.id} className="h-4 w-4 mb-1" />
-                      <span className="text-[10px] truncate max-w-full">{preset.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Display Label / Name */}
+              {/* Physical Address */}
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
-                  Platform Name / Label
+                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-blue-400" />
+                  <span>Physical Address / Office Location</span>
                 </label>
                 <Input
                   type="text"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  placeholder="e.g. WhatsApp, Instagram"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Ashoknagar, Kolkata"
                   required
-                  className="bg-slate-950 border-slate-800 text-slate-100 text-xs focus:border-blue-500"
+                  className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-10"
                 />
+                <p className="text-[10px] text-slate-500">Physical headquarters or city location shown in the footer.</p>
               </div>
 
-              {/* Destination URL */}
+              {/* Google Maps / Location URL */}
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
-                  Destination Redirect Link (URL)
+                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <LinkIcon className="h-3.5 w-3.5 text-blue-400" />
+                  <span>Location Map Link (Google Maps URL)</span>
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    type="url"
+                    value={mapUrl}
+                    onChange={(e) => setMapUrl(e.target.value)}
+                    placeholder="https://maps.google.com/?q=Ashoknagar,+Kolkata"
+                    className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-10 font-mono"
+                  />
+                  {mapUrl && (
+                    <a
+                      href={mapUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="h-10 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-300 shrink-0 transition-colors"
+                      title="Test Map Link"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  )}
+                </div>
+                <p className="text-[10px] text-slate-500">When users click the Address card, this URL opens in a new tab.</p>
+              </div>
+
+              {/* Brand Tagline */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-300">
+                  Brand Tagline & Mission Statement
+                </label>
+                <textarea
+                  value={brandTagline}
+                  onChange={(e) => setBrandTagline(e.target.value)}
+                  rows={3}
+                  placeholder="Your trusted partner for AI, enterprise software, and scalable cloud systems."
+                  required
+                  className="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-white text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 leading-relaxed"
+                />
+                <p className="text-[10px] text-slate-500">Brief summary displayed beneath the Astraiv logo in the footer.</p>
+              </div>
+
+              {/* Copyright Notice */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-300">
+                  Copyright Notice
                 </label>
                 <Input
-                  type="url"
-                  value={formUrl}
-                  onChange={(e) => setFormUrl(e.target.value)}
-                  placeholder="https://instagram.com/astraivtech"
-                  required
-                  className="bg-slate-950 border-slate-800 text-slate-100 text-xs focus:border-blue-500 font-mono"
+                  type="text"
+                  value={copyrightText}
+                  onChange={(e) => setCopyrightText(e.target.value)}
+                  placeholder="Astraiv Technologies. All rights reserved."
+                  className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-10"
                 />
-                <span className="text-[10px] text-slate-500">
-                  Must be a valid URL with <code className="font-mono">https://</code> prefix.
-                </span>
+                <p className="text-[10px] text-slate-500">Rendered in the bottom bar with current year automatically appended.</p>
               </div>
 
-              {/* Active Toggle & Live Preview Box */}
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-slate-900 border border-slate-800 text-blue-400 flex items-center justify-center">
-                    <SocialIconRenderer platform={formPlatform} className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <span className="font-bold text-slate-200 block text-xs">{formName || 'Social Link'}</span>
-                    <span className="text-[10px] text-slate-500 font-mono truncate max-w-[200px] block">
-                      {formUrl || 'https://...'}
-                    </span>
-                  </div>
-                </div>
-
-                <label className="flex items-center gap-2 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={formActive}
-                    onChange={(e) => setFormActive(e.target.checked)}
-                    className="h-4 w-4 rounded-sm border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-xs font-semibold text-slate-300">Active</span>
-                </label>
-              </div>
-
-              {/* Modal Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="text-slate-400 hover:text-white"
-                >
-                  Cancel
-                </Button>
+              <div className="pt-3 border-t border-slate-800 flex items-center justify-end">
                 <Button
                   type="submit"
-                  disabled={isSocialSubmitting}
-                  className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs gap-2"
+                  disabled={isPendingSettings}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center gap-2 h-10 px-6 shadow-md shadow-blue-600/20 cursor-pointer text-xs"
                 >
-                  {isSocialSubmitting ? (
+                  {isPendingSettings ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Saving...
+                      <span>Saving Changes...</span>
                     </>
                   ) : (
                     <>
-                      <Check className="h-4 w-4" />
-                      {editingSocial ? 'Update Social Link' : 'Add Social Link'}
+                      <Save className="h-4 w-4" />
+                      <span>Save Contact Settings</span>
                     </>
                   )}
                 </Button>
               </div>
             </form>
           </div>
+
+          {/* Side Live Card Preview */}
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-slate-900/80 border border-slate-800 p-5 shadow-xl">
+              <h5 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <CheckCircle2 className="h-3.5 w-3.5 text-blue-400" />
+                <span>Live Client Cards Preview</span>
+              </h5>
+
+              <div className="space-y-3.5">
+                {/* Phone Preview */}
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <Phone className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Call Us</span>
+                    <span className="text-xs text-white font-medium truncate">{phone || 'Not configured'}</span>
+                  </div>
+                </div>
+
+                {/* Email Preview */}
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Send Email</span>
+                    <span className="text-xs text-white font-medium truncate">{email || 'Not configured'}</span>
+                  </div>
+                </div>
+
+                {/* Address Preview */}
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <MapPin className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Address</span>
+                    <span className="text-xs text-white font-medium truncate">{address || 'Not configured'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 pt-4 border-t border-slate-800 text-[11px] text-slate-500 leading-relaxed">
+                When you click &quot;Save Contact Settings&quot;, the database is updated and Next.js revalidates the cache instantly.
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* MODAL: DELETE CONFIRMATION */}
-      {deletingSocialId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-6 space-y-4 text-slate-100">
-            <div className="flex items-center gap-3 text-red-400">
-              <div className="p-2 rounded-xl bg-red-500/10 border border-red-500/20">
-                <Trash2 className="h-5 w-5" />
+      {/* ============================================================ */}
+      {/* TAB 3: FULL LIVE FOOTER PREVIEW                             */}
+      {/* ============================================================ */}
+      {activeTab === 'preview' && (
+        <div className="rounded-2xl bg-slate-950 border border-slate-800 p-8 shadow-2xl">
+          <div className="flex items-center justify-between pb-6 border-b border-slate-900 mb-8">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-bold text-slate-300">Client Footer Simulation</span>
+            </div>
+            <a
+              href="http://localhost:3000"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1.5"
+            >
+              <span>Open live website</span>
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
+
+          {/* Footer Grid Simulation */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-start">
+            {/* Brand + Socials */}
+            <div className="space-y-4 md:col-span-2">
+              <div className="text-lg font-black tracking-tight text-white flex items-center gap-2">
+                <span className="text-blue-500">ASTRAIV</span> TECHNOLOGIES
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">Remove Social Network</h3>
-                <p className="text-xs text-slate-400">This action cannot be undone.</p>
+              <p className="text-xs text-slate-400 max-w-md leading-relaxed">
+                {brandTagline || settings.brandTagline}
+              </p>
+
+              <div className="flex items-center flex-wrap gap-2 pt-2">
+                {socials
+                  .filter((s) => s.active)
+                  .map((s) => (
+                    <a
+                      key={s.id}
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="h-8 w-8 rounded-lg bg-slate-900 border border-slate-800 hover:border-blue-500 text-slate-400 hover:text-white flex items-center justify-center transition-all shadow-xs"
+                      title={s.name}
+                    >
+                      <SocialPlatformIcon platform={s.platform || s.icon} className="h-3.5 w-3.5" />
+                    </a>
+                  ))}
               </div>
             </div>
 
-            <p className="text-xs text-slate-300">
-              Are you sure you want to remove{' '}
-              <strong className="text-white">
-                {socials.find((s) => s.id === deletingSocialId)?.name}
-              </strong>{' '}
-              from the client website footer?
-            </p>
+            {/* Quick Contacts Simulation */}
+            <div className="space-y-3.5 md:col-span-2">
+              <h5 className="text-xs font-bold uppercase tracking-wider text-slate-200">Contact Coordinates</h5>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <Button
-                variant="ghost"
-                onClick={() => setDeletingSocialId(null)}
-                className="text-xs text-slate-400 hover:text-white"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  const target = socials.find((s) => s.id === deletingSocialId);
-                  if (target) handleDeleteSocial(target.id, target.name);
-                }}
-                className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold"
-              >
-                Confirm Delete
-              </Button>
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-3 text-slate-300 text-xs">
+                  <div className="h-8 w-8 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
+                    <Phone className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase text-slate-500 block font-bold">Call Us</span>
+                    <span className="text-white font-medium">{phone || settings.phone}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 text-slate-300 text-xs">
+                  <div className="h-8 w-8 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
+                    <Mail className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase text-slate-500 block font-bold">Send Email</span>
+                    <span className="text-white font-medium">{email || settings.email}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 text-slate-300 text-xs">
+                  <div className="h-8 w-8 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
+                    <MapPin className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase text-slate-500 block font-bold">Address</span>
+                    <span className="text-white font-medium">{address || settings.address}</span>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-slate-900 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>&copy; {new Date().getFullYear()} {copyrightText || settings.copyrightText}</span>
+            <span>Live client sync enabled</span>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* MODAL: ADD / EDIT SOCIAL ACCOUNT                            */}
+      {/* ============================================================ */}
+      {isSocialModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center">
+                  <Share2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white">
+                    {editingSocial ? 'Edit Social Account' : 'Add New Social Account'}
+                  </h4>
+                  <p className="text-[11px] text-slate-400">
+                    Configure account details and icon displayed in the client website footer.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSocialModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitSocial} className="space-y-4">
+              {/* Quick Platform Presets */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-slate-300">
+                  Select Social Platform Preset
+                </label>
+                <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
+                  {AVAILABLE_PLATFORMS.map((p) => {
+                    const isSelected = socialPlatform.toLowerCase() === p.value;
+                    return (
+                      <button
+                        key={p.value}
+                        type="button"
+                        onClick={() => handlePlatformSelect(p.value, p.label)}
+                        className={cn(
+                          'px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all border',
+                          isSelected
+                            ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
+                            : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                        )}
+                      >
+                        <SocialPlatformIcon platform={p.value} className="h-3 w-3" />
+                        <span>{p.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Display Name */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-300">
+                  Display Label / Tooltip
+                </label>
+                <Input
+                  type="text"
+                  value={socialName}
+                  onChange={(e) => setSocialName(e.target.value)}
+                  placeholder="e.g. LinkedIn, Twitter, Instagram"
+                  required
+                  className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-9"
+                />
+              </div>
+
+              {/* Destination URL */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-300">
+                  Destination Profile URL
+                </label>
+                <Input
+                  type="url"
+                  value={socialUrl}
+                  onChange={(e) => setSocialUrl(e.target.value)}
+                  placeholder="https://linkedin.com/company/astraiv-technologies"
+                  required
+                  className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-9 font-mono"
+                />
+              </div>
+
+              {/* Icon & Live Preview */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-300">
+                  Icon Identifier & Live Preview
+                </label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="text"
+                    value={socialIcon}
+                    onChange={(e) => setSocialIcon(e.target.value)}
+                    placeholder="e.g. linkedin, twitter, instagram"
+                    className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-9"
+                  />
+                  <div className="h-9 w-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-blue-400 shrink-0 shadow-xs">
+                    <SocialPlatformIcon platform={socialIcon} className="h-4 w-4" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Toggle */}
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-white block">Visible in Client Footer</span>
+                  <span className="text-[11px] text-slate-400 block">
+                    If disabled, this account remains saved in the database but is hidden from visitors.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSocialActive(!socialActive)}
+                  className={cn(
+                    'px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer',
+                    socialActive
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                      : 'bg-slate-800 text-slate-400 border-slate-700'
+                  )}
+                >
+                  {socialActive ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                  <span>{socialActive ? 'Visible' : 'Hidden'}</span>
+                </button>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsSocialModalOpen(false)}
+                  className="text-slate-400 hover:text-white rounded-xl text-xs h-9"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmittingSocial}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs h-9 px-4 flex items-center gap-1.5 shadow-md shadow-blue-600/20 cursor-pointer"
+                >
+                  {isSubmittingSocial ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>{editingSocial ? 'Save Changes' : 'Add Account'}</span>
+                  )}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
