@@ -14,15 +14,16 @@ import {
   FolderKanban,
   Cpu,
   FileText,
-  PanelBottom,
   Settings,
   Shield,
   LogOut,
   ExternalLink,
+  PanelBottom,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/views/ui/button';
 import { logoutAdmin } from '@/controllers/auth.controller';
+import { useState } from 'react';
 
 interface AdminSidebarProps {
   user?: {
@@ -35,11 +36,18 @@ interface AdminSidebarProps {
 export function AdminSidebar({ user }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleSignOut = async () => {
-    await logoutAdmin();
-    router.push('/login');
-    router.refresh();
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await logoutAdmin();
+      router.push('/login');
+      router.refresh();
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const navigation = [
@@ -48,13 +56,13 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
     { name: 'Reviews Queue', href: '/reviews', icon: Star },
     { name: 'Projects CMS', href: '/projects', icon: FolderKanban },
     { name: 'Services Catalog', href: '/services', icon: Cpu },
-    { name: 'Blog Articles', href: '/blog', icon: FileText },
     { name: 'Footer Section', href: '/footer', icon: PanelBottom },
+    { name: 'Blog Articles', href: '/blog', icon: FileText },
     { name: 'Settings & Sync', href: '/settings', icon: Settings },
   ];
 
   return (
-    <aside className="w-64 shrink-0 bg-slate-950 border-r border-slate-800 flex flex-col justify-between min-h-screen text-slate-300 select-none">
+    <aside className="w-64 shrink-0 bg-slate-950 border-r border-slate-800 flex flex-col justify-between h-screen sticky top-0 text-slate-300 select-none overflow-y-auto overflow-x-hidden">
       <div className="flex flex-col">
         {/* Brand Logo Header */}
         <div className="h-16 flex items-center px-6 gap-3 border-b border-slate-800/80">
@@ -69,50 +77,44 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
           </div>
         </div>
 
-        {/* Navigation links */}
-        <nav className="p-4 space-y-1.5">
-          <div className="px-3 py-2 text-[10px] font-bold text-slate-400 tracking-wider uppercase">
+        {/* Navigation Items */}
+        <div className="p-4 space-y-1.5">
+          <div className="px-3 py-2 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
             Operations
           </div>
-
           {navigation.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
             const Icon = item.icon;
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
 
             return (
               <Link
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 group',
+                  'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150',
                   isActive
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20 font-bold'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                    ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20'
+                    : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900'
                 )}
               >
-                <Icon
-                  className={cn(
-                    'h-4 w-4 transition-colors',
-                    isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
-                  )}
-                />
+                <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-white' : 'text-slate-400')} />
                 <span>{item.name}</span>
               </Link>
             );
           })}
-        </nav>
+        </div>
       </div>
 
-      {/* Bottom Footer Section */}
+      {/* Footer Profile & Switcher */}
       <div className="p-4 border-t border-slate-800/80 space-y-3">
-        {/* Quick Link to Client Portal */}
+        {/* View Client Site shortcut */}
         <a
-          href="https://astraivtechnologies.com"
+          href="http://localhost:3000"
           target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+          rel="noreferrer"
+          className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800 text-slate-300 text-xs font-medium transition-colors"
         >
-          <span className="truncate">Live Client Website</span>
+          <span>Live Client Website</span>
           <ExternalLink className="h-3.5 w-3.5 text-slate-500" />
         </a>
 
@@ -136,7 +138,8 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
             size="icon"
             variant="ghost"
             onClick={handleSignOut}
-            className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-500/10"
+            disabled={isLoggingOut}
+            className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-500/10 cursor-pointer"
             title="Sign Out"
           >
             <LogOut className="h-4 w-4" />

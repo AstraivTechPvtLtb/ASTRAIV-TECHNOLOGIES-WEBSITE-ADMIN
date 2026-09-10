@@ -18,7 +18,7 @@ export default async function AdminServicesPage() {
     <div className="flex-1 flex flex-col min-h-screen">
       <AdminHeader
         title="Services & Capabilities Catalog"
-        subtitle="Manage engineering services, core offerings, and capabilities shown on the client website."
+        subtitle="Single source of truth for the public client website services section and detail pages."
         badge={`${services.length} Offerings`}
       />
 

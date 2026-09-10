@@ -16,10 +16,10 @@ export default async function RootLayout({
   const admin = await getAdminUser();
 
   return (
-    <html lang="en" className="dark">
-      <body className="bg-slate-950 text-slate-100 min-h-screen flex antialiased">
+    <html lang="en" className="dark h-full">
+      <body className="bg-slate-950 text-slate-100 h-screen flex overflow-hidden antialiased">
         {admin && <AdminSidebar user={{ name: admin.fullName, email: admin.email, role: admin.role }} />}
-        <div className="flex-1 flex flex-col min-w-0 bg-slate-950 overflow-y-auto">
+        <div className="flex-1 flex flex-col min-w-0 h-full bg-slate-950 overflow-y-auto">
           {children}
         </div>
       </body>

@@ -2,12 +2,11 @@
 
 /**
  * @file admin/src/controllers/footer.controller.ts
- * @description [CONTROLLER] Business logic for managing client website footer details, contact info, and social networks.
+ * @description [CONTROLLER] Business logic for managing client footer configuration, contact details, and social media channels.
  */
 
 import { db } from '@/models/db';
 import { revalidatePath } from 'next/cache';
-import { isSupabaseConfigured, createClient as createSupabaseClient } from '@/models/supabase';
 import {
   AdminFooterSettings,
   AdminFooterSettingsInput,
@@ -16,338 +15,153 @@ import {
   AdminActionResponse,
 } from '@/models/types';
 
-const DEFAULT_FOOTER_SETTINGS: AdminFooterSettings = {
-  brand_tagline: 'Your trusted partner for AI, enterprise software, and scalable cloud systems.',
+const DEFAULT_SETTINGS = {
+  brandTagline: 'Your trusted partner for AI, enterprise software, and scalable cloud systems.',
   phone: '+91 8167409664',
   email: 'info@astraivtechnologies.com',
   address: 'Ashoknagar, Kolkata',
-  map_url: 'https://maps.google.com/?q=Ashoknagar,+Kolkata',
-  copyright_text: 'Astraiv Technologies. All rights reserved.',
+  mapUrl: 'https://maps.google.com/?q=Ashoknagar,+Kolkata',
+  copyrightText: 'Astraiv Technologies. All rights reserved.',
 };
 
-const DEFAULT_SOCIAL_LINKS: AdminSocialLink[] = [
-  {
-    id: 'seed-twitter',
-    platform: 'twitter',
-    name: 'Twitter / X',
-    url: 'https://twitter.com',
-    icon: 'twitter',
-    active: true,
-    order_index: 0,
-  },
-  {
-    id: 'seed-linkedin',
-    platform: 'linkedin',
-    name: 'LinkedIn',
-    url: 'https://linkedin.com',
-    icon: 'linkedin',
-    active: true,
-    order_index: 1,
-  },
-  {
-    id: 'seed-github',
-    platform: 'github',
-    name: 'GitHub',
-    url: 'https://github.com',
-    icon: 'github',
-    active: true,
-    order_index: 2,
-  },
-];
-
-function safeRevalidateFooter() {
-  try {
-    revalidatePath('/footer');
-    revalidatePath('/settings');
-    revalidatePath('/dashboard');
-    revalidatePath('/');
-  } catch {
-    // Suppress error if called outside Next.js action context
-  }
-}
-
 /**
- * Retrieves footer settings including contact info, brand tagline, and copyright.
+ * Retrieves footer contact settings and all social accounts.
  */
-export async function getFooterSettings(): Promise<{ data: AdminFooterSettings; error?: string }> {
+export async function getFooterData(): Promise<{
+  settings: AdminFooterSettings;
+  socials: AdminSocialLink[];
+  error?: string;
+}> {
   try {
-    if (!isSupabaseConfigured()) {
-      try {
-        const record = await db.footerSetting.findFirst();
-        if (record) {
-          return {
-            data: {
-              id: record.id,
-              brand_tagline: record.brandTagline,
-              phone: record.phone,
-              email: record.email,
-              address: record.address,
-              map_url: record.mapUrl || DEFAULT_FOOTER_SETTINGS.map_url,
-              copyright_text: record.copyrightText || DEFAULT_FOOTER_SETTINGS.copyright_text,
-              updated_at: record.updatedAt.toISOString(),
-            },
-          };
-        }
-      } catch (dbErr) {
-        console.warn('[Get Footer Settings DB Fallback]:', dbErr);
-      }
-      return { data: DEFAULT_FOOTER_SETTINGS };
+    let settingsRecord = await db.footerSetting.findFirst();
+
+    if (!settingsRecord) {
+      settingsRecord = await db.footerSetting.create({
+        data: DEFAULT_SETTINGS,
+      });
     }
 
-    const supabase = await createSupabaseClient();
-    const { data, error } = await supabase.from('footer_settings').select('*').limit(1).maybeSingle();
+    const socialRecords = await db.socialLink.findMany({
+      orderBy: { orderIndex: 'asc' },
+    });
 
-    if (error || !data) {
-      return { data: DEFAULT_FOOTER_SETTINGS };
-    }
-
-    return {
-      data: {
-        id: data.id,
-        brand_tagline: data.brand_tagline || DEFAULT_FOOTER_SETTINGS.brand_tagline,
-        phone: data.phone || DEFAULT_FOOTER_SETTINGS.phone,
-        email: data.email || DEFAULT_FOOTER_SETTINGS.email,
-        address: data.address || DEFAULT_FOOTER_SETTINGS.address,
-        map_url: data.map_url || DEFAULT_FOOTER_SETTINGS.map_url,
-        copyright_text: data.copyright_text || DEFAULT_FOOTER_SETTINGS.copyright_text,
-        updated_at: data.updated_at,
-      },
+    const settings: AdminFooterSettings = {
+      id: settingsRecord.id,
+      brandTagline: settingsRecord.brandTagline,
+      phone: settingsRecord.phone,
+      email: settingsRecord.email,
+      address: settingsRecord.address,
+      mapUrl: settingsRecord.mapUrl,
+      copyrightText: settingsRecord.copyrightText,
+      createdAt: settingsRecord.createdAt.toISOString(),
+      updatedAt: settingsRecord.updatedAt.toISOString(),
     };
+
+    const socials: AdminSocialLink[] = socialRecords.map((s) => ({
+      id: s.id,
+      platform: s.platform,
+      name: s.name,
+      url: s.url,
+      icon: s.icon,
+      active: s.active,
+      orderIndex: s.orderIndex,
+      createdAt: s.createdAt.toISOString(),
+      updatedAt: s.updatedAt.toISOString(),
+    }));
+
+    return { settings, socials };
   } catch (error) {
-    console.error('[Get Footer Settings Error]:', error);
-    return { data: DEFAULT_FOOTER_SETTINGS, error: 'Failed to fetch footer settings' };
+    console.error('[Get Footer Data Controller Error]:', error);
+    return {
+      settings: {
+        id: 'fallback',
+        ...DEFAULT_SETTINGS,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      socials: [],
+      error: 'Failed to fetch footer configuration',
+    };
   }
 }
 
 /**
- * Updates company contact details and footer settings.
+ * Updates contact information and brand tagline in footer settings.
  */
 export async function updateFooterSettings(
   data: AdminFooterSettingsInput
 ): Promise<AdminActionResponse<AdminFooterSettings>> {
   try {
-    const payload = {
-      brandTagline: data.brand_tagline.trim(),
-      phone: data.phone.trim(),
-      email: data.email.trim(),
-      address: data.address.trim(),
-      mapUrl: data.map_url?.trim() || `https://maps.google.com/?q=${encodeURIComponent(data.address.trim())}`,
-      copyrightText: data.copyright_text?.trim() || 'Astraiv Technologies. All rights reserved.',
-    };
+    let record = await db.footerSetting.findFirst();
 
-    if (!isSupabaseConfigured()) {
-      try {
-        const existing = await db.footerSetting.findFirst();
-        let updated;
-        if (existing) {
-          updated = await db.footerSetting.update({
-            where: { id: existing.id },
-            data: payload,
-          });
-        } else {
-          updated = await db.footerSetting.create({
-            data: payload,
-          });
-        }
-
-        safeRevalidateFooter();
-        return {
-          success: true,
-          data: {
-            id: updated.id,
-            brand_tagline: updated.brandTagline,
-            phone: updated.phone,
-            email: updated.email,
-            address: updated.address,
-            map_url: updated.mapUrl,
-            copyright_text: updated.copyrightText,
-            updated_at: updated.updatedAt.toISOString(),
-          },
-          message: 'Footer contact settings updated successfully',
-        };
-      } catch (dbErr: any) {
-        console.error('[Update Footer Settings DB Error]:', dbErr);
-        return { success: false, error: dbErr?.message || 'Failed to update database' };
-      }
-    }
-
-    const supabase = await createSupabaseClient();
-    const { data: existing } = await supabase.from('footer_settings').select('id').limit(1).maybeSingle();
-
-    const dbPayload = {
-      brand_tagline: payload.brandTagline,
-      phone: payload.phone,
-      email: payload.email,
-      address: payload.address,
-      map_url: payload.mapUrl,
-      copyright_text: payload.copyrightText,
-      updated_at: new Date().toISOString(),
-    };
-
-    let result;
-    if (existing?.id) {
-      const { data: updated, error } = await supabase
-        .from('footer_settings')
-        .update(dbPayload)
-        .eq('id', existing.id)
-        .select()
-        .single();
-      if (error) throw error;
-      result = updated;
+    if (!record) {
+      record = await db.footerSetting.create({
+        data: {
+          brandTagline: data.brandTagline || DEFAULT_SETTINGS.brandTagline,
+          phone: data.phone || DEFAULT_SETTINGS.phone,
+          email: data.email || DEFAULT_SETTINGS.email,
+          address: data.address || DEFAULT_SETTINGS.address,
+          mapUrl: data.mapUrl || DEFAULT_SETTINGS.mapUrl,
+          copyrightText: data.copyrightText || DEFAULT_SETTINGS.copyrightText,
+        },
+      });
     } else {
-      const { data: inserted, error } = await supabase
-        .from('footer_settings')
-        .insert(dbPayload)
-        .select()
-        .single();
-      if (error) throw error;
-      result = inserted;
+      record = await db.footerSetting.update({
+        where: { id: record.id },
+        data: {
+          brandTagline: data.brandTagline,
+          phone: data.phone,
+          email: data.email,
+          address: data.address,
+          mapUrl: data.mapUrl,
+          copyrightText: data.copyrightText,
+        },
+      });
     }
 
-    safeRevalidateFooter();
+    revalidatePath('/footer');
     return {
       success: true,
       data: {
-        id: result.id,
-        brand_tagline: result.brand_tagline,
-        phone: result.phone,
-        email: result.email,
-        address: result.address,
-        map_url: result.map_url,
-        copyright_text: result.copyright_text,
-        updated_at: result.updated_at,
+        id: record.id,
+        brandTagline: record.brandTagline,
+        phone: record.phone,
+        email: record.email,
+        address: record.address,
+        mapUrl: record.mapUrl,
+        copyrightText: record.copyrightText,
+        createdAt: record.createdAt.toISOString(),
+        updatedAt: record.updatedAt.toISOString(),
       },
-      message: 'Footer contact settings updated successfully',
     };
-  } catch (error: any) {
-    console.error('[Update Footer Settings Error]:', error);
-    return { success: false, error: error?.message || 'Failed to update footer settings' };
-  }
-}
-
-/**
- * Retrieves all configured social links ordered by display index.
- */
-export async function getSocialLinks(): Promise<{ data: AdminSocialLink[]; error?: string }> {
-  try {
-    if (!isSupabaseConfigured()) {
-      try {
-        const records = await db.socialLink.findMany({
-          orderBy: { orderIndex: 'asc' },
-        });
-
-        if (records.length === 0) {
-          return { data: DEFAULT_SOCIAL_LINKS };
-        }
-
-        const mapped: AdminSocialLink[] = records.map((s) => ({
-          id: s.id,
-          platform: s.platform,
-          name: s.name,
-          url: s.url,
-          icon: s.icon,
-          active: s.active,
-          order_index: s.orderIndex,
-          created_at: s.createdAt.toISOString(),
-          updated_at: s.updatedAt.toISOString(),
-        }));
-
-        return { data: mapped };
-      } catch (dbErr) {
-        console.warn('[Get Social Links DB Fallback]:', dbErr);
-        return { data: DEFAULT_SOCIAL_LINKS };
-      }
-    }
-
-    const supabase = await createSupabaseClient();
-    const { data, error } = await supabase
-      .from('social_links')
-      .select('*')
-      .order('order_index', { ascending: true });
-
-    if (error || !data || data.length === 0) {
-      return { data: DEFAULT_SOCIAL_LINKS };
-    }
-
-    const mapped: AdminSocialLink[] = data.map((s: any) => ({
-      id: s.id,
-      platform: s.platform,
-      name: s.name,
-      url: s.url,
-      icon: s.icon || s.platform,
-      active: s.active ?? true,
-      order_index: s.order_index ?? 0,
-      created_at: s.created_at,
-      updated_at: s.updated_at,
-    }));
-
-    return { data: mapped };
   } catch (error) {
-    console.error('[Get Social Links Error]:', error);
-    return { data: DEFAULT_SOCIAL_LINKS, error: 'Failed to fetch social links' };
+    console.error('[Update Footer Settings Error]:', error);
+    return { success: false, error: 'Failed to save contact settings' };
   }
 }
 
 /**
- * Creates a new social link record.
+ * Creates a new social account link.
  */
 export async function createSocialLink(
   data: AdminSocialLinkInput
 ): Promise<AdminActionResponse<AdminSocialLink>> {
   try {
-    const platform = data.platform.toLowerCase().trim();
-    const name = data.name.trim() || data.platform;
-    const url = data.url.trim();
-    const icon = (data.icon || platform).toLowerCase().trim();
-    const active = data.active ?? true;
-    const orderIndex = data.order_index ?? 0;
+    const count = await db.socialLink.count();
+    const orderIndex = data.orderIndex !== undefined ? data.orderIndex : count;
 
-    if (!isSupabaseConfigured()) {
-      const created = await db.socialLink.create({
-        data: {
-          platform,
-          name,
-          url,
-          icon,
-          active,
-          orderIndex,
-        },
-      });
+    const created = await db.socialLink.create({
+      data: {
+        platform: data.platform.toLowerCase().trim(),
+        name: data.name.trim(),
+        url: data.url.trim(),
+        icon: (data.icon || data.platform || 'globe').toLowerCase().trim(),
+        active: data.active !== undefined ? data.active : true,
+        orderIndex,
+      },
+    });
 
-      safeRevalidateFooter();
-      return {
-        success: true,
-        data: {
-          id: created.id,
-          platform: created.platform,
-          name: created.name,
-          url: created.url,
-          icon: created.icon,
-          active: created.active,
-          order_index: created.orderIndex,
-          created_at: created.createdAt.toISOString(),
-          updated_at: created.updatedAt.toISOString(),
-        },
-        message: `Social link "${name}" added successfully`,
-      };
-    }
-
-    const supabase = await createSupabaseClient();
-    const { data: created, error } = await supabase
-      .from('social_links')
-      .insert({
-        platform,
-        name,
-        url,
-        icon,
-        active,
-        order_index: orderIndex,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    safeRevalidateFooter();
+    revalidatePath('/footer');
     return {
       success: true,
       data: {
@@ -357,132 +171,129 @@ export async function createSocialLink(
         url: created.url,
         icon: created.icon,
         active: created.active,
-        order_index: created.order_index,
-        created_at: created.created_at,
-        updated_at: created.updated_at,
+        orderIndex: created.orderIndex,
+        createdAt: created.createdAt.toISOString(),
+        updatedAt: created.updatedAt.toISOString(),
       },
-      message: `Social link "${name}" added successfully`,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error('[Create Social Link Error]:', error);
-    return { success: false, error: error?.message || 'Failed to create social link' };
+    return { success: false, error: 'Failed to add social account' };
   }
 }
 
 /**
- * Updates an existing social link record.
+ * Updates an existing social link account.
  */
 export async function updateSocialLink(
   id: string,
   data: Partial<AdminSocialLinkInput>
 ): Promise<AdminActionResponse> {
   try {
-    if (!isSupabaseConfigured()) {
-      const updatePayload: any = {};
-      if (data.platform !== undefined) updatePayload.platform = data.platform.toLowerCase().trim();
-      if (data.name !== undefined) updatePayload.name = data.name.trim();
-      if (data.url !== undefined) updatePayload.url = data.url.trim();
-      if (data.icon !== undefined) updatePayload.icon = data.icon.toLowerCase().trim();
-      if (data.active !== undefined) updatePayload.active = data.active;
-      if (data.order_index !== undefined) updatePayload.orderIndex = data.order_index;
-
-      await db.socialLink.update({
-        where: { id },
-        data: updatePayload,
-      });
-
-      safeRevalidateFooter();
-      return { success: true, message: 'Social link updated successfully' };
-    }
-
-    const supabase = await createSupabaseClient();
-    const updatePayload: Record<string, any> = {
-      updated_at: new Date().toISOString(),
-    };
+    const updatePayload: {
+      platform?: string;
+      name?: string;
+      url?: string;
+      icon?: string;
+      active?: boolean;
+      orderIndex?: number;
+    } = {};
     if (data.platform !== undefined) updatePayload.platform = data.platform.toLowerCase().trim();
     if (data.name !== undefined) updatePayload.name = data.name.trim();
     if (data.url !== undefined) updatePayload.url = data.url.trim();
     if (data.icon !== undefined) updatePayload.icon = data.icon.toLowerCase().trim();
     if (data.active !== undefined) updatePayload.active = data.active;
-    if (data.order_index !== undefined) updatePayload.order_index = data.order_index;
+    if (data.orderIndex !== undefined) updatePayload.orderIndex = data.orderIndex;
 
-    const { error } = await supabase.from('social_links').update(updatePayload).eq('id', id);
+    await db.socialLink.update({
+      where: { id },
+      data: updatePayload,
+    });
 
-    if (error) throw error;
-    safeRevalidateFooter();
-    return { success: true, message: 'Social link updated successfully' };
-  } catch (error: any) {
+    revalidatePath('/footer');
+    return { success: true };
+  } catch (error) {
     console.error('[Update Social Link Error]:', error);
-    return { success: false, error: error?.message || 'Failed to update social link' };
+    return { success: false, error: 'Failed to update social account' };
   }
 }
 
 /**
- * Quick toggle for active/visible state.
+ * Toggles visibility (hide/unhide) of a social account.
  */
-export async function toggleSocialStatus(id: string, active: boolean): Promise<AdminActionResponse> {
-  return updateSocialLink(id, { active });
+export async function toggleSocialVisibility(
+  id: string,
+  active: boolean
+): Promise<AdminActionResponse> {
+  try {
+    await db.socialLink.update({
+      where: { id },
+      data: { active },
+    });
+
+    revalidatePath('/footer');
+    return { success: true };
+  } catch (error) {
+    console.error('[Toggle Social Visibility Error]:', error);
+    return { success: false, error: 'Failed to toggle account visibility' };
+  }
 }
 
 /**
- * Swaps or updates order between two social links.
+ * Reorders a social account up or down.
  */
-export async function swapSocialOrder(
-  id1: string,
-  order1: number,
-  id2: string,
-  order2: number
+export async function reorderSocialLink(
+  id: string,
+  direction: 'up' | 'down'
 ): Promise<AdminActionResponse> {
   try {
-    if (!isSupabaseConfigured()) {
-      await db.$transaction([
-        db.socialLink.update({
-          where: { id: id1 },
-          data: { orderIndex: order2 },
-        }),
-        db.socialLink.update({
-          where: { id: id2 },
-          data: { orderIndex: order1 },
-        }),
-      ]);
+    const records = await db.socialLink.findMany({
+      orderBy: { orderIndex: 'asc' },
+    });
 
-      safeRevalidateFooter();
+    const currentIndex = records.findIndex((s) => s.id === id);
+    if (currentIndex === -1) return { success: false, error: 'Social account not found' };
+
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= records.length) {
       return { success: true };
     }
 
-    const supabase = await createSupabaseClient();
-    await supabase.from('social_links').update({ order_index: order2 }).eq('id', id1);
-    await supabase.from('social_links').update({ order_index: order1 }).eq('id', id2);
+    const currentItem = records[currentIndex];
+    const targetItem = records[targetIndex];
 
-    safeRevalidateFooter();
+    await db.$transaction([
+      db.socialLink.update({
+        where: { id: currentItem.id },
+        data: { orderIndex: targetItem.orderIndex },
+      }),
+      db.socialLink.update({
+        where: { id: targetItem.id },
+        data: { orderIndex: currentItem.orderIndex },
+      }),
+    ]);
+
+    revalidatePath('/footer');
     return { success: true };
-  } catch (error: any) {
-    console.error('[Swap Social Order Error]:', error);
-    return { success: false, error: error?.message || 'Failed to update order' };
+  } catch (error) {
+    console.error('[Reorder Social Link Error]:', error);
+    return { success: false, error: 'Failed to reorder social account' };
   }
 }
 
 /**
- * Deletes a social link record.
+ * Deletes a social account from the catalog.
  */
 export async function deleteSocialLink(id: string): Promise<AdminActionResponse> {
   try {
-    if (!isSupabaseConfigured()) {
-      await db.socialLink.delete({
-        where: { id },
-      });
-      safeRevalidateFooter();
-      return { success: true, message: 'Social link removed successfully' };
-    }
+    await db.socialLink.delete({
+      where: { id },
+    });
 
-    const supabase = await createSupabaseClient();
-    const { error } = await supabase.from('social_links').delete().eq('id', id);
-
-    if (error) throw error;
-    safeRevalidateFooter();
-    return { success: true, message: 'Social link removed successfully' };
-  } catch (error: any) {
+    revalidatePath('/footer');
+    return { success: true };
+  } catch (error) {
     console.error('[Delete Social Link Error]:', error);
-    return { success: false, error: error?.message || 'Failed to delete social link' };
+    return { success: false, error: 'Failed to delete social account' };
   }
 }
