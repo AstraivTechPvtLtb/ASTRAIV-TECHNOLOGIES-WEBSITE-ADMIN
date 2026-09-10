@@ -13,7 +13,12 @@ const globalForPrisma = globalThis as unknown as {
 
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:Akashindia123@localhost:5432/astraiv_tech?schema=public';
 
-const pool = new pg.Pool({ connectionString });
+const isLocalhost = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
+
+const pool = new pg.Pool({
+  connectionString,
+  ssl: isLocalhost ? false : { rejectUnauthorized: false },
+});
 const adapter = new PrismaPg(pool);
 
 export const db =

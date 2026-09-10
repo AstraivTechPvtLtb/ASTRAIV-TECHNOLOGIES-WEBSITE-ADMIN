@@ -13,14 +13,17 @@ import { Prisma } from '@prisma/client';
 
 /**
  * Retrieves all services ordered by display order.
+ * Dual-engine resilience: Tries direct PostgreSQL via Prisma ORM first.
+ * If Prisma returns empty or is unavailable and Supabase is configured, falls back to Supabase client.
  */
 export async function getServices(): Promise<{ data: AdminService[]; error?: string }> {
+  // 1. Primary: Direct PostgreSQL via Prisma ORM
   try {
-    if (!isSupabaseConfigured()) {
-      const records = await db.serviceItem.findMany({
-        orderBy: { orderIndex: 'asc' },
-      });
+    const records = await db.serviceItem.findMany({
+      orderBy: { orderIndex: 'asc' },
+    });
 
+    if (records && records.length > 0) {
       const mapped: AdminService[] = records.map((s) => ({
         id: s.id,
         title: s.title,
@@ -39,55 +42,66 @@ export async function getServices(): Promise<{ data: AdminService[]; error?: str
 
       return { data: mapped };
     }
-
-    const supabase = await createSupabaseClient();
-    const { data, error } = await supabase
-      .from('services')
-      .select('*')
-      .order('order_index', { ascending: true });
-
-    if (error) throw error;
-
-    interface SupabaseServiceRow {
-      id: string;
-      title: string;
-      slug: string;
-      category?: string | null;
-      badge?: string | null;
-      icon?: string;
-      short_desc?: string | null;
-      full_desc?: string | null;
-      description?: string | null;
-      features?: string[] | null;
-      active?: boolean;
-      status?: string;
-      order_index?: number;
-      display_order?: number;
-      created_at?: string;
-      updated_at?: string;
-    }
-
-    const mapped: AdminService[] = ((data as unknown as SupabaseServiceRow[]) || []).map((s) => ({
-      id: s.id,
-      title: s.title,
-      slug: s.slug,
-      category: s.category || 'Engineering',
-      badge: s.badge || null,
-      icon: s.icon || 'Cpu',
-      shortDesc: s.short_desc || s.description || '',
-      fullDesc: s.full_desc || s.short_desc || s.description || '',
-      features: s.features || [],
-      status: s.active ? 'active' : 'draft',
-      display_order: s.order_index ?? s.display_order ?? 0,
-      created_at: s.created_at || new Date().toISOString(),
-      updated_at: s.updated_at || new Date().toISOString(),
-    }));
-
-    return { data: mapped };
-  } catch (error) {
-    console.error('[Get Services Controller Error]:', error);
-    return { data: [], error: 'Failed to fetch services' };
+  } catch (prismaErr) {
+    console.warn('[Admin Prisma Services Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
   }
+
+  // 2. Secondary: Supabase client fallback
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = await createSupabaseClient();
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      if (!error && data && data.length > 0) {
+        interface SupabaseServiceRow {
+          id: string;
+          title: string;
+          slug: string;
+          category?: string | null;
+          badge?: string | null;
+          icon?: string;
+          short_desc?: string | null;
+          full_desc?: string | null;
+          description?: string | null;
+          features?: string[] | null;
+          active?: boolean;
+          status?: string;
+          order_index?: number;
+          display_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        }
+
+        const mapped: AdminService[] = ((data as unknown as SupabaseServiceRow[]) || []).map((s) => ({
+          id: s.id,
+          title: s.title,
+          slug: s.slug,
+          category: s.category || 'Engineering',
+          badge: s.badge || null,
+          icon: s.icon || 'Cpu',
+          shortDesc: s.short_desc || s.description || '',
+          fullDesc: s.full_desc || s.short_desc || s.description || '',
+          features: s.features || [],
+          status: s.active ? 'active' : 'draft',
+          display_order: s.order_index ?? s.display_order ?? 0,
+          created_at: s.created_at || new Date().toISOString(),
+          updated_at: s.updated_at || new Date().toISOString(),
+        }));
+
+        return { data: mapped };
+      }
+      if (error) {
+        console.warn('[Admin Supabase Services Notice]:', error.message);
+      }
+    } catch (supaErr) {
+      console.warn('[Admin Supabase Services Error]:', (supaErr as Error)?.message || supaErr);
+    }
+  }
+
+  return { data: [] };
 }
 
 /**
@@ -104,7 +118,10 @@ export async function createService(data: AdminServiceInput): Promise<AdminActio
     const features = data.features || [];
     const active = data.status === 'active';
 
-    if (!isSupabaseConfigured()) {
+    let createdService: AdminService | null = null;
+
+    // 1. Write via Prisma
+    try {
       const created = await db.serviceItem.create({
         data: {
           title: data.title,
@@ -120,66 +137,79 @@ export async function createService(data: AdminServiceInput): Promise<AdminActio
         },
       });
 
-      revalidatePath('/services');
-      revalidatePath('/dashboard');
-
-      return {
-        success: true,
-        data: {
-          id: created.id,
-          title: created.title,
-          slug: created.slug,
-          category: created.category,
-          badge: created.badge,
-          icon: created.icon,
-          shortDesc: created.shortDesc,
-          fullDesc: created.fullDesc,
-          features: created.features,
-          status: created.active ? 'active' : 'draft',
-          display_order: created.orderIndex,
-          created_at: created.createdAt.toISOString(),
-          updated_at: created.updatedAt.toISOString(),
-        },
-      };
-    }
-
-    const supabase = await createSupabaseClient();
-    const { data: created, error } = await supabase
-      .from('services')
-      .insert({
-        title: data.title,
-        slug: data.slug,
-        category,
-        badge,
-        icon,
-        short_desc: shortDesc,
-        full_desc: fullDesc,
-        features,
-        active,
-        order_index: orderIndex,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    revalidatePath('/services');
-    revalidatePath('/dashboard');
-    return {
-      success: true,
-      data: {
+      createdService = {
         id: created.id,
         title: created.title,
         slug: created.slug,
         category: created.category,
         badge: created.badge,
         icon: created.icon,
-        shortDesc: created.short_desc,
-        fullDesc: created.full_desc,
-        features: created.features || [],
+        shortDesc: created.shortDesc,
+        fullDesc: created.fullDesc,
+        features: created.features,
         status: created.active ? 'active' : 'draft',
-        display_order: created.order_index,
-      },
-    };
+        display_order: created.orderIndex,
+        created_at: created.createdAt.toISOString(),
+        updated_at: created.updatedAt.toISOString(),
+      };
+    } catch (prismaErr) {
+      console.warn('[Admin Create Service Prisma Notice]:', (prismaErr as Error)?.message || prismaErr);
+    }
+
+    // 2. Also write to Supabase if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = await createSupabaseClient();
+        const insertPayload: Record<string, unknown> = {
+          title: data.title,
+          slug: data.slug,
+          category,
+          badge,
+          icon,
+          short_desc: shortDesc,
+          full_desc: fullDesc,
+          features,
+          active,
+          order_index: orderIndex,
+        };
+        if (createdService?.id) {
+          insertPayload.id = createdService.id;
+        }
+
+        const { data: supaCreated, error } = await supabase
+          .from('services')
+          .upsert(insertPayload)
+          .select()
+          .single();
+
+        if (!error && supaCreated && !createdService) {
+          createdService = {
+            id: supaCreated.id,
+            title: supaCreated.title,
+            slug: supaCreated.slug,
+            category: supaCreated.category,
+            badge: supaCreated.badge,
+            icon: supaCreated.icon,
+            shortDesc: supaCreated.short_desc,
+            fullDesc: supaCreated.full_desc,
+            features: supaCreated.features || [],
+            status: supaCreated.active ? 'active' : 'draft',
+            display_order: supaCreated.order_index,
+          };
+        }
+      } catch (supaErr) {
+        console.warn('[Admin Create Service Supabase Notice]:', (supaErr as Error)?.message || supaErr);
+      }
+    }
+
+    revalidatePath('/services');
+    revalidatePath('/dashboard');
+
+    if (createdService) {
+      return { success: true, data: createdService };
+    }
+
+    return { success: false, error: 'Failed to create service in database' };
   } catch (error) {
     console.error('[Create Service Error]:', error);
     return { success: false, error: 'Failed to create service' };
@@ -194,7 +224,10 @@ export async function updateService(
   data: Partial<AdminServiceInput>
 ): Promise<AdminActionResponse> {
   try {
-    if (!isSupabaseConfigured()) {
+    let updated = false;
+
+    // 1. Update via Prisma
+    try {
       const updateData: Prisma.ServiceItemUpdateInput = {};
       if (data.title !== undefined) updateData.title = data.title;
       if (data.slug !== undefined) updateData.slug = data.slug;
@@ -211,36 +244,44 @@ export async function updateService(
         where: { id },
         data: updateData,
       });
-
-      revalidatePath('/services');
-      revalidatePath('/dashboard');
-      return { success: true };
+      updated = true;
+    } catch (prismaErr) {
+      console.warn('[Admin Update Service Prisma Notice]:', (prismaErr as Error)?.message || prismaErr);
     }
 
-    const supabase = await createSupabaseClient();
-    const updatePayload: Record<string, unknown> = {
-      updated_at: new Date().toISOString(),
-    };
-    if (data.title !== undefined) updatePayload.title = data.title;
-    if (data.slug !== undefined) updatePayload.slug = data.slug;
-    if (data.category !== undefined) updatePayload.category = data.category;
-    if (data.badge !== undefined) updatePayload.badge = data.badge;
-    if (data.icon !== undefined) updatePayload.icon = data.icon;
-    if (data.shortDesc !== undefined) updatePayload.short_desc = data.shortDesc;
-    if (data.fullDesc !== undefined) updatePayload.full_desc = data.fullDesc;
-    if (data.features !== undefined) updatePayload.features = data.features;
-    if (data.status !== undefined) updatePayload.active = data.status === 'active';
-    if (data.display_order !== undefined) updatePayload.order_index = data.display_order;
+    // 2. Update via Supabase if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = await createSupabaseClient();
+        const updatePayload: Record<string, unknown> = {
+          updated_at: new Date().toISOString(),
+        };
+        if (data.title !== undefined) updatePayload.title = data.title;
+        if (data.slug !== undefined) updatePayload.slug = data.slug;
+        if (data.category !== undefined) updatePayload.category = data.category;
+        if (data.badge !== undefined) updatePayload.badge = data.badge;
+        if (data.icon !== undefined) updatePayload.icon = data.icon;
+        if (data.shortDesc !== undefined) updatePayload.short_desc = data.shortDesc;
+        if (data.fullDesc !== undefined) updatePayload.full_desc = data.fullDesc;
+        if (data.features !== undefined) updatePayload.features = data.features;
+        if (data.status !== undefined) updatePayload.active = data.status === 'active';
+        if (data.display_order !== undefined) updatePayload.order_index = data.display_order;
 
-    const { error } = await supabase
-      .from('services')
-      .update(updatePayload)
-      .eq('id', id);
+        const { error } = await supabase
+          .from('services')
+          .update(updatePayload)
+          .eq('id', id);
 
-    if (error) throw error;
+        if (!error) updated = true;
+      } catch (supaErr) {
+        console.warn('[Admin Update Service Supabase Notice]:', (supaErr as Error)?.message || supaErr);
+      }
+    }
+
     revalidatePath('/services');
     revalidatePath('/dashboard');
-    return { success: true };
+
+    return { success: updated };
   } catch (error) {
     console.error('[Update Service Error]:', error);
     return { success: false, error: 'Failed to update service' };
@@ -256,30 +297,40 @@ export async function toggleServiceVisibility(
 ): Promise<AdminActionResponse> {
   try {
     const active = newStatus === 'active';
-    if (!isSupabaseConfigured()) {
+    let updated = false;
+
+    // 1. Update via Prisma
+    try {
       await db.serviceItem.update({
         where: { id },
         data: { active },
       });
-      revalidatePath('/services');
-      revalidatePath('/dashboard');
-      return { success: true };
+      updated = true;
+    } catch (prismaErr) {
+      console.warn('[Admin Toggle Service Prisma Notice]:', (prismaErr as Error)?.message || prismaErr);
     }
 
-    const supabase = await createSupabaseClient();
-    const { error } = await supabase
-      .from('services')
-      .update({
-        active,
-        status: newStatus,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id);
+    // 2. Update via Supabase
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = await createSupabaseClient();
+        const { error } = await supabase
+          .from('services')
+          .update({
+            active,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', id);
 
-    if (error) throw error;
+        if (!error) updated = true;
+      } catch (supaErr) {
+        console.warn('[Admin Toggle Service Supabase Notice]:', (supaErr as Error)?.message || supaErr);
+      }
+    }
+
     revalidatePath('/services');
     revalidatePath('/dashboard');
-    return { success: true };
+    return { success: updated };
   } catch (error) {
     console.error('[Toggle Service Visibility Error]:', error);
     return { success: false, error: 'Failed to update visibility status' };
@@ -320,6 +371,19 @@ export async function reorderService(
       }),
     ]);
 
+    // Also sync to Supabase if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = await createSupabaseClient();
+        await Promise.all([
+          supabase.from('services').update({ order_index: targetItem.orderIndex }).eq('id', currentItem.id),
+          supabase.from('services').update({ order_index: currentItem.orderIndex }).eq('id', targetItem.id),
+        ]);
+      } catch (supaErr) {
+        console.warn('[Admin Reorder Supabase Notice]:', (supaErr as Error)?.message || supaErr);
+      }
+    }
+
     revalidatePath('/services');
     revalidatePath('/dashboard');
     return { success: true };
@@ -334,25 +398,34 @@ export async function reorderService(
  */
 export async function deleteService(id: string): Promise<AdminActionResponse> {
   try {
-    if (!isSupabaseConfigured()) {
+    let deleted = false;
+
+    // 1. Delete via Prisma
+    try {
       await db.serviceItem.delete({
         where: { id },
       });
-      revalidatePath('/services');
-      revalidatePath('/dashboard');
-      return { success: true };
+      deleted = true;
+    } catch (prismaErr) {
+      console.warn('[Admin Delete Service Prisma Notice]:', (prismaErr as Error)?.message || prismaErr);
     }
 
-    const supabase = await createSupabaseClient();
-    const { error } = await supabase.from('services').delete().eq('id', id);
+    // 2. Delete via Supabase
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = await createSupabaseClient();
+        const { error } = await supabase.from('services').delete().eq('id', id);
+        if (!error) deleted = true;
+      } catch (supaErr) {
+        console.warn('[Admin Delete Service Supabase Notice]:', (supaErr as Error)?.message || supaErr);
+      }
+    }
 
-    if (error) throw error;
     revalidatePath('/services');
     revalidatePath('/dashboard');
-    return { success: true };
+    return { success: deleted };
   } catch (error) {
     console.error('[Delete Service Error]:', error);
     return { success: false, error: 'Failed to delete service' };
   }
 }
-
