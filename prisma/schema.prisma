@@ -264,4 +264,48 @@ model SocialLink {
   @@map("social_links")
 }
 
+// Recruitment & Job Openings
+model JobOpening {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  department  String   @default("Engineering")
+  type        String   @default("Full-Time / Remote")
+  location    String   @default("Remote")
+  experience  String?
+  description String   @db.Text
+  skills      String[]
+  salary      String?
+  applyUrl    String?  @default("/contact") @map("apply_url")
+  active      Boolean  @default(true)
+  orderIndex  Int      @default(0) @map("order_index")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
+  @@map("job_openings")
+}
+
+// Pricing & Engagement Models
+model PricingPlan {
+  id               String   @id @default(uuid())
+  name             String
+  slug             String   @unique
+  description      String   @db.Text
+  badge            String?
+  isPopular        Boolean  @default(false) @map("is_popular")
+  priceType        String   @default("fixed") @map("price_type") // 'fixed' | 'custom'
+  priceMonthlyInr  Float?   @map("price_monthly_inr")
+  priceYearlyInr   Float?   @map("price_yearly_inr")
+  priceMonthlyUsd  Float?   @map("price_monthly_usd")
+  priceYearlyUsd   Float?   @map("price_yearly_usd")
+  customPriceLabel String?  @default("Custom") @map("custom_price_label")
+  features         String[]
+  buttonText       String   @default("Start Building") @map("button_text")
+  buttonUrl        String   @default("/contact") @map("button_url")
+  active           Boolean  @default(true)
+  orderIndex       Int      @default(0) @map("order_index")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("pricing_plans")
+}

@@ -29,6 +29,8 @@ export async function getDashboardStats(): Promise<AdminDashboardStats> {
       draftProjects,
       totalServices,
       publishedBlogs,
+      totalJobOpenings,
+      totalPricingPlans,
     ] = await Promise.all([
       db.contactSubmission.count(),
       db.contactSubmission.count({ where: { status: 'pending' } }),
@@ -42,6 +44,8 @@ export async function getDashboardStats(): Promise<AdminDashboardStats> {
       db.portfolioProject.count({ where: { published: false } }),
       db.serviceItem.count(),
       db.blogPost.count({ where: { published: true } }),
+      db.jobOpening.count(),
+      db.pricingPlan.count(),
     ]);
 
     return {
@@ -57,6 +61,8 @@ export async function getDashboardStats(): Promise<AdminDashboardStats> {
       draftProjects,
       totalServices,
       publishedBlogs,
+      totalJobOpenings,
+      totalPricingPlans,
     };
   } catch (prismaErr) {
     console.warn('[Admin Stats Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);

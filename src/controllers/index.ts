@@ -10,3 +10,6 @@ export * from './projects.controller';
 export * from './services.controller';
 export * from './blog.controller';
 export * from './auth.controller';
+export * from './footer.controller';
+export * from './recruitment.controller';
+export * from './pricing.controller';

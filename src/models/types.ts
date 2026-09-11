@@ -25,6 +25,8 @@ export interface AdminDashboardStats {
   totalServices: number;
   activeServices?: number;
   publishedBlogs?: number;
+  totalJobOpenings?: number;
+  totalPricingPlans?: number;
 }
 
 /**
@@ -233,3 +235,82 @@ export interface AdminSocialLinkInput {
   orderIndex?: number;
 }
 
+/**
+ * Recruitment / Career Job Opening representation.
+ */
+export interface AdminJobOpening {
+  id: string;
+  title: string;
+  slug: string;
+  department: string;
+  type: string;
+  location: string;
+  experience?: string | null;
+  description: string;
+  skills: string[];
+  salary?: string | null;
+  applyUrl?: string | null;
+  active: boolean;
+  orderIndex: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminJobOpeningInput {
+  title: string;
+  slug?: string;
+  department: string;
+  type: string;
+  location?: string;
+  experience?: string | null;
+  description: string;
+  skills: string[];
+  salary?: string | null;
+  applyUrl?: string | null;
+  active?: boolean;
+  orderIndex?: number;
+}
+
+/**
+ * Service Pricing & Engagement Model representation.
+ */
+export interface AdminPricingPlan {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  badge?: string | null;
+  isPopular: boolean;
+  priceType: 'fixed' | 'custom';
+  priceMonthlyInr?: number | null;
+  priceYearlyInr?: number | null;
+  priceMonthlyUsd?: number | null;
+  priceYearlyUsd?: number | null;
+  customPriceLabel?: string | null;
+  features: string[];
+  buttonText: string;
+  buttonUrl: string;
+  active: boolean;
+  orderIndex: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminPricingPlanInput {
+  name: string;
+  slug?: string;
+  description: string;
+  badge?: string | null;
+  isPopular?: boolean;
+  priceType: 'fixed' | 'custom';
+  priceMonthlyInr?: number | null;
+  priceYearlyInr?: number | null;
+  priceMonthlyUsd?: number | null;
+  priceYearlyUsd?: number | null;
+  customPriceLabel?: string | null;
+  features: string[];
+  buttonText: string;
+  buttonUrl?: string;
+  active?: boolean;
+  orderIndex?: number;
+}
