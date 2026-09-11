@@ -19,6 +19,8 @@ import {
   LogOut,
   ExternalLink,
   PanelBottom,
+  Briefcase,
+  CreditCard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/views/ui/button';
@@ -56,6 +58,8 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
     { name: 'Reviews Queue', href: '/reviews', icon: Star },
     { name: 'Projects CMS', href: '/projects', icon: FolderKanban },
     { name: 'Services Catalog', href: '/services', icon: Cpu },
+    { name: 'Recruitment', href: '/recruitment', icon: Briefcase },
+    { name: 'Pricing', href: '/pricing', icon: CreditCard },
     { name: 'Footer Section', href: '/footer', icon: PanelBottom },
     { name: 'Blog Articles', href: '/blog', icon: FileText },
     { name: 'Settings & Sync', href: '/settings', icon: Settings },

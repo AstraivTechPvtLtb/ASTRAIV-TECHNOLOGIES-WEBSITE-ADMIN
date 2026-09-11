@@ -13,6 +13,8 @@ export * from './tables/enquiries-table';
 export * from './tables/projects-table';
 export * from './tables/reviews-table';
 export * from './tables/services-table';
+export * from './tables/recruitment-table';
+export * from './tables/pricing-table';
 
 // Cards
 export * from './cards/admin-stat-card';
