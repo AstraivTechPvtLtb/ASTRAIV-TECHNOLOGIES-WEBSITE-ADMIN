@@ -27,16 +27,13 @@ import {
   Briefcase,
   Search,
   ExternalLink,
-  Sparkles,
   MapPin,
   CheckCircle2,
   Clock,
-  Layers,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/views/ui/button';
 import { Input } from '@/views/ui/input';
-import { Badge } from '@/views/ui/badge';
 
 interface RecruitmentTableProps {
   initialData: AdminJobOpening[];

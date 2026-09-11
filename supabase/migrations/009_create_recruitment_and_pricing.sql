@@ -5,7 +5,7 @@
 
 -- 1. Create Job Openings Table
 CREATE TABLE IF NOT EXISTS public.job_openings (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) UNIQUE NOT NULL,
     department VARCHAR(100) NOT NULL DEFAULT 'Engineering',
@@ -18,31 +18,31 @@ CREATE TABLE IF NOT EXISTS public.job_openings (
     apply_url VARCHAR(255) DEFAULT '/contact',
     active BOOLEAN DEFAULT true NOT NULL,
     order_index INTEGER DEFAULT 0 NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now() NOT NULL,
+    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now() NOT NULL
 );
 
 -- 2. Create Pricing Plans Table
 CREATE TABLE IF NOT EXISTS public.pricing_plans (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     name VARCHAR(255) NOT NULL,
     slug VARCHAR(255) UNIQUE NOT NULL,
     description TEXT NOT NULL,
     badge VARCHAR(100),
     is_popular BOOLEAN DEFAULT false NOT NULL,
     price_type VARCHAR(50) DEFAULT 'fixed' NOT NULL, -- 'fixed' or 'custom'
-    price_monthly_inr NUMERIC(12, 2),
-    price_yearly_inr NUMERIC(12, 2),
-    price_monthly_usd NUMERIC(12, 2),
-    price_yearly_usd NUMERIC(12, 2),
+    price_monthly_inr DOUBLE PRECISION,
+    price_yearly_inr DOUBLE PRECISION,
+    price_monthly_usd DOUBLE PRECISION,
+    price_yearly_usd DOUBLE PRECISION,
     custom_price_label VARCHAR(100) DEFAULT 'Custom',
     features TEXT[] NOT NULL DEFAULT '{}',
     button_text VARCHAR(100) DEFAULT 'Start Building' NOT NULL,
     button_url VARCHAR(255) DEFAULT '/contact' NOT NULL,
     active BOOLEAN DEFAULT true NOT NULL,
     order_index INTEGER DEFAULT 0 NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now() NOT NULL,
+    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now() NOT NULL
 );
 
 -- 3. Enable RLS
