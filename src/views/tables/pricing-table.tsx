@@ -28,11 +28,7 @@ import {
   Check,
   Sparkles,
   ExternalLink,
-  DollarSign,
   CheckCircle2,
-  ArrowRight,
-  Shield,
-  Layers,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/views/ui/button';
