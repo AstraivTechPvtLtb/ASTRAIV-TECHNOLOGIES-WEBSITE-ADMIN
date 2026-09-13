@@ -168,6 +168,7 @@ export interface AdminBlogInput {
   author: string;
   category: string;
   status: ContentStatus;
+  cover_image?: string | null;
 }
 
 /**
