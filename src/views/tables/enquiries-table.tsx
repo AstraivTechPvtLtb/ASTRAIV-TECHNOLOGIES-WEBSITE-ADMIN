@@ -8,7 +8,7 @@
 import { useState } from 'react';
 import { AdminEnquiry, EnquiryStatus } from '@/models/types';
 import { updateEnquiryStatus, deleteEnquiry } from '@/controllers/enquiries.controller';
-import { Search, Trash2, Mail, Phone, Building, Eye, X } from 'lucide-react';
+import { Search, Trash2, Mail, Phone, Building, Eye, X, ExternalLink, FileText } from 'lucide-react';
 import { Button } from '@/views/ui/button';
 import { Input } from '@/views/ui/input';
 import { Badge } from '@/views/ui/badge';
@@ -249,11 +249,36 @@ export function EnquiriesTable({ initialData }: EnquiriesTableProps) {
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                Project Message / Requirements
-              </label>
-              <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-slate-200 text-xs leading-relaxed whitespace-pre-wrap">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  {selectedEnquiry.service?.startsWith('Job Application:')
+                    ? 'Job Application & Candidate Profile'
+                    : 'Project Message / Requirements'}
+                </label>
+                {selectedEnquiry.message.includes('Resume Link:') && (
+                  (() => {
+                    const match = selectedEnquiry.message.match(/Resume Link:\s*(https?:\/\/[^\s]+|\/uploads\/[^\s]+)/);
+                    if (match && match[1]) {
+                      const url = match[1].startsWith('/') ? `http://localhost:3000${match[1]}` : match[1];
+                      return (
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600/30 text-[11px] font-bold transition-colors"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          <span>View Resume</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      );
+                    }
+                    return null;
+                  })()
+                )}
+              </div>
+              <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-slate-200 text-xs leading-relaxed whitespace-pre-wrap font-sans">
                 {selectedEnquiry.message}
               </div>
             </div>
