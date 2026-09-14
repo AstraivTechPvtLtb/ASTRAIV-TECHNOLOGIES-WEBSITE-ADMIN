@@ -19,6 +19,42 @@ export interface GetReviewsParams {
   limit?: number;
 }
 
+interface ReviewDbRow {
+  id: string;
+  source_submission_id?: string | null;
+  review_id?: string | null;
+  client_name: string;
+  company_name?: string | null;
+  company?: string | null;
+  designation?: string | null;
+  project_name?: string | null;
+  email?: string | null;
+  overall_service_rating?: number | null;
+  software_quality_rating?: number | null;
+  communication_support_rating?: number | null;
+  average_rating?: number | string | null;
+  display_rating?: number | null;
+  rating?: number | null;
+  liked_most?: string | null;
+  would_recommend?: string | null;
+  improvement_feedback?: string | null;
+  original_review?: string | null;
+  review_text?: string | null;
+  review?: string | null;
+  image_url?: string | null;
+  website_publish_permission?: string | null;
+  can_publish_review?: boolean | null;
+  identity_display_permission?: string | null;
+  status: ReviewStatus;
+  featured?: boolean | null;
+  admin_note?: string | null;
+  submitted_at?: string | Date | null;
+  published_at?: string | Date | null;
+  created_at: string | Date;
+  updated_at: string | Date;
+  [key: string]: unknown;
+}
+
 /**
  * Retrieves reviews with search, approval status, and featured filter support.
  */
@@ -131,7 +167,7 @@ export async function getReviews({
       const { data, count, error } = await query.range(offset, offset + limit - 1);
 
       if (!error && data) {
-        const mapped: AdminReview[] = data.map((r: any) => ({
+        const mapped: AdminReview[] = (data as unknown as ReviewDbRow[]).map((r) => ({
           id: r.id,
           source_submission_id: r.source_submission_id || r.review_id || null,
           review_id: r.review_id || r.source_submission_id || null,
@@ -160,10 +196,10 @@ export async function getReviews({
           status: r.status as ReviewStatus,
           featured: Boolean(r.featured),
           admin_note: r.admin_note || null,
-          submitted_at: r.submitted_at || null,
-          published_at: r.published_at || null,
-          created_at: r.created_at,
-          updated_at: r.updated_at,
+          submitted_at: r.submitted_at instanceof Date ? r.submitted_at.toISOString() : (r.submitted_at || null),
+          published_at: r.published_at instanceof Date ? r.published_at.toISOString() : (r.published_at || null),
+          created_at: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at || ''),
+          updated_at: r.updated_at instanceof Date ? r.updated_at.toISOString() : (r.updated_at ? String(r.updated_at) : undefined),
         }));
         return { data: mapped, total: count || 0 };
       }
@@ -347,7 +383,7 @@ export async function updateReview(
     }
 
     const supabase = await createSupabaseClient();
-    const updatePayload: Record<string, any> = {
+    const updatePayload: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };
     if (updates.client_name) updatePayload.client_name = updates.client_name;

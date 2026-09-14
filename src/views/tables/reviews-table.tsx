@@ -26,12 +26,7 @@ import {
   Loader2,
   Globe,
   Lock,
-  UserCheck,
   Info,
-  Building2,
-  Briefcase,
-  Mail,
-  Calendar,
   PlusCircle,
   Link2,
   Copy,
@@ -461,6 +456,7 @@ export function ReviewsTable({ initialData, initialStatus = 'all' }: ReviewsTabl
                       <div className="flex items-start gap-3">
                         <div className="relative h-9 w-9 rounded-full overflow-hidden bg-slate-850 border border-slate-700/80 shrink-0 mt-0.5 flex items-center justify-center">
                           {rev.image_url ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
                             <img
                               src={rev.image_url}
                               alt={rev.client_name}
@@ -792,6 +788,7 @@ export function ReviewsTable({ initialData, initialStatus = 'all' }: ReviewsTabl
                   <div className="flex items-center gap-3 mt-1.5">
                     <div className="relative h-10 w-10 rounded-full overflow-hidden bg-slate-900 border border-slate-700 shrink-0 flex items-center justify-center">
                       {editImageUrl ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
                         <img
                           src={editImageUrl}
                           alt="Avatar Preview"
