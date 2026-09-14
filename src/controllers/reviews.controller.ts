@@ -218,52 +218,75 @@ export async function getReviews({
 export async function approveReview(id: string): Promise<AdminActionResponse> {
   try {
     const publishedAt = new Date();
+    let updated = false;
+    let canPublish = false;
 
-    if (!isSupabaseConfigured()) {
+    // 1. Primary PostgreSQL execution via Prisma ORM
+    try {
       const review = await db.review.findUnique({ where: { id } });
-      if (!review) return { success: false, error: 'Review not found' };
-
-      await db.review.update({
-        where: { id },
-        data: {
-          status: 'approved',
-          publishedAt,
-        },
-      });
-      revalidatePath('/reviews');
-      revalidatePath('/dashboard');
-      return {
-        success: true,
-        message: review.canPublishReview
-          ? 'Review approved and published to client website.'
-          : 'Approved internally — customer did not grant website publication permission.',
-      };
+      if (review) {
+        canPublish = Boolean(review.canPublishReview);
+        await db.review.update({
+          where: { id },
+          data: {
+            status: 'approved',
+            publishedAt,
+          },
+        });
+        updated = true;
+      }
+    } catch (prismaErr) {
+      console.warn('[Admin Approve Review Prisma Notice]:', (prismaErr as Error)?.message || prismaErr);
     }
 
-    const supabase = await createSupabaseClient();
-    const { data: revData } = await supabase.from('reviews').select('can_publish_review').eq('id', id).single();
+    // 2. Dual-sync via Supabase REST if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = await createSupabaseClient();
+        const { data: revData } = await supabase
+          .from('reviews')
+          .select('can_publish_review')
+          .eq('id', id)
+          .maybeSingle();
 
-    const { error } = await supabase
-      .from('reviews')
-      .update({
-        status: 'approved',
-        published_at: publishedAt.toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id);
+        if (revData && revData.can_publish_review !== undefined) {
+          canPublish = Boolean(revData.can_publish_review);
+        }
 
-    if (error) throw error;
+        const { error } = await supabase
+          .from('reviews')
+          .update({
+            status: 'approved',
+            published_at: publishedAt.toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', id);
+
+        if (!error) {
+          updated = true;
+        } else {
+          console.warn('[Admin Approve Review Supabase Update Notice]:', error.message || error);
+        }
+      } catch (supaErr) {
+        console.warn('[Admin Approve Review Supabase Notice]:', (supaErr as Error)?.message || supaErr);
+      }
+    }
+
+    if (!updated) {
+      return { success: false, error: 'Review not found or database update failed.' };
+    }
+
     revalidatePath('/reviews');
     revalidatePath('/dashboard');
     return {
       success: true,
-      message: revData?.can_publish_review
+      message: canPublish
         ? 'Review approved and published to client website.'
         : 'Approved internally — customer did not grant website publication permission.',
     };
   } catch (error) {
     console.error('[Approve Review Error]:', error);
-    return { success: false, error: 'Failed to approve review' };
+    return { success: false, error: (error as Error)?.message || 'Failed to approve review' };
   }
 }
 
@@ -272,34 +295,56 @@ export async function approveReview(id: string): Promise<AdminActionResponse> {
  */
 export async function rejectReview(id: string): Promise<AdminActionResponse> {
   try {
-    if (!isSupabaseConfigured()) {
-      await db.review.update({
-        where: { id },
-        data: {
-          status: 'rejected',
-        },
-      });
-      revalidatePath('/reviews');
-      revalidatePath('/dashboard');
-      return { success: true, message: 'Review marked as rejected.' };
+    let updated = false;
+
+    // 1. Primary PostgreSQL execution via Prisma ORM
+    try {
+      const review = await db.review.findUnique({ where: { id } });
+      if (review) {
+        await db.review.update({
+          where: { id },
+          data: {
+            status: 'rejected',
+          },
+        });
+        updated = true;
+      }
+    } catch (prismaErr) {
+      console.warn('[Admin Reject Review Prisma Notice]:', (prismaErr as Error)?.message || prismaErr);
     }
 
-    const supabase = await createSupabaseClient();
-    const { error } = await supabase
-      .from('reviews')
-      .update({
-        status: 'rejected',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id);
+    // 2. Dual-sync via Supabase REST if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = await createSupabaseClient();
+        const { error } = await supabase
+          .from('reviews')
+          .update({
+            status: 'rejected',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', id);
 
-    if (error) throw error;
+        if (!error) {
+          updated = true;
+        } else {
+          console.warn('[Admin Reject Review Supabase Update Notice]:', error.message || error);
+        }
+      } catch (supaErr) {
+        console.warn('[Admin Reject Review Supabase Notice]:', (supaErr as Error)?.message || supaErr);
+      }
+    }
+
+    if (!updated) {
+      return { success: false, error: 'Review not found or database update failed.' };
+    }
+
     revalidatePath('/reviews');
     revalidatePath('/dashboard');
     return { success: true, message: 'Review marked as rejected.' };
   } catch (error) {
     console.error('[Reject Review Error]:', error);
-    return { success: false, error: 'Failed to reject review' };
+    return { success: false, error: (error as Error)?.message || 'Failed to reject review' };
   }
 }
 
@@ -308,32 +353,54 @@ export async function rejectReview(id: string): Promise<AdminActionResponse> {
  */
 export async function toggleFeatureReview(id: string, featured: boolean): Promise<AdminActionResponse> {
   try {
-    if (!isSupabaseConfigured()) {
-      await db.review.update({
-        where: { id },
-        data: { featured },
-      });
-      revalidatePath('/reviews');
-      revalidatePath('/dashboard');
-      return { success: true };
+    let updated = false;
+
+    // 1. Primary PostgreSQL execution via Prisma ORM
+    try {
+      const review = await db.review.findUnique({ where: { id } });
+      if (review) {
+        await db.review.update({
+          where: { id },
+          data: { featured },
+        });
+        updated = true;
+      }
+    } catch (prismaErr) {
+      console.warn('[Admin Toggle Feature Prisma Notice]:', (prismaErr as Error)?.message || prismaErr);
     }
 
-    const supabase = await createSupabaseClient();
-    const { error } = await supabase
-      .from('reviews')
-      .update({
-        featured,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id);
+    // 2. Dual-sync via Supabase REST if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = await createSupabaseClient();
+        const { error } = await supabase
+          .from('reviews')
+          .update({
+            featured,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', id);
 
-    if (error) throw error;
+        if (!error) {
+          updated = true;
+        } else {
+          console.warn('[Admin Toggle Feature Supabase Update Notice]:', error.message || error);
+        }
+      } catch (supaErr) {
+        console.warn('[Admin Toggle Feature Supabase Notice]:', (supaErr as Error)?.message || supaErr);
+      }
+    }
+
+    if (!updated) {
+      return { success: false, error: 'Review not found or database update failed.' };
+    }
+
     revalidatePath('/reviews');
     revalidatePath('/dashboard');
-    return { success: true };
+    return { success: true, message: featured ? 'Review marked as featured.' : 'Review removed from featured.' };
   } catch (error) {
     console.error('[Toggle Feature Review Error]:', error);
-    return { success: false, error: 'Failed to toggle featured status' };
+    return { success: false, error: (error as Error)?.message || 'Failed to toggle featured status' };
   }
 }
 
@@ -346,7 +413,10 @@ export async function updateReview(
   updates: Partial<Omit<AdminReview, 'id' | 'original_review' | 'created_at' | 'updated_at'>>
 ): Promise<AdminActionResponse> {
   try {
-    if (!isSupabaseConfigured()) {
+    let updated = false;
+
+    // 1. Primary PostgreSQL execution via Prisma ORM
+    try {
       const updateData: Prisma.ReviewUpdateInput = {};
       if (updates.client_name) updateData.clientName = updates.client_name;
       if (updates.company_name !== undefined) {
@@ -377,44 +447,61 @@ export async function updateReview(
         where: { id },
         data: updateData,
       });
-      revalidatePath('/reviews');
-      revalidatePath('/dashboard');
-      return { success: true };
+      updated = true;
+    } catch (prismaErr) {
+      console.warn('[Admin Update Review Prisma Notice]:', (prismaErr as Error)?.message || prismaErr);
     }
 
-    const supabase = await createSupabaseClient();
-    const updatePayload: Record<string, unknown> = {
-      updated_at: new Date().toISOString(),
-    };
-    if (updates.client_name) updatePayload.client_name = updates.client_name;
-    if (updates.company_name !== undefined) updatePayload.company_name = updates.company_name;
-    if (updates.company !== undefined) updatePayload.company = updates.company;
-    if (updates.designation !== undefined) updatePayload.designation = updates.designation;
-    if (updates.project_name !== undefined) updatePayload.project_name = updates.project_name;
-    if (updates.review_text !== undefined) {
-      updatePayload.review_text = updates.review_text;
-      updatePayload.review = updates.review_text;
-    } else if (updates.review !== undefined) {
-      updatePayload.review_text = updates.review;
-      updatePayload.review = updates.review;
+    // 2. Dual-sync via Supabase REST if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = await createSupabaseClient();
+        const updatePayload: Record<string, unknown> = {
+          updated_at: new Date().toISOString(),
+        };
+        if (updates.client_name) updatePayload.client_name = updates.client_name;
+        if (updates.company_name !== undefined) updatePayload.company_name = updates.company_name;
+        if (updates.company !== undefined) updatePayload.company = updates.company;
+        if (updates.designation !== undefined) updatePayload.designation = updates.designation;
+        if (updates.project_name !== undefined) updatePayload.project_name = updates.project_name;
+        if (updates.review_text !== undefined) {
+          updatePayload.review_text = updates.review_text;
+          updatePayload.review = updates.review_text;
+        } else if (updates.review !== undefined) {
+          updatePayload.review_text = updates.review;
+          updatePayload.review = updates.review;
+        }
+
+        if (updates.status) updatePayload.status = updates.status;
+        if (updates.featured !== undefined) updatePayload.featured = updates.featured;
+        if (updates.admin_note !== undefined) updatePayload.admin_note = updates.admin_note;
+        if (updates.image_url !== undefined) updatePayload.image_url = updates.image_url;
+
+        const { error } = await supabase
+          .from('reviews')
+          .update(updatePayload)
+          .eq('id', id);
+
+        if (!error) {
+          updated = true;
+        } else {
+          console.warn('[Admin Update Review Supabase Update Notice]:', error.message || error);
+        }
+      } catch (supaErr) {
+        console.warn('[Admin Update Review Supabase Notice]:', (supaErr as Error)?.message || supaErr);
+      }
     }
-    if (updates.status) updatePayload.status = updates.status;
-    if (updates.featured !== undefined) updatePayload.featured = updates.featured;
-    if (updates.admin_note !== undefined) updatePayload.admin_note = updates.admin_note;
-    if (updates.image_url !== undefined) updatePayload.image_url = updates.image_url;
 
-    const { error } = await supabase
-      .from('reviews')
-      .update(updatePayload)
-      .eq('id', id);
+    if (!updated) {
+      return { success: false, error: 'Review not found or database update failed.' };
+    }
 
-    if (error) throw error;
     revalidatePath('/reviews');
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {
     console.error('[Update Review Error]:', error);
-    return { success: false, error: 'Failed to update review' };
+    return { success: false, error: (error as Error)?.message || 'Failed to update review' };
   }
 }
 
@@ -423,25 +510,43 @@ export async function updateReview(
  */
 export async function deleteReview(id: string): Promise<AdminActionResponse> {
   try {
-    if (!isSupabaseConfigured()) {
+    let deleted = false;
+
+    // 1. Primary PostgreSQL execution via Prisma ORM
+    try {
       await db.review.delete({
         where: { id },
       });
-      revalidatePath('/reviews');
-      revalidatePath('/dashboard');
-      return { success: true };
+      deleted = true;
+    } catch (prismaErr) {
+      console.warn('[Admin Delete Review Prisma Notice]:', (prismaErr as Error)?.message || prismaErr);
     }
 
-    const supabase = await createSupabaseClient();
-    const { error } = await supabase.from('reviews').delete().eq('id', id);
+    // 2. Dual-sync via Supabase REST if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = await createSupabaseClient();
+        const { error } = await supabase.from('reviews').delete().eq('id', id);
+        if (!error) {
+          deleted = true;
+        } else {
+          console.warn('[Admin Delete Review Supabase Delete Notice]:', error.message || error);
+        }
+      } catch (supaErr) {
+        console.warn('[Admin Delete Review Supabase Notice]:', (supaErr as Error)?.message || supaErr);
+      }
+    }
 
-    if (error) throw error;
+    if (!deleted) {
+      return { success: false, error: 'Review not found or delete failed.' };
+    }
+
     revalidatePath('/reviews');
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {
     console.error('[Delete Review Error]:', error);
-    return { success: false, error: 'Failed to delete review' };
+    return { success: false, error: (error as Error)?.message || 'Failed to delete review' };
   }
 }
 
@@ -479,153 +584,188 @@ export async function ingestFormSubmission(
 
     const sourceSubmissionId = input.sourceSubmissionId?.trim() || `sub_${Date.now()}`;
 
-    // Duplicate check & insertion
-    if (!isSupabaseConfigured()) {
-      const existing = await db.review.findFirst({
-        where: {
-          OR: [{ sourceSubmissionId }, { reviewId: sourceSubmissionId }],
-        },
-      });
+    // 1. Duplicate check via Prisma ORM
+    const existing = await db.review.findFirst({
+      where: {
+        OR: [{ sourceSubmissionId }, { reviewId: sourceSubmissionId }],
+      },
+    });
 
-      if (existing) {
-        return {
-          success: true,
-          message: 'Review already exists with this submission ID.',
-          review: {
-            id: existing.id,
-            source_submission_id: existing.sourceSubmissionId || null,
-            review_id: existing.reviewId || null,
-            client_name: existing.clientName,
-            company_name: existing.companyName || existing.company || null,
-            company: existing.company || existing.companyName || null,
-            designation: existing.designation || null,
-            project_name: existing.projectName || null,
-            email: existing.email || null,
-            overall_service_rating: existing.overallServiceRating,
-            software_quality_rating: existing.softwareQualityRating,
-            communication_support_rating: existing.communicationSupportRating,
-            average_rating: Number(existing.averageRating) || 5.0,
-            display_rating: existing.displayRating || existing.rating || 5,
-            rating: existing.rating || 5,
-            liked_most: existing.likedMost || null,
-            would_recommend: existing.wouldRecommend || null,
-            improvement_feedback: existing.improvementFeedback || null,
-            original_review: existing.originalReview || existing.review || '',
-            review_text: existing.reviewText || existing.review || '',
-            review: existing.reviewText || existing.review || '',
-            image_url: existing.imageUrl || null,
-            website_publish_permission: existing.websitePublishPermission || null,
-            can_publish_review: existing.canPublishReview,
-            identity_display_permission: existing.identityDisplayPermission || 'Yes',
-            status: existing.status as ReviewStatus,
-            featured: existing.featured,
-            admin_note: existing.adminNote || null,
-            submitted_at: existing.submittedAt ? existing.submittedAt.toISOString() : null,
-            published_at: existing.publishedAt ? existing.publishedAt.toISOString() : null,
-            created_at: existing.createdAt.toISOString(),
-            updated_at: existing.updatedAt.toISOString(),
-          },
-        };
-      }
-
-      // Compute average rating
-      const ratings = [
-        input.overallServiceRating,
-        input.softwareQualityRating,
-        input.communicationSupportRating,
-      ].filter((r): r is number => typeof r === 'number' && r >= 1 && r <= 5);
-
-      let averageRating = 5.0;
-      if (ratings.length > 0) {
-        const sum = ratings.reduce((acc, curr) => acc + curr, 0);
-        averageRating = parseFloat((sum / ratings.length).toFixed(2));
-      }
-      const displayRating = Math.min(5, Math.max(1, Math.round(averageRating)));
-
-      const webPerm = (input.websitePublishPermission || '').trim();
-      const canPublishReview =
-        webPerm.toLowerCase() === 'yes' ||
-        webPerm.toLowerCase().includes('permission to feature') ||
-        webPerm.toLowerCase().includes('yes,') ||
-        webPerm === 'Yes';
-
-      const identityPerm = input.identityDisplayPermission?.trim() || 'Yes';
-
-      const created = await db.review.create({
-        data: {
-          sourceSubmissionId,
-          reviewId: sourceSubmissionId,
-          clientName: input.clientName.trim(),
-          companyName: input.companyName?.trim() || null,
-          company: input.companyName?.trim() || null,
-          designation: input.designation?.trim() || null,
-          projectName: input.projectName?.trim() || null,
-          email: input.email?.trim() || null,
-          overallServiceRating: input.overallServiceRating || null,
-          softwareQualityRating: input.softwareQualityRating || null,
-          communicationSupportRating: input.communicationSupportRating || null,
-          averageRating: new Prisma.Decimal(averageRating),
-          displayRating,
-          rating: displayRating,
-          likedMost: input.likedMost?.trim() || null,
-          wouldRecommend: input.wouldRecommend?.trim() || null,
-          improvementFeedback: input.improvementFeedback?.trim() || null,
-          originalReview: input.testimonial.trim(),
-          reviewText: input.testimonial.trim(),
-          review: input.testimonial.trim(),
-          websitePublishPermission: webPerm || 'Yes',
-          canPublishReview,
-          identityDisplayPermission: identityPerm,
-          status: 'pending',
-          featured: false,
-          submittedAt: new Date(),
-        },
-      });
-
-      revalidatePath('/reviews');
-      revalidatePath('/dashboard');
-
+    if (existing) {
       return {
         success: true,
-        message: 'Google Form submission ingested successfully into pending moderation queue.',
+        message: 'Review already exists with this submission ID.',
         review: {
-          id: created.id,
-          source_submission_id: created.sourceSubmissionId || null,
-          review_id: created.reviewId || null,
-          client_name: created.clientName,
-          company_name: created.companyName || created.company || null,
-          company: created.company || created.companyName || null,
-          designation: created.designation || null,
-          project_name: created.projectName || null,
-          email: created.email || null,
-          overall_service_rating: created.overallServiceRating,
-          software_quality_rating: created.softwareQualityRating,
-          communication_support_rating: created.communicationSupportRating,
-          average_rating: Number(created.averageRating) || 5.0,
-          display_rating: created.displayRating || created.rating || 5,
-          rating: created.rating || 5,
-          liked_most: created.likedMost || null,
-          would_recommend: created.wouldRecommend || null,
-          improvement_feedback: created.improvementFeedback || null,
-          original_review: created.originalReview || created.review || '',
-          review_text: created.reviewText || created.review || '',
-          review: created.reviewText || created.review || '',
-          image_url: created.imageUrl || null,
-          website_publish_permission: created.websitePublishPermission || null,
-          can_publish_review: created.canPublishReview,
-          identity_display_permission: created.identityDisplayPermission || 'Yes',
-          status: created.status as ReviewStatus,
-          featured: created.featured,
-          admin_note: created.adminNote || null,
-          submitted_at: created.submittedAt ? created.submittedAt.toISOString() : null,
-          published_at: created.publishedAt ? created.publishedAt.toISOString() : null,
-          created_at: created.createdAt.toISOString(),
-          updated_at: created.updatedAt.toISOString(),
+          id: existing.id,
+          source_submission_id: existing.sourceSubmissionId || null,
+          review_id: existing.reviewId || null,
+          client_name: existing.clientName,
+          company_name: existing.companyName || existing.company || null,
+          company: existing.company || existing.companyName || null,
+          designation: existing.designation || null,
+          project_name: existing.projectName || null,
+          email: existing.email || null,
+          overall_service_rating: existing.overallServiceRating,
+          software_quality_rating: existing.softwareQualityRating,
+          communication_support_rating: existing.communicationSupportRating,
+          average_rating: Number(existing.averageRating) || 5.0,
+          display_rating: existing.displayRating || existing.rating || 5,
+          rating: existing.rating || 5,
+          liked_most: existing.likedMost || null,
+          would_recommend: existing.wouldRecommend || null,
+          improvement_feedback: existing.improvementFeedback || null,
+          original_review: existing.originalReview || existing.review || '',
+          review_text: existing.reviewText || existing.review || '',
+          review: existing.reviewText || existing.review || '',
+          image_url: existing.imageUrl || null,
+          website_publish_permission: existing.websitePublishPermission || null,
+          can_publish_review: existing.canPublishReview,
+          identity_display_permission: existing.identityDisplayPermission || 'Yes',
+          status: existing.status as ReviewStatus,
+          featured: existing.featured,
+          admin_note: existing.adminNote || null,
+          submitted_at: existing.submittedAt ? existing.submittedAt.toISOString() : null,
+          published_at: existing.publishedAt ? existing.publishedAt.toISOString() : null,
+          created_at: existing.createdAt.toISOString(),
+          updated_at: existing.updatedAt.toISOString(),
         },
       };
     }
 
-    return { success: false, error: 'Database not initialized.' };
+    // Compute average rating
+    const ratings = [
+      input.overallServiceRating,
+      input.softwareQualityRating,
+      input.communicationSupportRating,
+    ].filter((r): r is number => typeof r === 'number' && r >= 1 && r <= 5);
+
+    let averageRating = 5.0;
+    if (ratings.length > 0) {
+      const sum = ratings.reduce((acc, curr) => acc + curr, 0);
+      averageRating = parseFloat((sum / ratings.length).toFixed(2));
+    }
+    const displayRating = Math.min(5, Math.max(1, Math.round(averageRating)));
+
+    const webPerm = (input.websitePublishPermission || '').trim();
+    const canPublishReview =
+      webPerm.toLowerCase() === 'yes' ||
+      webPerm.toLowerCase().includes('permission to feature') ||
+      webPerm.toLowerCase().includes('yes,') ||
+      webPerm === 'Yes';
+
+    const identityPerm = input.identityDisplayPermission?.trim() || 'Yes';
+
+    // 2. Primary Insert via Prisma ORM
+    const created = await db.review.create({
+      data: {
+        sourceSubmissionId,
+        reviewId: sourceSubmissionId,
+        clientName: input.clientName.trim(),
+        companyName: input.companyName?.trim() || null,
+        company: input.companyName?.trim() || null,
+        designation: input.designation?.trim() || null,
+        projectName: input.projectName?.trim() || null,
+        email: input.email?.trim() || null,
+        overallServiceRating: input.overallServiceRating || null,
+        softwareQualityRating: input.softwareQualityRating || null,
+        communicationSupportRating: input.communicationSupportRating || null,
+        averageRating: new Prisma.Decimal(averageRating),
+        displayRating,
+        rating: displayRating,
+        likedMost: input.likedMost?.trim() || null,
+        wouldRecommend: input.wouldRecommend?.trim() || null,
+        improvementFeedback: input.improvementFeedback?.trim() || null,
+        originalReview: input.testimonial.trim(),
+        reviewText: input.testimonial.trim(),
+        review: input.testimonial.trim(),
+        websitePublishPermission: webPerm || 'Yes',
+        canPublishReview,
+        identityDisplayPermission: identityPerm,
+        status: 'pending',
+        featured: false,
+        submittedAt: new Date(),
+      },
+    });
+
+    // 3. Dual-sync to Supabase REST if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = await createSupabaseClient();
+        await supabase.from('reviews').upsert({
+          id: created.id,
+          source_submission_id: sourceSubmissionId,
+          review_id: sourceSubmissionId,
+          client_name: input.clientName.trim(),
+          company_name: input.companyName?.trim() || null,
+          company: input.companyName?.trim() || null,
+          designation: input.designation?.trim() || null,
+          project_name: input.projectName?.trim() || null,
+          email: input.email?.trim() || null,
+          overall_service_rating: input.overallServiceRating || null,
+          software_quality_rating: input.softwareQualityRating || null,
+          communication_support_rating: input.communicationSupportRating || null,
+          average_rating: averageRating,
+          display_rating: displayRating,
+          rating: displayRating,
+          liked_most: input.likedMost?.trim() || null,
+          would_recommend: input.wouldRecommend?.trim() || null,
+          improvement_feedback: input.improvementFeedback?.trim() || null,
+          original_review: input.testimonial.trim(),
+          review_text: input.testimonial.trim(),
+          review: input.testimonial.trim(),
+          website_publish_permission: webPerm || 'Yes',
+          can_publish_review: canPublishReview,
+          identity_display_permission: identityPerm,
+          status: 'pending',
+          featured: false,
+          submitted_at: new Date().toISOString(),
+        });
+      } catch (supaErr) {
+        console.warn('[Admin Ingest Supabase Notice]:', (supaErr as Error)?.message || supaErr);
+      }
+    }
+
+    revalidatePath('/reviews');
+    revalidatePath('/dashboard');
+
+    return {
+      success: true,
+      message: 'Google Form submission ingested successfully into pending moderation queue.',
+      review: {
+        id: created.id,
+        source_submission_id: created.sourceSubmissionId || null,
+        review_id: created.reviewId || null,
+        client_name: created.clientName,
+        company_name: created.companyName || created.company || null,
+        company: created.company || created.companyName || null,
+        designation: created.designation || null,
+        project_name: created.projectName || null,
+        email: created.email || null,
+        overall_service_rating: created.overallServiceRating,
+        software_quality_rating: created.softwareQualityRating,
+        communication_support_rating: created.communicationSupportRating,
+        average_rating: Number(created.averageRating) || 5.0,
+        display_rating: created.displayRating || created.rating || 5,
+        rating: created.rating || 5,
+        liked_most: created.likedMost || null,
+        would_recommend: created.wouldRecommend || null,
+        improvement_feedback: created.improvementFeedback || null,
+        original_review: created.originalReview || created.review || '',
+        review_text: created.reviewText || created.review || '',
+        review: created.reviewText || created.review || '',
+        image_url: created.imageUrl || null,
+        website_publish_permission: created.websitePublishPermission || null,
+        can_publish_review: created.canPublishReview,
+        identity_display_permission: created.identityDisplayPermission || 'Yes',
+        status: created.status as ReviewStatus,
+        featured: created.featured,
+        admin_note: created.adminNote || null,
+        submitted_at: created.submittedAt ? created.submittedAt.toISOString() : null,
+        published_at: created.publishedAt ? created.publishedAt.toISOString() : null,
+        created_at: created.createdAt.toISOString(),
+        updated_at: created.updatedAt.toISOString(),
+      },
+    };
   } catch (error) {
     console.error('[Ingest Form Submission Error]:', error);
     return {

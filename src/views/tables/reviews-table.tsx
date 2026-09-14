@@ -196,7 +196,13 @@ export function ReviewsTable({ initialData, initialStatus = 'all' }: ReviewsTabl
           setActionNotice(res.message);
           setTimeout(() => setActionNotice(null), 6000);
         }
+      } else {
+        setActionNotice(res.error || 'Failed to approve review.');
+        setTimeout(() => setActionNotice(null), 6000);
       }
+    } catch (err: unknown) {
+      setActionNotice((err as Error)?.message || 'An error occurred while approving review.');
+      setTimeout(() => setActionNotice(null), 6000);
     } finally {
       setIsUpdating(false);
     }
@@ -218,7 +224,13 @@ export function ReviewsTable({ initialData, initialStatus = 'all' }: ReviewsTabl
           setActionNotice(res.message);
           setTimeout(() => setActionNotice(null), 5000);
         }
+      } else {
+        setActionNotice(res.error || 'Failed to reject review.');
+        setTimeout(() => setActionNotice(null), 5000);
       }
+    } catch (err: unknown) {
+      setActionNotice((err as Error)?.message || 'An error occurred while rejecting review.');
+      setTimeout(() => setActionNotice(null), 5000);
     } finally {
       setIsUpdating(false);
     }
@@ -235,7 +247,13 @@ export function ReviewsTable({ initialData, initialStatus = 'all' }: ReviewsTabl
         if (selectedReview?.id === id) {
           setSelectedReview((prev) => (prev ? { ...prev, featured: !currentVal } : null));
         }
+      } else {
+        setActionNotice(res.error || 'Failed to update featured status.');
+        setTimeout(() => setActionNotice(null), 5000);
       }
+    } catch (err: unknown) {
+      setActionNotice((err as Error)?.message || 'An error occurred while toggling featured status.');
+      setTimeout(() => setActionNotice(null), 5000);
     } finally {
       setIsUpdating(false);
     }
@@ -249,7 +267,15 @@ export function ReviewsTable({ initialData, initialStatus = 'all' }: ReviewsTabl
       if (res.success) {
         setData((prev) => prev.filter((item) => item.id !== id));
         if (selectedReview?.id === id) setSelectedReview(null);
+        setActionNotice('Review deleted successfully.');
+        setTimeout(() => setActionNotice(null), 4000);
+      } else {
+        setActionNotice(res.error || 'Failed to delete review.');
+        setTimeout(() => setActionNotice(null), 5000);
       }
+    } catch (err: unknown) {
+      setActionNotice((err as Error)?.message || 'An error occurred while deleting review.');
+      setTimeout(() => setActionNotice(null), 5000);
     } finally {
       setIsUpdating(false);
     }
