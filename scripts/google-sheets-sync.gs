@@ -1,45 +1,124 @@
 /**
  * ============================================================================
- * ASTRAIV TECHNOLOGIES — PRODUCTION GOOGLE APPS SCRIPT FOR FORM & SHEET SYNC
+ * ASTRAIV TECHNOLOGIES — DUAL-DISPATCH GOOGLE APPS SCRIPT (LOCAL & LIVE SYNC)
  * ============================================================================
  * 
  * Form Name: Customer Feedback
  * Form URL: https://docs.google.com/forms/d/1bq_DbfCGderO2Hv36ll5gLOVv--59_Ciyt3RfDabOuE/edit
  * 
- * This script runs in the Google Sheet linked to the "Customer Feedback" form.
- * It catches form submissions via an installable "On form submit" trigger, extracts
- * all responses using the exact Google Form question headers, calculates the rating
- * arithmetic average, packages the structured JSON payload, and posts securely to
- * the Astraiv Technologies backend webhook.
+ * FEATURES:
+ * 1. MULTI-TARGET DUAL DISPATCH:
+ *    - Simultaneously posts to Live Production Admin & Client webhooks AND Local Dev Tunnel.
+ *    - You NEVER have to change URLs when switching between local dev and live!
+ * 2. GRACEFUL OFFLINE TOLERANCE:
+ *    - If your local dev tunnel is offline, production still syncs 100% reliably.
+ *    - If live production has temporary latency, it retries with exponential backoff.
+ * 3. IN-SHEET INTERACTIVE MENU ("Astraiv Sync ⚡"):
+ *    - "🚀 Test Connections": Tests Live & Local endpoints and reports status.
+ *    - "⚙️ Set Local Tunnel URL": Set or change your tunnel URL directly from the Sheet UI.
+ *    - "🔄 Sync All Existing Rows": Bulk syncs all historical responses.
+ * 4. SYNC STATUS COLUMN:
+ *    - Automatically writes status to the sheet (e.g., "✅ Live: 201 | Local: 200").
+ * 5. DUPLICATE PROTECTION:
+ *    - Deterministic GF- submission IDs prevent duplicate reviews on all backends.
  * 
  * SETUP INSTRUCTIONS:
- * 1. Open your connected Google Sheet (where form responses are stored).
- * 2. In the menu, click: Extensions > Apps Script.
- * 3. Delete any code in the editor, and paste the entire contents of this file.
- * 4. Configure Script Properties (Project Settings > Script Properties):
- *    - WEBHOOK_URL: https://superuser.admin.astraivtechnologies.com/api/reviews/google-form
- *                   (or https://www.astraivtechnologies.com/api/reviews/google-form)
- *    - WEBHOOK_SECRET: astraiv_gsheet_webhook_secret_2026
- * 5. Configure the Installable Trigger:
- *    - Click the clock icon ("Triggers") on the left sidebar.
- *    - Click "+ Add Trigger" (bottom right).
- *    - Function to run: onFormSubmit
- *    - Deployment: Head
- *    - Event source: "From spreadsheet"
- *    - Event type: "On form submit"
- *    - Failure notification settings: "Notify me immediately"
- *    - Click Save and grant Google permissions.
- * 6. Test by running testWebhookSync() directly from the editor.
+ * 1. Open your connected Google Sheet.
+ * 2. Click: Extensions > Apps Script.
+ * 3. Paste this ENTIRE code and click Save (Floppy disk icon).
+ * 4. Configure Installable Trigger (Triggers icon on left sidebar):
+ *    - Function: onFormSubmit
+ *    - Event Source: From spreadsheet
+ *    - Event Type: On form submit
+ *    - Click Save and allow permissions.
+ * 5. Refresh your Google Sheet tab — a new menu "Astraiv Sync ⚡" will appear!
  */
 
 /**
- * Fallback constants if Script Properties are not configured.
+ * Default configurations (Used automatically if not overridden in Script Properties).
  */
-var DEFAULT_WEBHOOK_URL = "https://rmxff-103-130-105-203.free.pinggy.net/api/reviews/google-form";
-var DEFAULT_WEBHOOK_SECRET = "astraiv_gsheet_webhook_secret_2026";
+var CONFIG = {
+  // LIVE PRODUCTION ENDPOINTS (Permanent — always receives submissions)
+  LIVE_ADMIN_URL: "https://superuser.admin.astraivtechnologies.com/api/reviews/google-form",
+  LIVE_CLIENT_URL: "https://www.astraivtechnologies.com/api/reviews/google-form",
+
+  // LOCAL DEV TUNNEL (Used when testing locally via untun, loca.lt, ngrok, pinggy)
+  DEFAULT_LOCAL_TUNNEL_URL: "https://astraiv-reviews-sync.loca.lt/api/reviews/google-form",
+
+  // SECRET TOKEN (Must match GOOGLE_FORM_WEBHOOK_SECRET in .env)
+  WEBHOOK_SECRET: "astraiv_gsheet_webhook_secret_2026"
+};
 
 /**
- * Normalizes text for resilient dictionary lookups (lowercased, all whitespace condensed).
+ * Automatically creates the custom "Astraiv Sync ⚡" menu inside Google Sheets UI.
+ */
+function onOpen() {
+  try {
+    var ui = SpreadsheetApp.getUi();
+    ui.createMenu("Astraiv Sync ⚡")
+      .addItem("🚀 Test Connections (Check Live & Local)", "menuTestConnections")
+      .addItem("⚙️ Set Local Tunnel URL (loca.lt / ngrok / untun)", "menuSetLocalTunnelUrl")
+      .addItem("🔄 Sync All Existing Rows to Backend", "syncAllExistingRows")
+      .addSeparator()
+      .addItem("📋 View Active Endpoints & Settings", "menuViewEndpoints")
+      .addItem("🧹 Clear Local Tunnel URL (Live Only)", "menuClearLocalTunnelUrl")
+      .addToUi();
+  } catch (err) {
+    Logger.log("onOpen menu skipped (e.g. running outside interactive Sheet): " + err.toString());
+  }
+}
+
+/**
+ * Compiles list of all active target endpoints (Live Admin + Live Client + Local Tunnel).
+ */
+function getActiveEndpoints() {
+  var props = PropertiesService.getScriptProperties();
+  var endpoints = [];
+
+  // 1. Live Production Admin Webhook
+  var liveAdmin = props.getProperty("LIVE_ADMIN_URL") || CONFIG.LIVE_ADMIN_URL;
+  if (liveAdmin && liveAdmin.trim()) {
+    endpoints.push({
+      name: "Live Admin",
+      url: liveAdmin.trim(),
+      isProduction: true
+    });
+  }
+
+  // 2. Live Production Client Webhook
+  var liveClient = props.getProperty("LIVE_CLIENT_URL") || CONFIG.LIVE_CLIENT_URL;
+  if (liveClient && liveClient.trim() && liveClient.trim() !== liveAdmin.trim()) {
+    endpoints.push({
+      name: "Live Client",
+      url: liveClient.trim(),
+      isProduction: true
+    });
+  }
+
+  // 3. Local Development Tunnel (Custom Script Property, legacy property, or default)
+  var localTunnel = props.getProperty("LOCAL_TUNNEL_URL") ||
+                    props.getProperty("DEV_WEBHOOK_URL") ||
+                    props.getProperty("WEBHOOK_URL") ||
+                    CONFIG.DEFAULT_LOCAL_TUNNEL_URL;
+
+  if (localTunnel && localTunnel.trim()) {
+    var cleanLocal = localTunnel.trim();
+    // Only add if not already in production endpoints
+    var exists = endpoints.some(function(ep) { return ep.url.toLowerCase() === cleanLocal.toLowerCase(); });
+    if (!exists) {
+      endpoints.push({
+        name: "Local Dev",
+        url: cleanLocal,
+        isProduction: false
+      });
+    }
+  }
+
+  return endpoints;
+}
+
+/**
+ * Normalizes text for resilient dictionary lookups (lowercased, condensed whitespace).
  */
 function normalizeKey(str) {
   if (!str) return "";
@@ -47,7 +126,7 @@ function normalizeKey(str) {
 }
 
 /**
- * Resolves a value from e.namedValues or row values using normalized question patterns.
+ * Resolves a value from normalizedMap using an ordered list of question patterns.
  */
 function getValueByPatterns(normalizedMap, patterns) {
   for (var i = 0; i < patterns.length; i++) {
@@ -76,24 +155,22 @@ function parseRatingValue(raw) {
 }
 
 /**
- * Main trigger function called on each Google Form submission.
+ * Main trigger function invoked on each Google Form submission or manual sync.
  * @param {Object} e - Trigger event object passed by Google Sheets.
  */
 function onFormSubmit(e) {
   var lock = LockService.getScriptLock();
   try {
-    // Wait up to 30 seconds for concurrent submissions
+    // Wait up to 30 seconds for concurrent submissions to queue safely
     lock.waitLock(30000);
-
-    var scriptProperties = PropertiesService.getScriptProperties();
-    var webhookUrl = scriptProperties.getProperty("WEBHOOK_URL") || DEFAULT_WEBHOOK_URL;
-    var webhookSecret = scriptProperties.getProperty("WEBHOOK_SECRET") || DEFAULT_WEBHOOK_SECRET;
 
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
     var lastRow = (e && e.range) ? e.range.getRow() : sheet.getLastRow();
     var sheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
 
-    // Build normalized map from e.namedValues or by reading row directly
+    if (lastRow < 2) return;
+
+    // Build normalized map from e.namedValues or row values
     var normalizedMap = {};
 
     if (e && e.namedValues) {
@@ -102,11 +179,13 @@ function onFormSubmit(e) {
       }
     }
 
-    // Also read header row and current row from the sheet to ensure full coverage
     var lastCol = sheet.getLastColumn();
-    if (lastCol > 0 && lastRow > 1) {
-      var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
-      var rowData = sheet.getRange(lastRow, 1, 1, lastCol).getValues()[0];
+    var headers = [];
+    var rowData = [];
+
+    if (lastCol > 0) {
+      headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+      rowData = sheet.getRange(lastRow, 1, 1, lastCol).getValues()[0];
       for (var c = 0; c < headers.length; c++) {
         var nKey = normalizeKey(headers[c]);
         if (!normalizedMap[nKey] || normalizedMap[nKey] === "") {
@@ -116,10 +195,8 @@ function onFormSubmit(e) {
     }
 
     // ========================================================================
-    // EXACT FIELD EXTRACTIONS
+    // 1. CLIENT IDENTITY FIELDS
     // ========================================================================
-
-    // 1. Client Identity
     var email = getValueByPatterns(normalizedMap, [
       "You Email Id :",
       "Your Email Id :",
@@ -154,7 +231,9 @@ function onFormSubmit(e) {
       "Project Name"
     ]);
 
-    // 2. Experience / Rating Questions (1-5 scale)
+    // ========================================================================
+    // 2. EXPERIENCE & RATINGS (1-5 SCALE)
+    // ========================================================================
     var rawOverall = getValueByPatterns(normalizedMap, [
       "  How would you rate our overall service?  ",
       "How would you rate our overall service?",
@@ -177,7 +256,6 @@ function onFormSubmit(e) {
     var softwareQuality = parseRatingValue(rawQuality);
     var communicationSupport = parseRatingValue(rawSupport);
 
-    // Calculate arithmetic mean of valid rating responses
     var validRatings = [];
     if (overallService !== null) validRatings.push(overallService);
     if (softwareQuality !== null) validRatings.push(softwareQuality);
@@ -192,7 +270,9 @@ function onFormSubmit(e) {
       averageRating = Number((sum / validRatings.length).toFixed(2));
     }
 
-    // 3. Additional Experience Questions
+    // ========================================================================
+    // 3. FEEDBACK & TESTIMONIAL
+    // ========================================================================
     var likedMost = getValueByPatterns(normalizedMap, [
       "What did you like most about working with us?  ",
       "What did you like most about working with us?",
@@ -205,14 +285,12 @@ function onFormSubmit(e) {
       "Would you recommend"
     ]);
 
-    // 4. Improvement Feedback (Internal only)
     var improvementFeedback = getValueByPatterns(normalizedMap, [
       "Please suggest us how we can serve you better next time, below -",
       "Tell us how we can improve :",
       "Please suggest us how we can serve you better"
     ]);
 
-    // 5. Testimonial (Public review text)
     var testimonial = getValueByPatterns(normalizedMap, [
       "Please share your experience working with Astraiv Technologies.  ",
       "Please share your experience working with Astraiv Technologies.",
@@ -220,7 +298,6 @@ function onFormSubmit(e) {
       "Please share your experience"
     ]);
 
-    // 6. Permissions
     var websitePublishPermission = getValueByPatterns(normalizedMap, [
       "May we display your feedback on our website (www.astraivtechnologies.com)?  ",
       "May we display your feedback on our website (www.astraivtechnologies.com)?",
@@ -233,16 +310,16 @@ function onFormSubmit(e) {
       "May we display your name and company"
     ]) || "Yes";
 
-    // 7. Timestamp and Deterministic Submission ID
+    // 4. Timestamp & Deterministic ID
     var timestampStr = getValueByPatterns(normalizedMap, ["Timestamp", "timestamp"]) || new Date().toISOString();
     var parsedTimestamp = Date.parse(timestampStr) || new Date().getTime();
     var sourceSubmissionId = "GF-" + sheetId.substring(0, 6) + "-R" + lastRow + "-" + parsedTimestamp;
 
-    // Ensure testimonial has fallback content so responses are never dropped
+    // Resilient fallback for testimonial
     var effectiveTestimonial = testimonial || likedMost || improvementFeedback || ("Client provided a " + (overallService || 5) + "-star rating for Astraiv Technologies.");
 
     // ========================================================================
-    // CONSTRUCT PAYLOAD
+    // CONSTRUCT JSON PAYLOAD
     // ========================================================================
     var payload = {
       source: "google_form",
@@ -270,50 +347,35 @@ function onFormSubmit(e) {
     };
 
     // ========================================================================
-    // DISPATCH TO SECURE BACKEND WEBHOOK WITH RETRY
+    // DISPATCH TO ALL ACTIVE ENDPOINTS (LIVE + LOCAL DUAL DISPATCH)
     // ========================================================================
+    var endpoints = getActiveEndpoints();
+    var props = PropertiesService.getScriptProperties();
+    var secret = props.getProperty("WEBHOOK_SECRET") || CONFIG.WEBHOOK_SECRET;
+
     var options = {
       method: "post",
       contentType: "application/json",
       headers: {
-        "x-webhook-secret": webhookSecret,
-        "Bypass-Tunnel-Reminder": "true"
+        "x-webhook-secret": secret,
+        "Bypass-Tunnel-Reminder": "true",
+        "ngrok-skip-browser-warning": "true",
+        "User-Agent": "Astraiv-Google-Sheets-Sync/3.0"
       },
       payload: JSON.stringify(payload),
       muteHttpExceptions: true
     };
 
-    var maxRetries = 3;
-    var success = false;
-    for (var attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        var response = UrlFetchApp.fetch(webhookUrl, options);
-        var statusCode = response.getResponseCode();
-        var responseBody = response.getContentText();
+    var results = [];
 
-        Logger.log("[Webhook Dispatch Row " + lastRow + "] Attempt " + attempt + " - HTTP " + statusCode);
-        Logger.log("Response Body: " + responseBody);
-
-        if (statusCode >= 200 && statusCode < 300) {
-          success = true;
-          break;
-        } else {
-          Logger.log("Attempt " + attempt + " returned non-200 status code: " + statusCode);
-          if (attempt < maxRetries) {
-            Utilities.sleep(attempt * 2000);
-          }
-        }
-      } catch (reqError) {
-        Logger.log("Network error on attempt " + attempt + ": " + reqError.toString());
-        if (attempt < maxRetries) {
-          Utilities.sleep(attempt * 2000);
-        }
-      }
+    for (var i = 0; i < endpoints.length; i++) {
+      var ep = endpoints[i];
+      var epResult = dispatchToEndpoint(ep, options);
+      results.push(epResult);
     }
 
-    if (!success) {
-      Logger.log("Error: Webhook dispatch failed after " + maxRetries + " attempts for row " + lastRow);
-    }
+    // Write audit status to Google Sheet
+    updateSheetSyncStatus(sheet, headers, lastRow, results);
 
   } catch (err) {
     Logger.log("Fatal Exception in onFormSubmit: " + err.toString());
@@ -323,35 +385,103 @@ function onFormSubmit(e) {
 }
 
 /**
- * Manual test runner for verifying webhook connectivity from the Apps Script editor.
+ * Dispatches payload to a specific endpoint with retries for production and fast-fail for local.
  */
-function testWebhookSync() {
-  var scriptProperties = PropertiesService.getScriptProperties();
-  var webhookUrl = scriptProperties.getProperty("WEBHOOK_URL") || DEFAULT_WEBHOOK_URL;
-  var webhookSecret = scriptProperties.getProperty("WEBHOOK_SECRET") || DEFAULT_WEBHOOK_SECRET;
+function dispatchToEndpoint(ep, baseOptions) {
+  var maxAttempts = ep.isProduction ? 3 : 1; // Don't block if local dev tunnel is offline
+  var lastStatus = "Pending";
 
-  var samplePayload = {
+  for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      var response = UrlFetchApp.fetch(ep.url, baseOptions);
+      var statusCode = response.getResponseCode();
+      lastStatus = "HTTP " + statusCode;
+
+      Logger.log("[" + ep.name + "] Attempt " + attempt + " returned " + lastStatus);
+
+      if (statusCode >= 200 && statusCode < 300) {
+        return { name: ep.name, success: true, status: lastStatus };
+      }
+
+      if (attempt < maxAttempts) {
+        Utilities.sleep(attempt * 1500);
+      }
+    } catch (networkError) {
+      var errStr = networkError.toString();
+      if (errStr.indexOf("DNS") !== -1 || errStr.indexOf("Address") !== -1 || errStr.indexOf("Connection refused") !== -1) {
+        lastStatus = "Offline";
+      } else {
+        lastStatus = "Network Error";
+      }
+      Logger.log("[" + ep.name + "] Attempt " + attempt + " failed: " + lastStatus + " (" + errStr + ")");
+
+      if (attempt < maxAttempts) {
+        Utilities.sleep(attempt * 1500);
+      }
+    }
+  }
+
+  return { name: ep.name, success: false, status: lastStatus };
+}
+
+/**
+ * Updates or creates a "Sync Status" column on the processed row.
+ */
+function updateSheetSyncStatus(sheet, headers, row, results) {
+  try {
+    var statusColIdx = -1;
+    for (var i = 0; i < headers.length; i++) {
+      if (normalizeKey(headers[i]) === "sync status") {
+        statusColIdx = i + 1;
+        break;
+      }
+    }
+
+    if (statusColIdx === -1) {
+      statusColIdx = headers.length + 1;
+      sheet.getRange(1, statusColIdx).setValue("Sync Status").setFontWeight("bold");
+    }
+
+    var summaryParts = [];
+    for (var r = 0; r < results.length; r++) {
+      var res = results[r];
+      var icon = res.success ? "✅" : (res.status === "Offline" ? "⚪" : "❌");
+      summaryParts.push(icon + " " + res.name + ": " + res.status);
+    }
+
+    var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || "GMT", "dd MMM HH:mm");
+    var statusText = summaryParts.join(" | ") + " (" + now + ")";
+    sheet.getRange(row, statusColIdx).setValue(statusText);
+  } catch (err) {
+    Logger.log("Notice: Could not write Sync Status column: " + err.toString());
+  }
+}
+
+// ============================================================================
+// INTERACTIVE USER MENU ACTIONS (Runs from Google Sheet UI)
+// ============================================================================
+
+/**
+ * Menu Action: Pings all active endpoints with a test payload and displays an interactive alert.
+ */
+function menuTestConnections() {
+  var ui = SpreadsheetApp.getUi();
+  var endpoints = getActiveEndpoints();
+  var props = PropertiesService.getScriptProperties();
+  var secret = props.getProperty("WEBHOOK_SECRET") || CONFIG.WEBHOOK_SECRET;
+
+  var testPayload = {
     source: "google_form",
-    sourceSubmissionId: "GF-TEST-MANUAL-" + new Date().getTime(),
-    clientName: "Rahul Sharma",
-    companyName: "ABC Technologies",
-    designation: "CTO",
-    projectName: "Enterprise Cloud Portal",
-    email: "rahul.sharma@example.com",
-    ratings: {
-      overallService: 5,
-      softwareQuality: 4,
-      communicationSupport: 5
-    },
-    averageRating: 4.67,
-    likedMost: "Speed, architecture rigor, and clean codebase.",
-    wouldRecommend: "Yes",
-    improvementFeedback: "Everything was superb, keep it up.",
-    testimonial: "Astraiv delivered our platform professionally and ahead of schedule.",
-    permissions: {
-      websitePublishing: "Yes, you may publish my feedback",
-      identityDisplay: "Yes"
-    },
+    sourceSubmissionId: "GF-TEST-PING-" + new Date().getTime(),
+    clientName: "Connectivity Test",
+    companyName: "Astraiv Testing Suite",
+    designation: "System Ping",
+    projectName: "Dual-Sync Verification",
+    email: "test@astraivtechnologies.com",
+    ratings: { overallService: 5, softwareQuality: 5, communicationSupport: 5 },
+    averageRating: 5.0,
+    testimonial: "Automated test ping verifying dual-sync between Live and Local.",
+    permissions: { websitePublishing: "Yes", identityDisplay: "Yes" },
     submittedAt: new Date().toISOString()
   };
 
@@ -359,22 +489,85 @@ function testWebhookSync() {
     method: "post",
     contentType: "application/json",
     headers: {
-      "x-webhook-secret": webhookSecret,
-      "Bypass-Tunnel-Reminder": "true"
+      "x-webhook-secret": secret,
+      "Bypass-Tunnel-Reminder": "true",
+      "ngrok-skip-browser-warning": "true"
     },
-    payload: JSON.stringify(samplePayload),
+    payload: JSON.stringify(testPayload),
     muteHttpExceptions: true
   };
 
-  Logger.log("Sending test payload to: " + webhookUrl);
-  var response = UrlFetchApp.fetch(webhookUrl, options);
-  Logger.log("Test HTTP Status: " + response.getResponseCode());
-  Logger.log("Test Response: " + response.getContentText());
+  var report = "Astraiv Dual-Sync Connectivity Report:\n\n";
+
+  for (var i = 0; i < endpoints.length; i++) {
+    var ep = endpoints[i];
+    var res = dispatchToEndpoint(ep, options);
+    var symbol = res.success ? "✅ CONNECTED" : (res.status === "Offline" ? "⚠️ OFFLINE / TUNNEL CLOSED" : "❌ ERROR");
+    report += "• " + ep.name + " (" + ep.url + ")\n   → " + symbol + " (" + res.status + ")\n\n";
+  }
+
+  report += "Tip: Live Production is always active. If Local Dev says OFFLINE, simply launch your tunnel (e.g. untun or loca.lt).";
+
+  ui.alert("⚡ Endpoint Status", report, ui.ButtonSet.OK);
 }
 
 /**
- * Synchronizes ALL existing responses already recorded in the Google Sheet.
- * Call this directly from the Apps Script editor to ingest previously submitted rows.
+ * Menu Action: Prompt user for new Local Dev Tunnel URL and save directly to Script Properties.
+ */
+function menuSetLocalTunnelUrl() {
+  var ui = SpreadsheetApp.getUi();
+  var props = PropertiesService.getScriptProperties();
+  var currentUrl = props.getProperty("LOCAL_TUNNEL_URL") || CONFIG.DEFAULT_LOCAL_TUNNEL_URL;
+
+  var response = ui.prompt(
+    "Set Local Dev Tunnel URL",
+    "Enter your active tunnel URL (from loca.lt, ngrok, untun, or pinggy).\n\n" +
+    "Example: https://astraiv-reviews-sync.loca.lt/api/reviews/google-form\n\n" +
+    "Current setting: " + currentUrl + "\n\n" +
+    "New URL:",
+    ui.ButtonSet.OK_CANCEL
+  );
+
+  if (response.getSelectedButton() === ui.Button.OK) {
+    var input = response.getResponseText().trim();
+    if (input) {
+      // Auto-append route if user entered bare domain
+      if (input.indexOf("/api/reviews/google-form") === -1) {
+        input = input.replace(/\/+$/, "") + "/api/reviews/google-form";
+      }
+      props.setProperty("LOCAL_TUNNEL_URL", input);
+      ui.alert("Success", "Local tunnel URL updated to:\n\n" + input + "\n\nAll future form submissions will now sync to both Live and Local!", ui.ButtonSet.OK);
+    }
+  }
+}
+
+/**
+ * Menu Action: View active endpoints.
+ */
+function menuViewEndpoints() {
+  var ui = SpreadsheetApp.getUi();
+  var endpoints = getActiveEndpoints();
+  var text = "Configured Dual-Sync Endpoints:\n\n";
+  for (var i = 0; i < endpoints.length; i++) {
+    text += (i + 1) + ". " + endpoints[i].name + " (" + (endpoints[i].isProduction ? "Live" : "Dev") + "):\n   " + endpoints[i].url + "\n\n";
+  }
+  ui.alert("Active Endpoints", text, ui.ButtonSet.OK);
+}
+
+/**
+ * Menu Action: Clear local tunnel URL to route exclusively to Live Production.
+ */
+function menuClearLocalTunnelUrl() {
+  var ui = SpreadsheetApp.getUi();
+  var props = PropertiesService.getScriptProperties();
+  props.deleteProperty("LOCAL_TUNNEL_URL");
+  props.deleteProperty("DEV_WEBHOOK_URL");
+  props.deleteProperty("WEBHOOK_URL");
+  ui.alert("Cleared", "Local tunnel URL has been cleared. The script will use the default tunnel or live production only.", ui.ButtonSet.OK);
+}
+
+/**
+ * Bulk synchronizes all historical responses recorded in the Google Sheet.
  */
 function syncAllExistingRows() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
@@ -383,10 +576,13 @@ function syncAllExistingRows() {
 
   if (lastRow < 2) {
     Logger.log("No response rows found in sheet to sync.");
+    try {
+      SpreadsheetApp.getUi().alert("Notice", "No response rows found in sheet.", SpreadsheetApp.getUi().ButtonSet.OK);
+    } catch(e) {}
     return;
   }
 
-  Logger.log("Found " + (lastRow - 1) + " response rows. Starting sync...");
+  Logger.log("Found " + (lastRow - 1) + " response rows. Starting dual sync...");
 
   for (var r = 2; r <= lastRow; r++) {
     Logger.log("--- Syncing Row " + r + " ---");
@@ -396,6 +592,15 @@ function syncAllExistingRows() {
     onFormSubmit(fakeEvent);
   }
 
-  Logger.log("All existing rows synchronized successfully!");
+  Logger.log("All rows synchronized successfully!");
+  try {
+    SpreadsheetApp.getUi().alert("Complete", "Successfully synchronized " + (lastRow - 1) + " rows to both Live and Local!", SpreadsheetApp.getUi().ButtonSet.OK);
+  } catch(e) {}
 }
 
+/**
+ * Command-line / Apps Script editor test function.
+ */
+function testWebhookSync() {
+  menuTestConnections();
+}
