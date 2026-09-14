@@ -19,6 +19,62 @@ function parseRating(val: unknown): number | null {
   return null;
 }
 
+interface FormPayload {
+  [key: string]: unknown;
+  clientName?: string;
+  client_name?: string;
+  companyName?: string;
+  company_name?: string;
+  company?: string;
+  designation?: string;
+  projectName?: string;
+  project_name?: string;
+  email?: string;
+  Email?: string;
+  ratings?: {
+    overallService?: unknown;
+    softwareQuality?: unknown;
+    communicationSupport?: unknown;
+    [key: string]: unknown;
+  };
+  overall_service_rating?: unknown;
+  overallService?: unknown;
+  software_quality_rating?: unknown;
+  softwareQuality?: unknown;
+  communication_support_rating?: unknown;
+  communicationSupport?: unknown;
+  averageRating?: unknown;
+  average_rating?: unknown;
+  rating?: unknown;
+  likedMost?: string;
+  liked_most?: string;
+  wouldRecommend?: string;
+  would_recommend?: string;
+  improvementFeedback?: string;
+  improvement_feedback?: string;
+  testimonial?: string;
+  review?: string;
+  original_review?: string;
+  originalReview?: string;
+  permissions?: {
+    websitePublishing?: string;
+    identityDisplay?: string;
+    [key: string]: unknown;
+  };
+  websitePublishPermission?: string;
+  website_publish_permission?: string;
+  identityDisplayPermission?: string;
+  identity_display_permission?: string;
+  sourceSubmissionId?: string;
+  source_submission_id?: string;
+  review_id?: string;
+  reviewId?: string;
+  submittedAt?: string;
+  submitted_at?: string;
+  timestamp?: string;
+  Timestamp?: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
     // 1. Validate x-webhook-secret
@@ -41,9 +97,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Parse payload
-    let payload: Record<string, any>;
+    let payload: FormPayload;
     try {
-      payload = await req.json();
+      payload = (await req.json()) as FormPayload;
     } catch {
       return NextResponse.json(
         { error: 'Bad Request: Invalid JSON payload.' },

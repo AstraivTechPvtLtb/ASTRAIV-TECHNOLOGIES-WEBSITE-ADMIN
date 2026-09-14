@@ -28,11 +28,37 @@ const DEFAULT_SETTINGS = {
   slaLabel: 'ON-TIME SLA DELIVERY',
 };
 
+interface ComplianceDbRecord {
+  id: string;
+  isoNumber: string;
+  isoLabel: string;
+  showIsoBadge: boolean;
+  showIsoSection: boolean;
+  uptimeValue: string;
+  uptimeLabel: string;
+  savingsValue: string;
+  savingsLabel: string;
+  actionsValue: string;
+  actionsLabel: string;
+  slaValue: string;
+  slaLabel: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+interface PrismaWithCompliance {
+  complianceSetting?: {
+    findFirst: () => Promise<ComplianceDbRecord | null>;
+    create: (args: { data: Partial<ComplianceDbRecord> }) => Promise<ComplianceDbRecord>;
+    update: (args: { where: { id: string }; data: Partial<ComplianceDbRecord> }) => Promise<ComplianceDbRecord>;
+  };
+}
+
 /**
  * Helper to fetch the compliance record via model or raw SQL fallback.
  */
-async function fetchComplianceRecord(): Promise<any> {
-  const model = (db as any).complianceSetting;
+async function fetchComplianceRecord(): Promise<ComplianceDbRecord> {
+  const model = (db as unknown as PrismaWithCompliance).complianceSetting;
   if (model && typeof model.findFirst === 'function') {
     let rec = await model.findFirst();
     if (!rec) {
@@ -43,7 +69,7 @@ async function fetchComplianceRecord(): Promise<any> {
 
   // Fallback: direct query via raw SQL in case PrismaClient was cached in dev memory
   try {
-    const rows: any[] = await db.$queryRaw`
+    const rows = await db.$queryRaw<ComplianceDbRecord[]>`
       SELECT 
         id, 
         iso_number as "isoNumber", 
@@ -112,10 +138,10 @@ async function fetchComplianceRecord(): Promise<any> {
 /**
  * Helper to update the compliance record via model or raw SQL fallback.
  */
-async function saveComplianceRecord(payload: any): Promise<any> {
-  const model = (db as any).complianceSetting;
+async function saveComplianceRecord(payload: AdminComplianceSettingsInput): Promise<ComplianceDbRecord> {
+  const model = (db as unknown as PrismaWithCompliance).complianceSetting;
   if (model && typeof model.findFirst === 'function') {
-    let rec = await model.findFirst();
+    const rec = await model.findFirst();
     if (!rec) {
       return await model.create({ data: payload });
     }
@@ -126,7 +152,7 @@ async function saveComplianceRecord(payload: any): Promise<any> {
   }
 
   // Fallback: direct raw SQL update
-  const rows: any[] = await db.$queryRaw`SELECT id FROM compliance_settings LIMIT 1`;
+  const rows = await db.$queryRaw<Array<{ id: string }>>`SELECT id FROM compliance_settings LIMIT 1`;
   if (rows && rows.length > 0) {
     const id = rows[0].id;
     await db.$executeRaw`
@@ -148,7 +174,7 @@ async function saveComplianceRecord(payload: any): Promise<any> {
       WHERE id = ${id}
     `;
 
-    const updatedRows: any[] = await db.$queryRaw`
+    const updatedRows = await db.$queryRaw<ComplianceDbRecord[]>`
       SELECT 
         id, 
         iso_number as "isoNumber", 
@@ -197,6 +223,14 @@ async function saveComplianceRecord(payload: any): Promise<any> {
     return {
       id,
       ...payload,
+      uptimeValue: payload.uptimeValue || '99.99%',
+      uptimeLabel: payload.uptimeLabel || 'SERVER UPTIME',
+      savingsValue: payload.savingsValue || '40%+',
+      savingsLabel: payload.savingsLabel || 'INFRASTRUCTURE SAVING',
+      actionsValue: payload.actionsValue || '10M+',
+      actionsLabel: payload.actionsLabel || 'API ACTIONS',
+      slaValue: payload.slaValue || '100%',
+      slaLabel: payload.slaLabel || 'ON-TIME SLA DELIVERY',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -232,7 +266,7 @@ export async function getComplianceSettings(): Promise<{
         updatedAt: record.updatedAt instanceof Date ? record.updatedAt.toISOString() : String(record.updatedAt || ''),
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('getComplianceSettings error:', error);
     return {
       settings: {
@@ -241,7 +275,7 @@ export async function getComplianceSettings(): Promise<{
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
-      error: error.message || 'Failed to fetch compliance settings',
+      error: error instanceof Error ? error.message : 'Failed to fetch compliance settings',
     };
   }
 }
@@ -297,11 +331,11 @@ export async function updateComplianceSettings(
         updatedAt: updated.updatedAt instanceof Date ? updated.updatedAt.toISOString() : String(updated.updatedAt || ''),
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('updateComplianceSettings error:', error);
     return {
       success: false,
-      error: error.message || 'Failed to update compliance settings.',
+      error: error instanceof Error ? error.message : 'Failed to update compliance settings.',
     };
   }
 }

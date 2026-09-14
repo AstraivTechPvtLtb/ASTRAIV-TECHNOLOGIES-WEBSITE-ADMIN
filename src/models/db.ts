@@ -29,7 +29,7 @@ const pool = new pg.Pool({
 const adapter = new PrismaPg(pool);
 
 // If Prisma client was cached in memory before complianceSetting model was added, discard it
-if (globalForPrisma.prisma && !(globalForPrisma.prisma as any).complianceSetting) {
+if (globalForPrisma.prisma && !(globalForPrisma.prisma as unknown as { complianceSetting?: unknown }).complianceSetting) {
   globalForPrisma.prisma = undefined;
 }
 

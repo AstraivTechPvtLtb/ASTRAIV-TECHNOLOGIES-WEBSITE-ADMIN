@@ -10,7 +10,6 @@ import { AdminComplianceSettings } from '@/models/types';
 import { updateComplianceSettings } from '@/controllers/compliance.controller';
 import {
   ShieldCheck,
-  Eye,
   EyeOff,
   Save,
   Loader2,
@@ -20,7 +19,6 @@ import {
   RotateCcw,
   Sparkles,
   SlidersHorizontal,
-  Check,
 } from 'lucide-react';
 import { Button } from '@/views/ui/button';
 import { Input } from '@/views/ui/input';
@@ -84,10 +82,10 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
           message: res.error || 'Failed to update compliance settings.',
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setNotice({
         type: 'error',
-        message: err.message || 'An unexpected error occurred while saving.',
+        message: err instanceof Error ? err.message : 'An unexpected error occurred while saving.',
       });
     } finally {
       setIsSaving(false);
@@ -130,10 +128,10 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
           message: res.error || 'Failed to update compliance settings.',
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setNotice({
         type: 'error',
-        message: err.message || 'An error occurred while saving.',
+        message: err instanceof Error ? err.message : 'An error occurred while saving.',
       });
     } finally {
       setIsSaving(false);
@@ -176,10 +174,10 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
           message: res.error || 'Failed to update compliance settings.',
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setNotice({
         type: 'error',
-        message: err.message || 'An error occurred while saving.',
+        message: err instanceof Error ? err.message : 'An error occurred while saving.',
       });
     } finally {
       setIsSaving(false);
