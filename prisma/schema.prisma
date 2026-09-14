@@ -197,20 +197,45 @@ model ContactSubmission {
 
 // Client Reviews & Testimonials
 model Review {
-  id          String    @id @default(uuid())
-  reviewId    String?   @map("review_id")
-  clientName  String    @map("client_name")
-  company     String?
-  designation String?
-  review      String    @db.Text
-  rating      Int       @default(5)
-  imageUrl    String?   @map("image_url")
-  status      String    @default("pending") // pending, approved, rejected
-  featured    Boolean   @default(false)
-  adminNote   String?   @map("admin_note") @db.Text
-  publishedAt DateTime? @map("published_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id                          String    @id @default(uuid())
+  sourceSubmissionId          String?   @unique @map("source_submission_id")
+  reviewId                    String?   @map("review_id")
+  clientName                  String    @map("client_name")
+  companyName                 String?   @map("company_name")
+  company                     String?
+  designation                 String?
+  projectName                 String?   @map("project_name")
+  email                       String?
+
+  overallServiceRating        Int?      @map("overall_service_rating")
+  softwareQualityRating       Int?      @map("software_quality_rating")
+  communicationSupportRating  Int?      @map("communication_support_rating")
+
+  averageRating               Decimal   @default(5.00) @db.Decimal(3, 2) @map("average_rating")
+  displayRating               Int       @default(5) @map("display_rating")
+  rating                      Int       @default(5)
+
+  likedMost                   String?   @map("liked_most") @db.Text
+  wouldRecommend              String?   @map("would_recommend")
+  improvementFeedback         String?   @map("improvement_feedback") @db.Text
+
+  originalReview              String    @default("") @map("original_review") @db.Text
+  reviewText                  String    @default("") @map("review_text") @db.Text
+  review                      String    @default("") @db.Text
+  imageUrl                    String?   @map("image_url")
+
+  websitePublishPermission    String?   @map("website_publish_permission")
+  canPublishReview            Boolean   @default(false) @map("can_publish_review")
+  identityDisplayPermission   String?   @default("Yes") @map("identity_display_permission")
+
+  status                      String    @default("pending") // pending, approved, rejected
+  featured                    Boolean   @default(false)
+  adminNote                   String?   @map("admin_note") @db.Text
+
+  submittedAt                 DateTime? @map("submitted_at")
+  publishedAt                 DateTime? @map("published_at")
+  createdAt                   DateTime  @default(now()) @map("created_at")
+  updatedAt                   DateTime  @updatedAt @map("updated_at")
 
   @@map("reviews")
 }
@@ -308,4 +333,25 @@ model PricingPlan {
   updatedAt        DateTime @updatedAt @map("updated_at")
 
   @@map("pricing_plans")
+}
+
+// ISO Compliance & Performance Metrics Configuration
+model ComplianceSetting {
+  id             String   @id @default(uuid())
+  isoNumber      String   @default("ISO 27001:2022") @map("iso_number")
+  isoLabel       String   @default("Certified") @map("iso_label")
+  showIsoBadge   Boolean  @default(true) @map("show_iso_badge")
+  showIsoSection Boolean  @default(true) @map("show_iso_section")
+  uptimeValue    String   @default("99.99%") @map("uptime_value")
+  uptimeLabel    String   @default("SERVER UPTIME") @map("uptime_label")
+  savingsValue   String   @default("40%+") @map("savings_value")
+  savingsLabel   String   @default("INFRASTRUCTURE SAVING") @map("savings_label")
+  actionsValue   String   @default("10M+") @map("actions_value")
+  actionsLabel   String   @default("API ACTIONS") @map("actions_label")
+  slaValue       String   @default("100%") @map("sla_value")
+  slaLabel       String   @default("ON-TIME SLA DELIVERY") @map("sla_label")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("compliance_settings")
 }

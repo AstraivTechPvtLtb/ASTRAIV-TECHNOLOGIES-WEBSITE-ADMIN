@@ -13,3 +13,4 @@ export * from './auth.controller';
 export * from './footer.controller';
 export * from './recruitment.controller';
 export * from './pricing.controller';
+export * from './compliance.controller';

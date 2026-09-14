@@ -18,10 +18,12 @@ export default async function AdminReviewsPage({ searchParams }: AdminReviewsPag
 
   const { status, search } = await searchParams;
 
+  // Always fetch all reviews for the reviews management view so the client-side
+  // tabs (All, Pending, Approved, Rejected) can filter instantly without empty states.
   const { data: reviews } = await getReviews({
-    status: (status as 'all' | 'pending' | 'approved' | 'rejected') || 'all',
+    status: 'all',
     search: search || '',
-    limit: 100,
+    limit: 500,
   });
 
   return (
@@ -33,7 +35,7 @@ export default async function AdminReviewsPage({ searchParams }: AdminReviewsPag
       />
 
       <main className="p-6 md:p-8 max-w-7xl">
-        <ReviewsTable initialData={reviews} />
+        <ReviewsTable initialData={reviews} initialStatus={status || 'all'} />
       </main>
     </div>
   );

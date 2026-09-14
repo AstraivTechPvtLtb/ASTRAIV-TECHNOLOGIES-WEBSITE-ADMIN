@@ -50,16 +50,34 @@ export interface AdminEnquiry {
  */
 export interface AdminReview {
   id: string;
+  source_submission_id?: string | null;
   review_id?: string | null;
   client_name: string;
+  company_name?: string | null;
   company?: string | null;
   designation?: string | null;
-  review: string;
+  project_name?: string | null;
+  email?: string | null;
+  overall_service_rating?: number | null;
+  software_quality_rating?: number | null;
+  communication_support_rating?: number | null;
+  average_rating: number;
+  display_rating: number;
   rating: number;
+  liked_most?: string | null;
+  would_recommend?: string | null;
+  improvement_feedback?: string | null;
+  original_review: string;
+  review_text: string;
+  review: string;
   image_url?: string | null;
+  website_publish_permission?: string | null;
+  can_publish_review: boolean;
+  identity_display_permission?: string | null;
   status: ReviewStatus;
   featured: boolean;
   admin_note?: string | null;
+  submitted_at?: string | null;
   published_at?: string | null;
   created_at: string;
   updated_at?: string;
@@ -314,4 +332,40 @@ export interface AdminPricingPlanInput {
   buttonUrl?: string;
   active?: boolean;
   orderIndex?: number;
+}
+
+/**
+ * ISO Compliance & Client Website Performance Section Settings
+ */
+export interface AdminComplianceSettings {
+  id: string;
+  isoNumber: string;
+  isoLabel: string;
+  showIsoBadge: boolean;
+  showIsoSection: boolean;
+  uptimeValue: string;
+  uptimeLabel: string;
+  savingsValue: string;
+  savingsLabel: string;
+  actionsValue: string;
+  actionsLabel: string;
+  slaValue: string;
+  slaLabel: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminComplianceSettingsInput {
+  isoNumber: string;
+  isoLabel: string;
+  showIsoBadge: boolean;
+  showIsoSection: boolean;
+  uptimeValue?: string;
+  uptimeLabel?: string;
+  savingsValue?: string;
+  savingsLabel?: string;
+  actionsValue?: string;
+  actionsLabel?: string;
+  slaValue?: string;
+  slaLabel?: string;
 }
