@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation';
 import { getAdminUser } from '@/controllers/auth.controller';
+import { getComplianceSettings } from '@/controllers/compliance.controller';
 import { AdminHeader } from '@/views/layouts/admin-header';
 import { ShieldCheck, Database, Webhook } from 'lucide-react';
 import { Card, CardContent } from '@/views/ui/card';
 import { Badge } from '@/views/ui/badge';
+import { IsoComplianceManager } from '@/views/settings/iso-compliance-manager';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +14,8 @@ export default async function AdminSettingsPage() {
   if (!admin) {
     redirect('/login');
   }
+
+  const { settings: complianceSettings } = await getComplianceSettings();
 
   const supabaseConfigured = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -25,10 +29,12 @@ export default async function AdminSettingsPage() {
     <div className="flex-1 flex flex-col min-h-screen">
       <AdminHeader
         title="System Settings & Integrations"
-        subtitle="Review database connections, security status, and Google Sheet synchronization parameters."
+        subtitle="Review database connections, security status, ISO compliance section, and Google Sheet synchronization parameters."
       />
 
       <main className="p-6 md:p-8 space-y-8 max-w-5xl">
+        {/* Client Website ISO & Compliance Section Manager */}
+        <IsoComplianceManager initialSettings={complianceSettings} />
         {/* Administrator Profile Card */}
         <Card className="bg-slate-900/80 border-slate-800 text-slate-100">
           <CardContent className="p-6">
