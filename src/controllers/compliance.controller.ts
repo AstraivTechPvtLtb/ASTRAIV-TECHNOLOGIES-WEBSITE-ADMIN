@@ -13,6 +13,15 @@ import {
   AdminActionResponse,
 } from '@/models/types';
 
+const DEFAULT_CLIENT_LOGOS = [
+  { id: 'acme', name: 'ACME CORP', iconKey: 'acme', imageUrl: null },
+  { id: 'globex', name: 'GLOBEX', iconKey: 'globex', imageUrl: null },
+  { id: 'initech', name: 'INITECH', iconKey: 'initech', imageUrl: null },
+  { id: 'umbrella', name: 'UMBRELLA', iconKey: 'umbrella', imageUrl: null },
+  { id: 'hooli', name: 'HOOLI', iconKey: 'hooli', imageUrl: null },
+  { id: 'stark', name: 'STARK INDUSTRIES', iconKey: 'stark', imageUrl: null },
+];
+
 const DEFAULT_SETTINGS = {
   isoNumber: 'ISO 27001:2022',
   isoLabel: 'Certified',
@@ -26,6 +35,7 @@ const DEFAULT_SETTINGS = {
   actionsLabel: 'API ACTIONS',
   slaValue: '100%',
   slaLabel: 'ON-TIME SLA DELIVERY',
+  clientLogos: JSON.stringify(DEFAULT_CLIENT_LOGOS),
 };
 
 interface ComplianceDbRecord {
@@ -42,6 +52,8 @@ interface ComplianceDbRecord {
   actionsLabel: string;
   slaValue: string;
   slaLabel: string;
+  clientLogos?: string | null;
+  client_logos?: string | null;
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -84,6 +96,7 @@ async function fetchComplianceRecord(): Promise<ComplianceDbRecord> {
         actions_label as "actionsLabel",
         sla_value as "slaValue",
         sla_label as "slaLabel",
+        client_logos as "clientLogos",
         created_at as "createdAt",
         updated_at as "updatedAt"
       FROM compliance_settings 
@@ -100,7 +113,7 @@ async function fetchComplianceRecord(): Promise<ComplianceDbRecord> {
       INSERT INTO compliance_settings (
         id, iso_number, iso_label, show_iso_badge, show_iso_section,
         uptime_value, uptime_label, savings_value, savings_label,
-        actions_value, actions_label, sla_value, sla_label
+        actions_value, actions_label, sla_value, sla_label, client_logos
       ) VALUES (
         ${id},
         ${DEFAULT_SETTINGS.isoNumber},
@@ -114,7 +127,8 @@ async function fetchComplianceRecord(): Promise<ComplianceDbRecord> {
         ${DEFAULT_SETTINGS.actionsValue},
         ${DEFAULT_SETTINGS.actionsLabel},
         ${DEFAULT_SETTINGS.slaValue},
-        ${DEFAULT_SETTINGS.slaLabel}
+        ${DEFAULT_SETTINGS.slaLabel},
+        ${DEFAULT_SETTINGS.clientLogos}
       )
     `;
 
@@ -139,15 +153,23 @@ async function fetchComplianceRecord(): Promise<ComplianceDbRecord> {
  * Helper to update the compliance record via model or raw SQL fallback.
  */
 async function saveComplianceRecord(payload: AdminComplianceSettingsInput): Promise<ComplianceDbRecord> {
+  const clientLogosString = payload.clientLogos
+    ? (typeof payload.clientLogos === 'string' ? payload.clientLogos : JSON.stringify(payload.clientLogos))
+    : null;
+
   const model = (db as unknown as PrismaWithCompliance).complianceSetting;
   if (model && typeof model.findFirst === 'function') {
     const rec = await model.findFirst();
+    const dataToSave = {
+      ...payload,
+      clientLogos: clientLogosString,
+    };
     if (!rec) {
-      return await model.create({ data: payload });
+      return await model.create({ data: dataToSave });
     }
     return await model.update({
       where: { id: rec.id },
-      data: payload,
+      data: dataToSave,
     });
   }
 
@@ -170,6 +192,7 @@ async function saveComplianceRecord(payload: AdminComplianceSettingsInput): Prom
         actions_label = ${payload.actionsLabel},
         sla_value = ${payload.slaValue},
         sla_label = ${payload.slaLabel},
+        client_logos = ${clientLogosString},
         updated_at = NOW()
       WHERE id = ${id}
     `;
@@ -189,6 +212,7 @@ async function saveComplianceRecord(payload: AdminComplianceSettingsInput): Prom
         actions_label as "actionsLabel",
         sla_value as "slaValue",
         sla_label as "slaLabel",
+        client_logos as "clientLogos",
         created_at as "createdAt",
         updated_at as "updatedAt"
       FROM compliance_settings 
@@ -202,7 +226,7 @@ async function saveComplianceRecord(payload: AdminComplianceSettingsInput): Prom
       INSERT INTO compliance_settings (
         id, iso_number, iso_label, show_iso_badge, show_iso_section,
         uptime_value, uptime_label, savings_value, savings_label,
-        actions_value, actions_label, sla_value, sla_label
+        actions_value, actions_label, sla_value, sla_label, client_logos
       ) VALUES (
         ${id},
         ${payload.isoNumber},
@@ -216,7 +240,8 @@ async function saveComplianceRecord(payload: AdminComplianceSettingsInput): Prom
         ${payload.actionsValue},
         ${payload.actionsLabel},
         ${payload.slaValue},
-        ${payload.slaLabel}
+        ${payload.slaLabel},
+        ${clientLogosString}
       )
     `;
 
@@ -231,6 +256,7 @@ async function saveComplianceRecord(payload: AdminComplianceSettingsInput): Prom
       actionsLabel: payload.actionsLabel || 'API ACTIONS',
       slaValue: payload.slaValue || '100%',
       slaLabel: payload.slaLabel || 'ON-TIME SLA DELIVERY',
+      clientLogos: clientLogosString,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -247,6 +273,19 @@ export async function getComplianceSettings(): Promise<{
   try {
     const record = await fetchComplianceRecord();
 
+    let clientLogos = DEFAULT_CLIENT_LOGOS;
+    const rawLogos = record.clientLogos || record.client_logos;
+    if (rawLogos) {
+      try {
+        const parsed = typeof rawLogos === 'string' ? JSON.parse(rawLogos) : rawLogos;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          clientLogos = parsed;
+        }
+      } catch {
+        // Fallback to default
+      }
+    }
+
     return {
       settings: {
         id: record.id,
@@ -262,6 +301,7 @@ export async function getComplianceSettings(): Promise<{
         actionsLabel: record.actionsLabel || 'API ACTIONS',
         slaValue: record.slaValue || '100%',
         slaLabel: record.slaLabel || 'ON-TIME SLA DELIVERY',
+        clientLogos,
         createdAt: record.createdAt instanceof Date ? record.createdAt.toISOString() : String(record.createdAt || ''),
         updatedAt: record.updatedAt instanceof Date ? record.updatedAt.toISOString() : String(record.updatedAt || ''),
       },
@@ -272,6 +312,7 @@ export async function getComplianceSettings(): Promise<{
       settings: {
         id: 'default',
         ...DEFAULT_SETTINGS,
+        clientLogos: DEFAULT_CLIENT_LOGOS,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
@@ -300,6 +341,7 @@ export async function updateComplianceSettings(
       actionsLabel: input.actionsLabel?.trim() || 'API ACTIONS',
       slaValue: input.slaValue?.trim() || '100%',
       slaLabel: input.slaLabel?.trim() || 'ON-TIME SLA DELIVERY',
+      clientLogos: input.clientLogos,
     };
 
     const updated = await saveComplianceRecord(payload);
@@ -308,6 +350,19 @@ export async function updateComplianceSettings(
       revalidatePath('/settings');
     } catch {
       // safe fallback if outside active request lifecycle
+    }
+
+    let parsedLogos = DEFAULT_CLIENT_LOGOS;
+    const rawUpdatedLogos = updated.clientLogos || updated.client_logos;
+    if (rawUpdatedLogos) {
+      try {
+        const parsed = typeof rawUpdatedLogos === 'string' ? JSON.parse(rawUpdatedLogos) : rawUpdatedLogos;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          parsedLogos = parsed;
+        }
+      } catch {
+        // Fallback
+      }
     }
 
     return {
@@ -327,6 +382,7 @@ export async function updateComplianceSettings(
         actionsLabel: updated.actionsLabel,
         slaValue: updated.slaValue,
         slaLabel: updated.slaLabel,
+        clientLogos: parsedLogos,
         createdAt: updated.createdAt instanceof Date ? updated.createdAt.toISOString() : String(updated.createdAt || ''),
         updatedAt: updated.updatedAt instanceof Date ? updated.updatedAt.toISOString() : String(updated.updatedAt || ''),
       },

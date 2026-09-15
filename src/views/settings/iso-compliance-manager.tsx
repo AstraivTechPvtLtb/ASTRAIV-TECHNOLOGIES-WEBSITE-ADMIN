@@ -19,16 +19,30 @@ import {
   RotateCcw,
   Sparkles,
   SlidersHorizontal,
+  Plus,
+  Trash2,
+  Building2,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { Button } from '@/views/ui/button';
 import { Input } from '@/views/ui/input';
 import { Badge } from '@/views/ui/badge';
 import { Card, CardContent } from '@/views/ui/card';
 import { cn } from '@/lib/utils';
+import { ClientLogoItem } from '@/models/types';
 
 interface IsoComplianceManagerProps {
   initialSettings: AdminComplianceSettings;
 }
+
+const DEFAULT_CLIENT_LOGOS_FALLBACK: ClientLogoItem[] = [
+  { id: 'acme', name: 'ACME CORP', iconKey: 'acme', imageUrl: null },
+  { id: 'globex', name: 'GLOBEX', iconKey: 'globex', imageUrl: null },
+  { id: 'initech', name: 'INITECH', iconKey: 'initech', imageUrl: null },
+  { id: 'umbrella', name: 'UMBRELLA', iconKey: 'umbrella', imageUrl: null },
+  { id: 'hooli', name: 'HOOLI', iconKey: 'hooli', imageUrl: null },
+  { id: 'stark', name: 'STARK INDUSTRIES', iconKey: 'stark', imageUrl: null },
+];
 
 export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerProps) {
   const [isoNumber, setIsoNumber] = useState(initialSettings.isoNumber || 'ISO 27001:2022');
@@ -45,6 +59,13 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
   const [actionsLabel, setActionsLabel] = useState(initialSettings.actionsLabel || 'API ACTIONS');
   const [slaValue, setSlaValue] = useState(initialSettings.slaValue || '100%');
   const [slaLabel, setSlaLabel] = useState(initialSettings.slaLabel || 'ON-TIME SLA DELIVERY');
+
+  // Partner Company Logos & Circular Profile Pictures
+  const [clientLogos, setClientLogos] = useState<ClientLogoItem[]>(
+    initialSettings.clientLogos && initialSettings.clientLogos.length > 0
+      ? initialSettings.clientLogos
+      : DEFAULT_CLIENT_LOGOS_FALLBACK
+  );
 
   const [isSaving, setIsSaving] = useState(false);
   const [notice, setNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -68,6 +89,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
         actionsLabel,
         slaValue,
         slaLabel,
+        clientLogos,
       });
 
       if (res.success) {
@@ -197,6 +219,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
     setActionsLabel('API ACTIONS');
     setSlaValue('100%');
     setSlaLabel('ON-TIME SLA DELIVERY');
+    setClientLogos(DEFAULT_CLIENT_LOGOS_FALLBACK);
   };
 
   return (
@@ -577,6 +600,105 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
                   />
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Partner Company Logos & Circular Profile Pictures */}
+          <div className="pt-5 border-t border-slate-800 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Building2 className="h-3.5 w-3.5 text-cyan-400" />
+                  Client Company Logos & Profile Pictures (Proof Ticker)
+                </span>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Customize the client company logos displayed in small circular profile picture avatars below the metrics. Provide a picture URL or leave empty to use authentic vector icons.
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const newId = `partner-${Date.now()}`;
+                  setClientLogos((prev) => [
+                    ...prev,
+                    { id: newId, name: 'NEW PARTNER', iconKey: '', imageUrl: '' },
+                  ]);
+                }}
+                className="border-slate-800 bg-slate-900/80 text-cyan-400 hover:text-cyan-300 text-xs font-semibold gap-1.5 rounded-xl h-8 self-start sm:self-auto"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Company</span>
+              </Button>
+            </div>
+
+            {/* List of Company Logo Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {clientLogos.map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center gap-3.5 hover:border-slate-700 transition-colors"
+                >
+                  {/* Small Circle Profile Picture Preview */}
+                  <div className="w-10 h-10 aspect-square rounded-full bg-[#101726] border border-slate-700/80 flex items-center justify-center overflow-hidden shrink-0 shadow-inner ring-1 ring-white/10">
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-full h-full object-cover rounded-full aspect-square"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <span className="text-xs font-bold text-cyan-400 font-mono">
+                        {item.name ? item.name.charAt(0).toUpperCase() : '?'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Inputs */}
+                  <div className="flex-1 space-y-1.5 min-w-0">
+                    <Input
+                      placeholder="Company Name (e.g. ACME CORP)"
+                      value={item.name}
+                      onChange={(e) => {
+                        const next = [...clientLogos];
+                        next[idx] = { ...next[idx], name: e.target.value };
+                        setClientLogos(next);
+                      }}
+                      className="bg-slate-900 border-slate-800 text-slate-200 text-xs rounded-lg h-7 font-semibold"
+                    />
+                    <div className="flex items-center gap-1.5">
+                      <ImageIcon className="h-3 w-3 text-slate-500 shrink-0" />
+                      <Input
+                        placeholder="Image / Logo URL (optional)"
+                        value={item.imageUrl || ''}
+                        onChange={(e) => {
+                          const next = [...clientLogos];
+                          next[idx] = { ...next[idx], imageUrl: e.target.value };
+                          setClientLogos(next);
+                        }}
+                        className="bg-slate-900 border-slate-800 text-slate-400 text-[11px] rounded-lg h-6 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Remove Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClientLogos((prev) => prev.filter((_, i) => i !== idx));
+                    }}
+                    title="Remove Company"
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
 
