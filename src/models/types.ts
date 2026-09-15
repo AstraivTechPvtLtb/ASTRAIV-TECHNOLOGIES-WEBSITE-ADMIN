@@ -335,6 +335,16 @@ export interface AdminPricingPlanInput {
 }
 
 /**
+ * Enterprise client partner logo item for the proof ticker
+ */
+export interface ClientLogoItem {
+  id: string;
+  name: string;
+  imageUrl?: string | null;
+  iconKey?: string;
+}
+
+/**
  * ISO Compliance & Client Website Performance Section Settings
  */
 export interface AdminComplianceSettings {
@@ -351,6 +361,7 @@ export interface AdminComplianceSettings {
   actionsLabel: string;
   slaValue: string;
   slaLabel: string;
+  clientLogos?: ClientLogoItem[];
   createdAt: string;
   updatedAt: string;
 }
@@ -368,4 +379,5 @@ export interface AdminComplianceSettingsInput {
   actionsLabel?: string;
   slaValue?: string;
   slaLabel?: string;
+  clientLogos?: ClientLogoItem[] | string;
 }

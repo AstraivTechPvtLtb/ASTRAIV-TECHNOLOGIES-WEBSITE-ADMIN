@@ -350,6 +350,7 @@ model ComplianceSetting {
   actionsLabel   String   @default("API ACTIONS") @map("actions_label")
   slaValue       String   @default("100%") @map("sla_value")
   slaLabel       String   @default("ON-TIME SLA DELIVERY") @map("sla_label")
+  clientLogos    String?  @map("client_logos") @db.Text
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 

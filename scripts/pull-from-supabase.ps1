@@ -21,7 +21,7 @@ $SUPABASE_DB   = "postgres"
 $LOCAL_HOST = "localhost"
 $LOCAL_PORT = "5432"
 $LOCAL_USER = "postgres"
-$LOCAL_PASS = "Akashindia123"
+$LOCAL_PASS = "Akashindia123@"
 $LOCAL_DB   = "astraiv_tech"
 
 # Locate pg_dump and psql
@@ -67,9 +67,11 @@ try {
         Write-Host "Database '$LOCAL_DB' already exists." -ForegroundColor Green
     }
 
-    Write-Host "`n[3/4] Restoring schema and data into local '$LOCAL_DB'..." -ForegroundColor Yellow
+    Write-Host "`n[3/5] Restoring schema and data into local '$LOCAL_DB'..." -ForegroundColor Yellow
     # Clean existing public schema to prevent duplicate collisions
     & "$PG_DIR\psql.exe" -h $LOCAL_HOST -p $LOCAL_PORT -U $LOCAL_USER -d $LOCAL_DB -c "DROP SCHEMA IF EXISTS public CASCADE;" | Out-Null
+    # Ensure auth schema and auth.role() exist so Supabase RLS policies restore cleanly
+    & "$PG_DIR\psql.exe" -h $LOCAL_HOST -p $LOCAL_PORT -U $LOCAL_USER -d $LOCAL_DB -c "CREATE SCHEMA IF NOT EXISTS auth; CREATE OR REPLACE FUNCTION auth.role() RETURNS text LANGUAGE sql AS 'SELECT ''authenticated''::text;';" | Out-Null
     # Restore dump
     & "$PG_DIR\psql.exe" -h $LOCAL_HOST -p $LOCAL_PORT -U $LOCAL_USER -d $LOCAL_DB -f $DUMP_FILE | Out-Null
 
@@ -78,8 +80,21 @@ try {
     }
     Write-Host " Restoration completed successfully." -ForegroundColor Green
 
-    Write-Host "`n[4/4] Verifying local database tables..." -ForegroundColor Yellow
+    Write-Host "`n[4/5] Verifying local database tables..." -ForegroundColor Yellow
     & "$PG_DIR\psql.exe" -h $LOCAL_HOST -p $LOCAL_PORT -U $LOCAL_USER -d $LOCAL_DB -c "\dt public.*"
+
+    Write-Host "`n[5/5] Regenerating Prisma client..." -ForegroundColor Yellow
+    $workspaceRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+    if (Test-Path "$workspaceRoot\admin") {
+        Push-Location "$workspaceRoot\admin"
+        npx prisma generate
+        Pop-Location
+    }
+    if (Test-Path "$workspaceRoot\client") {
+        Push-Location "$workspaceRoot\client"
+        npx prisma generate
+        Pop-Location
+    }
 
     Write-Host "`n=================================================" -ForegroundColor Green
     Write-Host " Database sync finished! Local DB is ready to use." -ForegroundColor Green
