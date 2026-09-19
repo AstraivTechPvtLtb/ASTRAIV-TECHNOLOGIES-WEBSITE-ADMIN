@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
+    "@google-analytics/data": "^7.1.0",
     "@hookform/resolvers": "^5.4.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
@@ -37,6 +38,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@swc/helpers": "^0.5.23",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.20.0",
@@ -47,7 +49,6 @@
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.3",
     "prisma": "^7.8.0",
-    "@swc/helpers": "^0.5.23",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

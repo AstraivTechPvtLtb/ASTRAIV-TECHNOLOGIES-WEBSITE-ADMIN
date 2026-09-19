@@ -30,6 +30,7 @@ export function middleware(request: NextRequest) {
   // Protected administrative routes
   const protectedPrefixes = [
     '/dashboard',
+    '/analytics',
     '/enquiries',
     '/reviews',
     '/projects',
