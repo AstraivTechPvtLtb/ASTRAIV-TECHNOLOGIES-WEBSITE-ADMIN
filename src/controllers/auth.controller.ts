@@ -10,6 +10,9 @@ import { AdminUserSession, AdminActionResponse } from '@/models/types';
 import { cookies } from 'next/headers';
 import { verifyPassword } from 'better-auth/crypto';
 
+// In-memory session cache to prevent parallel database storms when multiple API routes fire simultaneously
+const adminUserCache = new Map<string, { user: AdminUserSession; expiresAt: number }>();
+
 /**
  * Verifies admin session strictly from the session cookie.
  * Does not bypass authentication without credentials.
@@ -20,16 +23,30 @@ export async function getAdminUser(): Promise<AdminUserSession | null> {
     const adminSessionCookie = cookieStore.get('astraiv_admin_session');
 
     if (adminSessionCookie?.value) {
+      const sessionId = adminSessionCookie.value;
+      const now = Date.now();
+      const cached = adminUserCache.get(sessionId);
+
+      if (cached && cached.expiresAt > now) {
+        return cached.user;
+      }
+
       const user = await db.user.findUnique({
-        where: { id: adminSessionCookie.value },
+        where: { id: sessionId },
       });
       if (user && user.role === 'ADMIN') {
-        return {
+        const sessionUser: AdminUserSession = {
           id: user.id,
           email: user.email,
           fullName: user.name,
           role: user.role,
         };
+        // Cache for 60 seconds
+        adminUserCache.set(sessionId, {
+          user: sessionUser,
+          expiresAt: now + 60 * 1000,
+        });
+        return sessionUser;
       }
     }
 
@@ -129,6 +146,7 @@ export async function logoutAdmin(): Promise<AdminActionResponse> {
       path: '/',
       maxAge: 0,
     });
+    adminUserCache.clear();
     cookieStore.delete('astraiv_admin_session');
     return { success: true };
   } catch (error) {

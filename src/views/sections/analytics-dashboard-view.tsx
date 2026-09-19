@@ -113,6 +113,15 @@ export function AnalyticsDashboardView() {
 
       const queryString = query.toString() ? `?${query.toString()}` : '';
 
+      const safeJson = async (res: Response) => {
+        try {
+          if (!res.ok) return null;
+          return await res.json();
+        } catch {
+          return null;
+        }
+      };
+
       const [
         overviewRes,
         usersRes,
@@ -140,13 +149,13 @@ export function AnalyticsDashboardView() {
         countriesData,
         realtimeData,
       ] = await Promise.all([
-        overviewRes.json(),
-        usersRes.json(),
-        pagesRes.json(),
-        sourcesRes.json(),
-        devicesRes.json(),
-        countriesRes.json(),
-        realtimeRes.json(),
+        safeJson(overviewRes),
+        safeJson(usersRes),
+        safeJson(pagesRes),
+        safeJson(sourcesRes),
+        safeJson(devicesRes),
+        safeJson(countriesRes),
+        safeJson(realtimeRes),
       ]);
 
       if (overviewData?.data) {
@@ -155,22 +164,23 @@ export function AnalyticsDashboardView() {
       setIsConfigured(overviewData?.configured ?? true);
       setConfigReason(overviewData?.configReason || null);
 
-      if (usersData?.success) setTimeline(usersData.data || []);
-      if (pagesData?.success) setPages(pagesData.data || []);
-      if (sourcesData?.success) setSources(sourcesData.data || []);
-      if (devicesData?.success) {
+      if (usersData?.data) setTimeline(usersData.data || []);
+      if (pagesData?.data) setPages(pagesData.data || []);
+      if (sourcesData?.data) setSources(sourcesData.data || []);
+      if (devicesData?.data) {
         setDevices(devicesData.data?.devices || []);
         setTechnology(devicesData.data?.technology || null);
       }
-      if (countriesData?.success) setCountries(countriesData.data || []);
-      if (realtimeData?.success) setRealtime(realtimeData.data || null);
+      if (countriesData?.data) setCountries(countriesData.data || []);
+      if (realtimeData?.data) setRealtime(realtimeData.data || null);
 
       if (!overviewRes.ok && !overviewData?.data) {
-        setErrorMessage(overviewData?.error || 'Failed to fetch analytics overview.');
+        setErrorMessage(overviewData?.error || null);
+      } else {
+        setErrorMessage(null);
       }
     } catch (err) {
-      console.error('[Analytics View Error]:', err);
-      setErrorMessage((err as Error)?.message || 'An error occurred while loading analytics.');
+      console.warn('[Analytics View]: Handled fetch notice', (err as Error)?.message || err);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -186,7 +196,7 @@ export function AnalyticsDashboardView() {
   useEffect(() => {
     const timer = setInterval(() => {
       fetch('/api/analytics/realtime')
-        .then((res) => res.json())
+        .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data?.success && data.data) {
             setRealtime(data.data);

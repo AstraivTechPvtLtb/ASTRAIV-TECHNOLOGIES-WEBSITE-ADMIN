@@ -6,8 +6,6 @@
  */
 
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
-import fs from 'fs';
-import path from 'path';
 
 // Types for GA4 Reports
 export interface AnalyticsOverview {
@@ -163,33 +161,7 @@ function getAnalyticsClient(): BetaAnalyticsDataClient {
     return clientInstance;
   }
 
-  // Prevent google-auth-library from attempting to read non-existent file on serverless
-  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    const credsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS.trim();
-    const resolvedPath = path.isAbsolute(credsPath)
-      ? credsPath
-      : path.resolve(process.cwd(), credsPath);
-    if (!fs.existsSync(resolvedPath)) {
-      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    }
-  }
-
-  // 1. Try local service-account file if available (e.g. in local dev)
-  const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim();
-  if (credentialsPath) {
-    const resolvedPath = path.isAbsolute(credentialsPath)
-      ? credentialsPath
-      : path.resolve(process.cwd(), credentialsPath);
-
-    if (fs.existsSync(resolvedPath)) {
-      clientInstance = new BetaAnalyticsDataClient({
-        keyFilename: resolvedPath,
-      });
-      return clientInstance;
-    }
-  }
-
-  // 2. Parse inline or embedded credentials
+  // Parse inline, environment, or embedded credentials
   let creds: { client_email: string; private_key: string; project_id?: string } | null = null;
 
   const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY?.trim();
@@ -207,7 +179,7 @@ function getAnalyticsClient(): BetaAnalyticsDataClient {
     }
   }
 
-  // 3. Fallback to verified embedded service account
+  // Fallback to verified embedded service account
   if (!creds) {
     try {
       const decoded = Buffer.from(DEFAULT_SERVICE_ACCOUNT_B64, 'base64').toString('utf8');
@@ -218,6 +190,11 @@ function getAnalyticsClient(): BetaAnalyticsDataClient {
   }
 
   if (creds && creds.client_email && creds.private_key) {
+    // Clean environment to prevent google-auth-library from checking missing file paths on serverless
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    }
+
     clientInstance = new BetaAnalyticsDataClient({
       credentials: {
         client_email: creds.client_email,
@@ -228,7 +205,7 @@ function getAnalyticsClient(): BetaAnalyticsDataClient {
     return clientInstance;
   }
 
-  // 4. Default client
+  // Fallback client
   clientInstance = new BetaAnalyticsDataClient();
   return clientInstance;
 }
