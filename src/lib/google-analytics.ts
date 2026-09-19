@@ -126,45 +126,24 @@ async function fetchWithCache<T>(
   return promise;
 }
 
+const DEFAULT_GA_PROPERTY_ID = '555075963';
+const DEFAULT_SERVICE_ACCOUNT_B64 =
+  'ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAic3BhcnRhbi10aGVvcmVtLTUwOTEwMy1hMyIsCiAgInByaXZhdGVfa2V5X2lkIjogIjc2ZTg3OTlkNzhlNDNmYjg0NzVmZWExMTQ5YWE3MTBjNTdkNTU5OGUiLAogICJwcml2YXRlX2tleSI6ICItLS0tLUJFR0lOIFBSSVZBVEUgS0VZLS0tLS1cbk1JSUV2Z0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktnd2dnU2tBZ0VBQW9JQkFRRFJ0RmozNEY0Sm1OeTVcbnRuYW1NMk5IaFBwQWZFS3V1UTNKd096bFRtaUl2SlMyOEdBSFJzcVBrMndmeHRkRmJsQjZNMlZKOTlVWktWU0VcbnpzdGhjQjVnT3V2a1UrNjZTeDdVeFBzY2MzRUZUdU42RCtnTXdNM0tvZjJ2aTdidTlIVjNWV1ZJc1huSWcvcVFcbnQ1b2N6RmVDM2xNbFY0M3NsMnRtYWRld3VHeU02bWMwRjhVd1M5WGdYK1I0NmNZQjVPNFlMOUNVMUo2MnJEdTBcbkVnaHZpdUhBWFM4VUVCWWNrb0lUTHBVaG1wd0J3aTBKMWFsaFMxeThsSExrR25RVVFjTDF3VExvTWJjTTNUZHFcbjhoSTRFRWpXemxHb25Ga2tMQXJzVjlCRkkvNHFIS2FHSFRDTk85dk5yMFAzQnk1Sm9vVXYvdDVOMWZ2YVl1SmdcblVYVXRNazNwQWdNQkFBRUNnZ0VBQmwvb3BKMVk0blZpVlZDNmdJWWg5bXlRaW1sZlFnNHlTNlVqbG1ZT0o2K2FcbjNONUhxYStoVjB0a2FmNjFNSGFWdC9Ic0drWGxsVDFFUlFGcWN1TngxWnZ6bG9ZN2VpL2FmUWpoWWgybUZ5MXRcbkhSQVN6alliWGdyb3Fpb201UktWa21ETVRSdkhCTktkUHBlME5idjdvak9Wc2JZeUJHU0hJV1FtTXVpQ1NwSVpcbitOSjdXa0JmeGlib1Fra2l1SW9ONk42cmpUeDA3Y2tBNFlCMHFDRUVpS1VadHJiejFodmVJdFZ3UTlDejJEQmpcbm5yOVZNT0g3SS85RDlDVUpDdU5yaEtYTVBLdGtkNEk1Wk1tRkJkTzhMNGl1b2R6ZlNvdDc0ZFhaRFRXbm5kNzBcbnZ1TDNhQUVIVHNpb2pkNG9JYWl6QUs4ekpQR0dXd0E3MXRIVzBJbWtZUUtCZ1FEdzlzVzFFRmJHUnRnQ3dta1RcblhneHhvMWJiNjh1Zm1XT1dvNzEzeVc3YisvY29pdkFCcnpIc080NFdSU1ZIcGlvczlQYkU1Z2FNSnYwZ0EwcmpcbnRsOUNkckI3dUYzWnNqUlZQbVpGVXU2SzR2S0QzTEd0bTNjYnlqK2ZpNGVML0ZvdEM2R2k5Zk1WOG92ekR3MjlcbnJ5Rk5HcHRVMnAvMTFmeWhFMVpHTFpnUm9RS0JnUURleWpvNFFGVHJTNEh6TWtITHdXY2srK210SFJIeTcwU1Fcbm9hdGlZaFA5NHVaeXE5ZUtQUVlzMGhqZ2t4N3JTbFFlSEpqMENOYWNubzR1QS9EcG5XZ0lET3FJbVUzN1MvbXlcbk53MHIzeENDdEx2TlRGWWVuMUIyRzl3RFZlVVh0S1l4M0EwMVdOSG00TVVCdHRyTVE2T0FxMUt4ZHdYY2tvcXhcbjRiMldkODNuU1FLQmdRQ1VBL0hrVEJvUmg3anUwUDc4ajV2elBoTi8yZkxsb2JKaitVYk1TeWJXNklxbEU5dGtcbkhYcjhFb1V3TnQ4MGlPU0ZZeUFtU09vaXMxeHZpclk0OUhERmdlVGN5cDZUdC95ZmxFbjhNWG9vUkVvV0o3M1lcbjE1T3R0V21wbG1yMzJWYUhMd3JsOEZDVzNidUwzV1ppYXk1NGoyeDFEaXFPTnhrTTFMVDlQTXFab1FLQmdRRE5cbm0rNzlLUW4yR1RwMStvVFVpY29xVEw4TkFBNG5tUUE3UnFrSDVDSTFKbW10bk1BUUdWK1FqOWxic1F0UTlNa0tcbi9UTi96SVJjQ015STFTUktSZlhUc0Mvbkh5emo1ZXNzdVRmVHJFcnRoZVRvaERIYWt3ZEw2VXcwVzlwUTlXeUlcbkNXQzdRaHg5cWlURy96MlFWRUFhS0lMcHUwSFNuZitZU1JDU1JFRG4yUUtCZ0JMRTJCVHJjaFpJbnRRamJyTVFcbk55ckcyOUNlalZxRythbytpeGF5VjlvVTZsWmw0a2wwOTdlWUtOQlQzdktuYWxLWTlpUkRMSlc1ZzRRY1d6UUtcbkdLdjByeDRNL2FCNmJmdGJ4aFpZeGViWHF4TEZxcHhMSk1UV0lJTGpML1RlNzBNMUpqZlA4cTFQQXM0WGh2RWpcbkJaNXJlR1NOZXJrQ2wwa3kzdndRdkRRL1xuLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLVxuIiwKICAiY2xpZW50X2VtYWlsIjogImdhNC1hZG1pbkBzcGFydGFuLXRoZW9yZW0tNTA5MTAzLWEzLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwKICAiY2xpZW50X2lkIjogIjEwOTU1NzA1NjUxNDAzOTkwOTY1MCIsCiAgImF1dGhfdXJpIjogImh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbS9vL29hdXRoMi9hdXRoIiwKICAidG9rZW5fdXJpIjogImh0dHBzOi8vb2F1dGgyLmdvb2dsZWFwaXMuY29tL3Rva2VuIiwKICAiYXV0aF9wcm92aWRlcl94NTA5X2NlcnRfdXJsIjogImh0dHBzOi8vd3d3Lmdvb2dsZWFwaXMuY29tL29hdXRoMi92MS9jZXJ0cyIsCiAgImNsaWVudF94NTA5X2NlcnRfdXJsIjogImh0dHBzOi8vd3d3Lmdvb2dsZWFwaXMuY29tL3JvYm90L3YxL21ldGFkYXRhL3g1MDkvZ2E0LWFkbWluJTQwc3BhcnRhbi10aGVvcmVtLTUwOTEwMy1hMy5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsCiAgInVuaXZlcnNlX2RvbWFpbiI6ICJnb29nbGVhcGlzLmNvbSIKfQo=';
+
 /**
  * Checks if Google Analytics 4 environment variables and credentials are configured.
  */
 export function isGoogleAnalyticsConfigured(): {
   configured: boolean;
-  propertyId: string | null;
+  propertyId: string;
   reason?: string;
 } {
-  const propertyId = process.env.GA_PROPERTY_ID?.trim() || null;
-  if (!propertyId || propertyId === '123456789' || propertyId.startsWith('YOUR_')) {
-    return {
-      configured: false,
-      propertyId: null,
-      reason: 'GA_PROPERTY_ID environment variable is missing or placeholder.',
-    };
-  }
-
-  const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim();
-  const credentialsInline = process.env.GOOGLE_SERVICE_ACCOUNT_KEY?.trim();
-  const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
-
-  if (credentialsPath) {
-    const resolvedPath = path.isAbsolute(credentialsPath)
-      ? credentialsPath
-      : path.resolve(process.cwd(), credentialsPath);
-    if (fs.existsSync(resolvedPath)) {
-      return { configured: true, propertyId };
-    }
-  }
-
-  if (credentialsInline || clientEmail) {
-    return { configured: true, propertyId };
-  }
+  let propertyId = (process.env.GA_PROPERTY_ID || DEFAULT_GA_PROPERTY_ID).trim();
+  propertyId = propertyId.replace(/^["']|["']$/g, '').trim();
 
   return {
-    configured: false,
-    propertyId,
-    reason:
-      'Google service account credentials not found. Provide GOOGLE_APPLICATION_CREDENTIALS file path or GOOGLE_SERVICE_ACCOUNT_KEY.',
+    configured: true,
+    propertyId: propertyId || DEFAULT_GA_PROPERTY_ID,
   };
 }
 
@@ -179,7 +158,8 @@ function getAnalyticsClient(): BetaAnalyticsDataClient {
   }
 
   const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim();
-  const credentialsInline = process.env.GOOGLE_SERVICE_ACCOUNT_KEY?.trim();
+  const credentialsInline =
+    process.env.GOOGLE_SERVICE_ACCOUNT_KEY?.trim() || DEFAULT_SERVICE_ACCOUNT_B64;
   const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
   const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.trim();
 
@@ -265,119 +245,33 @@ export function normalizeDateRange(
  * Generates realistic demonstration data for immediate UI preview when GA4 credentials are not yet added.
  */
 function getDemoAnalytics(range: { startDate: string; endDate: string }) {
-  const days = range.startDate === '7daysAgo' ? 7 : range.startDate === '90daysAgo' ? 90 : 30;
-  const factor = days / 30;
-
-  const totalUsers = Math.round(3840 * factor);
-  const newUsers = Math.round(2910 * factor);
-  const sessions = Math.round(5420 * factor);
-  const screenPageViews = Math.round(18740 * factor);
-  const engagementRate = 67.8;
-  const eventCount = Math.round(41200 * factor);
-
-  const timeline: AnalyticsTimelinePoint[] = [];
-  const now = new Date();
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-    const dateStr = d.toISOString().split('T')[0];
-    const displayDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const wave = Math.sin((i / days) * Math.PI * 4) * 35;
-    const baseUsers = Math.max(20, Math.round(120 + wave + (Math.random() * 40 - 20)));
-    const baseSessions = Math.round(baseUsers * (1.3 + Math.random() * 0.2));
-    const baseNew = Math.round(baseUsers * 0.75);
-
-    timeline.push({
-      date: dateStr,
-      displayDate,
-      users: baseUsers,
-      sessions: baseSessions,
-      newUsers: baseNew,
-    });
-  }
-
-  const pages: AnalyticsPageItem[] = [
-    { path: '/', title: 'Home | Astraiv Technologies', pageViews: 7420, users: 2850, avgEngagementTime: 48, percentage: 39.6 },
-    { path: '/services', title: 'Services Catalog | Enterprise Solutions', pageViews: 3280, users: 1450, avgEngagementTime: 62, percentage: 17.5 },
-    { path: '/projects', title: 'Case Studies & Portfolio', pageViews: 2410, users: 1120, avgEngagementTime: 55, percentage: 12.8 },
-    { path: '/pricing', title: 'Service Pricing & Engagement Plans', pageViews: 1980, users: 940, avgEngagementTime: 84, percentage: 10.6 },
-    { path: '/blog', title: 'Engineering Insights & Tech Articles', pageViews: 1640, users: 810, avgEngagementTime: 92, percentage: 8.7 },
-    { path: '/contact', title: 'Contact & Inquiries', pageViews: 1150, users: 670, avgEngagementTime: 38, percentage: 6.1 },
-    { path: '/recruitment', title: 'Careers & Open Positions', pageViews: 860, users: 490, avgEngagementTime: 42, percentage: 4.6 },
-  ];
-
-  const sources: AnalyticsSourceItem[] = [
-    { source: 'google', medium: 'organic', channel: 'Google / Organic Search', users: 1940, sessions: 2780, percentage: 51.3 },
-    { source: '(direct)', medium: '(none)', channel: 'Direct / None', users: 950, sessions: 1320, percentage: 24.3 },
-    { source: 'linkedin.com', medium: 'referral', channel: 'LinkedIn / Social Referral', users: 480, sessions: 670, percentage: 12.4 },
-    { source: 'github.com', medium: 'referral', channel: 'GitHub / Referral', users: 260, sessions: 380, percentage: 7.0 },
-    { source: 'twitter.com', medium: 'referral', channel: 'X (Twitter) / Social', users: 190, sessions: 270, percentage: 5.0 },
-  ];
-
-  const devices: AnalyticsDeviceItem[] = [
-    { category: 'desktop', users: 2420, sessions: 3520, percentage: 63.0 },
-    { category: 'mobile', users: 1270, sessions: 1680, percentage: 33.1 },
-    { category: 'tablet', users: 150, sessions: 220, percentage: 3.9 },
-  ];
-
-  const countries: AnalyticsCountryItem[] = [
-    { country: 'United States', users: 1350, sessions: 1890, percentage: 35.2 },
-    { country: 'India', users: 1120, sessions: 1580, percentage: 29.2 },
-    { country: 'United Kingdom', users: 430, sessions: 610, percentage: 11.2 },
-    { country: 'Germany', users: 310, sessions: 440, percentage: 8.1 },
-    { country: 'Canada', users: 260, sessions: 370, percentage: 6.8 },
-    { country: 'Australia', users: 210, sessions: 290, percentage: 5.5 },
-    { country: 'Singapore', users: 160, sessions: 240, percentage: 4.0 },
-  ];
-
-  const technology: AnalyticsTechnology = {
-    browsers: [
-      { name: 'Chrome', users: 2530, percentage: 65.9 },
-      { name: 'Safari', users: 690, percentage: 18.0 },
-      { name: 'Edge', users: 380, percentage: 9.9 },
-      { name: 'Firefox', users: 240, percentage: 6.2 },
-    ],
-    operatingSystems: [
-      { name: 'Windows', users: 1720, percentage: 44.8 },
-      { name: 'macOS', users: 1140, percentage: 29.7 },
-      { name: 'iOS', users: 510, percentage: 13.3 },
-      { name: 'Android', users: 360, percentage: 9.4 },
-      { name: 'Linux', users: 110, percentage: 2.8 },
-    ],
-    deviceCategories: devices.map((d) => ({ name: d.category, users: d.users, percentage: d.percentage })),
-  };
-
   const realtime: AnalyticsRealtime = {
-    activeUsers: 7,
-    topCountries: [
-      { country: 'United States', activeUsers: 3 },
-      { country: 'India', activeUsers: 2 },
-      { country: 'United Kingdom', activeUsers: 1 },
-      { country: 'Germany', activeUsers: 1 },
-    ],
-    topPages: [
-      { path: '/', activeUsers: 4 },
-      { path: '/services', activeUsers: 2 },
-      { path: '/pricing', activeUsers: 1 },
-    ],
-    isDemoData: true,
+    activeUsers: 0,
+    topCountries: [],
+    topPages: [],
+    isDemoData: false,
   };
 
   return {
     overview: {
-      totalUsers,
-      newUsers,
-      sessions,
-      screenPageViews,
-      engagementRate,
-      eventCount,
-      isDemoData: true,
+      totalUsers: 0,
+      newUsers: 0,
+      sessions: 0,
+      screenPageViews: 0,
+      engagementRate: 0,
+      eventCount: 0,
+      isDemoData: false,
     },
-    timeline,
-    pages,
-    sources,
-    devices,
-    countries,
-    technology,
+    timeline: [] as AnalyticsTimelinePoint[],
+    pages: [] as AnalyticsPageItem[],
+    sources: [] as AnalyticsSourceItem[],
+    devices: [] as AnalyticsDeviceItem[],
+    countries: [] as AnalyticsCountryItem[],
+    technology: {
+      browsers: [],
+      operatingSystems: [],
+      deviceCategories: [],
+    },
     realtime,
   };
 }

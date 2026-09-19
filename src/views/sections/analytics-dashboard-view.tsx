@@ -70,7 +70,6 @@ export function AnalyticsDashboardView() {
   const [customStart, setCustomStart] = useState<string>('');
   const [customEnd, setCustomEnd] = useState<string>('');
   const [isCustomOpen, setIsCustomOpen] = useState(false);
-  const [demoMode, setDemoMode] = useState<boolean>(false);
 
   // Data States
   const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
@@ -111,9 +110,6 @@ export function AnalyticsDashboardView() {
       } else {
         query.set('range', rangePreset);
       }
-      if (demoMode) {
-        query.set('demo', 'true');
-      }
 
       const queryString = query.toString() ? `?${query.toString()}` : '';
 
@@ -132,7 +128,7 @@ export function AnalyticsDashboardView() {
         fetch(`/api/analytics/sources${queryString}`),
         fetch(`/api/analytics/devices${queryString}`),
         fetch(`/api/analytics/countries${queryString}`),
-        fetch(`/api/analytics/realtime${demoMode ? '?demo=true' : ''}`),
+        fetch('/api/analytics/realtime'),
       ]);
 
       const [
@@ -177,7 +173,7 @@ export function AnalyticsDashboardView() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [rangePreset, customStart, customEnd, demoMode]);
+  }, [rangePreset, customStart, customEnd]);
 
   // Initial fetch and dependency trigger
   useEffect(() => {
@@ -187,7 +183,7 @@ export function AnalyticsDashboardView() {
   // Auto-refresh real-time data every 30 seconds
   useEffect(() => {
     const timer = setInterval(() => {
-      fetch(`/api/analytics/realtime${demoMode ? '?demo=true' : ''}`)
+      fetch('/api/analytics/realtime')
         .then((res) => res.json())
         .then((data) => {
           if (data?.success && data.data) {
@@ -198,7 +194,7 @@ export function AnalyticsDashboardView() {
     }, 30000);
 
     return () => clearInterval(timer);
-  }, [demoMode]);
+  }, []);
 
   // Filtered and paginated pages
   const filteredPages = useMemo(() => {
@@ -251,16 +247,6 @@ export function AnalyticsDashboardView() {
               </span>
             </div>
           </div>
-
-          {overview?.isDemoData && (
-            <Badge
-              variant="outline"
-              className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-[11px] font-semibold flex items-center gap-1.5 px-3 py-1"
-            >
-              <Sparkles className="h-3 w-3" />
-              <span>Demo Preview Mode</span>
-            </Badge>
-          )}
         </div>
 
         {/* Date Presets & Refresh Controls */}
@@ -350,44 +336,6 @@ export function AnalyticsDashboardView() {
           >
             Apply Range
           </Button>
-        </div>
-      )}
-
-      {/* Setup Required / Demonstration Notice Banner */}
-      {!isConfigured && (
-        <div className="p-5 rounded-2xl bg-blue-950/40 border border-blue-800/60 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-start gap-3.5">
-            <div className="p-2.5 rounded-xl bg-blue-600/20 text-blue-400 shrink-0 mt-0.5">
-              <AlertCircle className="h-5 w-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                <span>Google Analytics 4 Setup Required</span>
-                <span className="text-[10px] bg-blue-500/20 text-blue-300 font-mono px-2 py-0.5 rounded-md">
-                  SETUP.md Available
-                </span>
-              </h4>
-              <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-                {configReason ||
-                  'Your Google Analytics Service Account credentials or GA_PROPERTY_ID are not yet configured in admin/.env.'}{' '}
-                The dashboard is currently running in <strong>Live Demo Mode</strong> to showcase all telemetry, KPI cards, Recharts visualizations, and table interactions.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5 shrink-0 w-full md:w-auto justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setDemoMode(!demoMode);
-              }}
-              className="h-9 rounded-xl border-blue-700/50 bg-blue-900/30 text-blue-200 text-xs font-bold hover:bg-blue-800/40"
-            >
-              <Sparkles className="h-3.5 w-3.5 mr-1 text-blue-400" />
-              {demoMode ? 'Switch to Live API' : 'Refresh Demo'}
-            </Button>
-          </div>
         </div>
       )}
 
