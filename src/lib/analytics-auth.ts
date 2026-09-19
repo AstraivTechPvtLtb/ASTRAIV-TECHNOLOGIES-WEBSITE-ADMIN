@@ -39,8 +39,8 @@ export async function verifyAdminSession(): Promise<
     return {
       authorized: false,
       response: NextResponse.json(
-        { error: 'Internal Server Error: Authentication verification failed.' },
-        { status: 500 }
+        { error: 'Unauthorized: Authentication verification failed.' },
+        { status: 401 }
       ),
     };
   }
