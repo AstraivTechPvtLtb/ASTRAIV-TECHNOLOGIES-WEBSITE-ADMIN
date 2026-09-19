@@ -18,3 +18,6 @@ export * from './tables/pricing-table';
 
 // Cards
 export * from './cards/admin-stat-card';
+
+// Sections & Analytics
+export * from './sections/analytics-dashboard-view';
