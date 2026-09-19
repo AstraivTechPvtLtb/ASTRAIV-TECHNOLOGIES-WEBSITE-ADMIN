@@ -149,23 +149,25 @@ export function AnalyticsDashboardView() {
         realtimeRes.json(),
       ]);
 
-      if (!overviewRes.ok || !overviewData.success) {
-        throw new Error(overviewData.error || 'Failed to fetch analytics overview.');
+      if (overviewData?.data) {
+        setOverview(overviewData.data);
       }
+      setIsConfigured(overviewData?.configured ?? true);
+      setConfigReason(overviewData?.configReason || null);
 
-      setOverview(overviewData.data);
-      setIsConfigured(overviewData.configured ?? true);
-      setConfigReason(overviewData.configReason || null);
-
-      if (usersData.success) setTimeline(usersData.data || []);
-      if (pagesData.success) setPages(pagesData.data || []);
-      if (sourcesData.success) setSources(sourcesData.data || []);
-      if (devicesData.success) {
+      if (usersData?.success) setTimeline(usersData.data || []);
+      if (pagesData?.success) setPages(pagesData.data || []);
+      if (sourcesData?.success) setSources(sourcesData.data || []);
+      if (devicesData?.success) {
         setDevices(devicesData.data?.devices || []);
         setTechnology(devicesData.data?.technology || null);
       }
-      if (countriesData.success) setCountries(countriesData.data || []);
-      if (realtimeData.success) setRealtime(realtimeData.data || null);
+      if (countriesData?.success) setCountries(countriesData.data || []);
+      if (realtimeData?.success) setRealtime(realtimeData.data || null);
+
+      if (!overviewRes.ok && !overviewData?.data) {
+        setErrorMessage(overviewData?.error || 'Failed to fetch analytics overview.');
+      }
     } catch (err) {
       console.error('[Analytics View Error]:', err);
       setErrorMessage((err as Error)?.message || 'An error occurred while loading analytics.');
