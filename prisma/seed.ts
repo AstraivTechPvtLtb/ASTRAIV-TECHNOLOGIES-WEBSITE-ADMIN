@@ -30,7 +30,7 @@ async function main() {
   const adminUser = await prisma.user.create({
     data: {
       name: 'Astraiv Admin',
-      email: 'admin@astraiv.com',
+      email: 'astraivtechnologies@gmail.com',
       emailVerified: true,
       role: Role.ADMIN,
       image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&h=256&fit=crop',
@@ -69,9 +69,8 @@ async function main() {
 
   console.log('👤 Created User profiles.');
 
-  // 4. Create Better Auth Accounts linked to the users
+  // 4. Create Better Auth Accounts linked to standard test users (admin password is set explicitly via OTP/Forgot Password)
   const accountsData = [
-    { id: 'acc-admin', email: adminUser.email, userId: adminUser.id },
     { id: 'acc-pm', email: pmUser.email, userId: pmUser.id },
     { id: 'acc-client', email: clientUser.email, userId: clientUser.id },
     { id: 'acc-user', email: standardUser.email, userId: standardUser.id },

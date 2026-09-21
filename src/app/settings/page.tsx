@@ -6,6 +6,7 @@ import { ShieldCheck, Database, Webhook } from 'lucide-react';
 import { Card, CardContent } from '@/views/ui/card';
 import { Badge } from '@/views/ui/badge';
 import { IsoComplianceManager } from '@/views/settings/iso-compliance-manager';
+import { ChangePasswordCard } from '@/views/settings/change-password-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,6 +72,9 @@ export default async function AdminSettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Administrator Password & Security (OTP Guarded) */}
+        <ChangePasswordCard adminEmail={admin.email} />
 
         {/* Database & Infrastructure Status */}
         <Card className="bg-slate-900/80 border-slate-800 text-slate-100">

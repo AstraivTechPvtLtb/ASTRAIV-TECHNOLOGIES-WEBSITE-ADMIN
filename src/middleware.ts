@@ -1,31 +1,72 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { jwtVerify } from 'jose';
+import { getJwtSecretKey } from '@/lib/jwt';
 
 /**
- * Edge middleware to enforce strict authentication across all admin portal routes.
+ * Edge middleware to enforce strict JWT authentication across all admin portal routes.
  */
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const adminSessionCookie = request.cookies.get('astraiv_admin_session');
-  const hasSession = Boolean(adminSessionCookie?.value);
 
-  // Root path ALWAYS redirects to /login so credentials are required on start
+  const accessTokenCookie = request.cookies.get('astraiv_admin_access_token')?.value;
+  const refreshTokenCookie = request.cookies.get('astraiv_admin_refresh_token')?.value;
+  const legacySessionCookie = request.cookies.get('astraiv_admin_session')?.value;
+
+  let isAuthenticated = false;
+
+  // 1. Verify JWT Access Token (60 days)
+  if (accessTokenCookie) {
+    try {
+      const secret = getJwtSecretKey();
+      const { payload } = await jwtVerify(accessTokenCookie, secret, {
+        algorithms: ['HS256'],
+      });
+      if (payload.tokenType === 'access' && payload.role === 'ADMIN') {
+        isAuthenticated = true;
+      }
+    } catch {
+      // Access token expired or invalid; fall through to refresh token verification
+    }
+  }
+
+  // 2. If access token is expired, verify JWT Refresh Token (30 days)
+  if (!isAuthenticated && refreshTokenCookie) {
+    try {
+      const secret = getJwtSecretKey();
+      const { payload } = await jwtVerify(refreshTokenCookie, secret, {
+        algorithms: ['HS256'],
+      });
+      if (payload.tokenType === 'refresh') {
+        isAuthenticated = true;
+      }
+    } catch {
+      // Refresh token expired or invalid
+    }
+  }
+
+  // 3. Fallback to legacy session cookie
+  if (!isAuthenticated && legacySessionCookie) {
+    isAuthenticated = true;
+  }
+
+  // Root path redirects to /dashboard if logged in, or /login if not
   if (pathname === '/') {
+    if (isAuthenticated) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
     const loginUrl = new URL('/login', request.url);
     const response = NextResponse.redirect(loginUrl);
+    response.cookies.delete('astraiv_admin_access_token');
+    response.cookies.delete('astraiv_admin_refresh_token');
     response.cookies.delete('astraiv_admin_session');
     return response;
   }
 
-  // Login page always displays the login screen and clears any prior lingering session
+  // Login page: displays login screen
   if (pathname === '/login') {
-    const response = NextResponse.next();
-    if (request.method === 'GET' && hasSession) {
-      response.cookies.delete('astraiv_admin_session');
-    }
-    return response;
+    return NextResponse.next();
   }
-
 
   // Protected administrative routes
   const protectedPrefixes = [
@@ -38,13 +79,15 @@ export function middleware(request: NextRequest) {
     '/footer',
     '/blog',
     '/settings',
+    '/recruitment',
+    '/pricing',
   ];
 
   const isProtected = protectedPrefixes.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );
 
-  if (isProtected && !hasSession) {
+  if (isProtected && !isAuthenticated) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
