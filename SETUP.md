@@ -204,8 +204,8 @@ You can verify the backend API endpoints by visiting them in your browser or wit
 
 1. Open `http://localhost:3001/login` in your browser.
 2. Sign in with your administrator credentials:
-   - Email: `admin@astraiv.com`
-   - Password: `Password123` (or your configured `ADMIN_MASTER_PASSWORD`).
+   - Email: `astraivtechnologies@gmail.com`
+   - Sign in using **Email OTP** (preferred) or use your password configured via **Forgot Password**.
 3. In the left navigation sidebar, click **Analytics**.
 4. You will see:
    - **Live Active Users**: Real-time counter with pulse indicator.

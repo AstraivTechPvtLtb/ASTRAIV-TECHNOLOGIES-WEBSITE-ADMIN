@@ -89,7 +89,7 @@ export async function createBlogPost(data: AdminBlogInput): Promise<AdminActionR
         author = await db.user.create({
           data: {
             name: data.author || 'AstraIV Admin',
-            email: 'admin@astraiv.com',
+            email: 'astraivtechnologies@gmail.com',
             emailVerified: true,
             role: 'ADMIN',
           },

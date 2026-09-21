@@ -135,7 +135,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
                 {user?.name || 'Administrator'}
               </span>
               <span className="block text-[10px] text-slate-500 truncate">
-                {user?.email || 'admin@astraiv.com'}
+                {user?.email || 'astraivtechnologies@gmail.com'}
               </span>
             </div>
           </div>

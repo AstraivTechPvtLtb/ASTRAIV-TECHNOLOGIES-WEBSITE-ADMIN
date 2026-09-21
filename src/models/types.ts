@@ -8,6 +8,8 @@ export type ReviewStatus = 'pending' | 'approved' | 'rejected';
 export type EnquiryStatus = 'pending' | 'contacted' | 'closed' | 'spam';
 export type ContentStatus = 'draft' | 'published' | 'archived';
 
+export const DEFAULT_ADMIN_EMAIL = 'astraivtechnologies@gmail.com';
+
 /**
  * Summary telemetry KPIs displayed on the Admin Dashboard overview.
  */
