@@ -325,11 +325,13 @@ function LoginForm() {
           </div>
         )}
 
-        {/* Local Console Developer Tip */}
-        <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center gap-2 text-[11px] text-slate-400">
-          <Terminal className="h-3.5 w-3.5 text-blue-400 shrink-0" />
-          <span>Local login & reset OTP is printed in your server terminal console.</span>
-        </div>
+        {/* Local Console Developer Tip (Shown strictly in local development) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center gap-2 text-[11px] text-slate-400">
+            <Terminal className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+            <span>Local login & reset OTP is printed in your server terminal console.</span>
+          </div>
+        )}
 
         {/* TAB 1: OTP AUTHENTICATION (DEFAULT) */}
         {authMode === 'otp' && (

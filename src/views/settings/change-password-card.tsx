@@ -179,15 +179,17 @@ export function ChangePasswordCard({ adminEmail }: ChangePasswordCardProps) {
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-start gap-3">
-              <Terminal className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
-              <div>
-                <span className="text-slate-200 font-semibold block">Developer Console Logging</span>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  In local mode, the 6-digit OTP is also logged directly to your server console for convenience.
-                </p>
+            {process.env.NODE_ENV === 'development' && (
+              <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-start gap-3">
+                <Terminal className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
+                <div>
+                  <span className="text-slate-200 font-semibold block">Developer Console Logging</span>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    In local mode, the 6-digit OTP is also logged directly to your server console for convenience.
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
