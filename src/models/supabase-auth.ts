@@ -28,7 +28,8 @@ export async function sendSupabaseAuthOtp(
   purpose: 'login' | 'change_password' = 'login'
 ): Promise<SupabaseOtpResponse> {
   const cleanEmail = email.toLowerCase().trim();
-  const isLocal = process.env.NODE_ENV !== 'production' || !isSupabaseConfigured();
+  const isLocal = process.env.NODE_ENV !== 'production';
+  const supabaseReady = isSupabaseConfigured();
   const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
 
@@ -58,7 +59,7 @@ export async function sendSupabaseAuthOtp(
     // Non-blocking
   }
 
-  // Always log in development/local environments as explicitly requested by user
+  // Always log in development/local environments
   if (isLocal) {
     console.log('\n' + '='.repeat(65));
     console.log(`🔑 [ASTRAIV LOCAL ADMIN OTP - ${purpose.toUpperCase()}]`);
@@ -68,8 +69,8 @@ export async function sendSupabaseAuthOtp(
     console.log('='.repeat(65) + '\n');
   }
 
-  // If Supabase is fully configured, attempt live Supabase Auth dispatch
-  if (isSupabaseConfigured()) {
+  // If Supabase is configured with a valid key, attempt live Supabase Auth email dispatch
+  if (supabaseReady) {
     try {
       const supabase = await createClient();
       const { error } = await supabase.auth.signInWithOtp({
@@ -80,14 +81,18 @@ export async function sendSupabaseAuthOtp(
       });
 
       if (error) {
-        console.warn('[Supabase Auth OTP Warning]:', error.message);
-        // If live Supabase dispatch fails (e.g. rate limit or SMTP), fall back gracefully to local dev OTP
+        console.error('[Supabase Auth OTP Error]:', error.message);
+        if (isLocal) {
+          return {
+            success: true,
+            message: 'OTP generated (Check server console for local code).',
+            isLocalDev: true,
+          };
+        }
         return {
-          success: true,
-          message: isLocal
-            ? 'OTP generated (Check server console for local code).'
-            : `Email dispatch delayed: ${error.message}`,
-          isLocalDev: isLocal,
+          success: false,
+          error: `Email OTP dispatch failed: ${error.message}. Please check NEXT_PUBLIC_SUPABASE_ANON_KEY in hosting environment variables or sign in using Password.`,
+          isLocalDev: false,
         };
       }
 
@@ -98,18 +103,35 @@ export async function sendSupabaseAuthOtp(
       };
     } catch (error: unknown) {
       console.error('[Supabase Auth Client Error]:', error);
+      if (isLocal) {
+        return {
+          success: true,
+          message: 'OTP generated (Check server console for local code).',
+          isLocalDev: true,
+        };
+      }
+      const msg = error instanceof Error ? error.message : 'Unknown error';
       return {
-        success: true,
-        message: 'OTP generated (Check server console for local code).',
-        isLocalDev: true,
+        success: false,
+        error: `Supabase authentication error: ${msg}. Please sign in with your Password.`,
+        isLocalDev: false,
       };
     }
   }
 
+  // If Supabase is not configured (missing or invalid key in hosting environment)
+  if (isLocal) {
+    return {
+      success: true,
+      message: 'Local mode active: Verification code printed to your server terminal console.',
+      isLocalDev: true,
+    };
+  }
+
   return {
-    success: true,
-    message: 'Local mode active: Verification code printed to your server terminal console.',
-    isLocalDev: true,
+    success: false,
+    error: 'Live Supabase email OTP is not configured on this server. Please enter using your Administrator Password or configure a valid NEXT_PUBLIC_SUPABASE_ANON_KEY in your hosting environment variables.',
+    isLocalDev: false,
   };
 }
 
