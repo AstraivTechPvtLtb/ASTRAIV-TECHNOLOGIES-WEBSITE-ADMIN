@@ -257,19 +257,19 @@ export function ChangePasswordCard({ adminEmail }: ChangePasswordCardProps) {
                 {/* OTP Input */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                    6-Digit Verification Code (OTP)
+                    Verification Code (OTP)
                   </label>
                   <Input
                     type="text"
                     inputMode="numeric"
-                    maxLength={6}
+                    maxLength={8}
                     pattern="[0-9]*"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                    placeholder="------"
+                    placeholder="--------"
                     autoFocus
                     required
-                    className="h-11 bg-slate-900 border-slate-800 text-slate-100 font-mono text-center text-lg tracking-[0.4em] font-bold focus-visible:border-blue-500"
+                    className="h-11 bg-slate-900 border-slate-800 text-slate-100 font-mono text-center text-lg tracking-[0.35em] font-bold focus-visible:border-blue-500"
                   />
                 </div>
 

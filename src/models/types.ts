@@ -8,12 +8,28 @@ export type ReviewStatus = 'pending' | 'approved' | 'rejected';
 export type EnquiryStatus = 'pending' | 'contacted' | 'closed' | 'spam';
 export type ContentStatus = 'draft' | 'published' | 'archived';
 
+/**
+ * Recommended 7-stage Lead Lifecycle.
+ */
+export type LeadLifecycleStatus =
+  | 'NEW'
+  | 'QUALIFIED'
+  | 'CONTACTED'
+  | 'PROPOSAL'
+  | 'NEGOTIATION'
+  | 'WON'
+  | 'LOST';
+
 export const DEFAULT_ADMIN_EMAIL = 'astraivtechnologies@gmail.com';
 
 /**
  * Summary telemetry KPIs displayed on the Admin Dashboard overview.
  */
 export interface AdminDashboardStats {
+  totalLeads?: number;
+  newLeads?: number;
+  qualifiedLeads?: number;
+  wonLeads?: number;
   totalEnquiries: number;
   pendingEnquiries: number;
   contactedEnquiries: number;
@@ -29,6 +45,44 @@ export interface AdminDashboardStats {
   publishedBlogs?: number;
   totalJobOpenings?: number;
   totalPricingPlans?: number;
+}
+
+/**
+ * Prospective enterprise lead captured via Start a Project wizard or website inbound funnels.
+ */
+export interface AdminLead {
+  id: string;
+  lead_number: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  company?: string | null;
+  service_id?: string | null;
+  solution_id?: string | null;
+  industry_id?: string | null;
+  project_description?: string | null;
+  budget_range?: string | null;
+  timeline?: string | null;
+  source_page?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  status: LeadLifecycleStatus;
+  assigned_to?: string | null;
+  assigned_user_name?: string | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+/**
+ * Analytics and conversion funnel metrics for CRM Leads.
+ */
+export interface AdminLeadAnalytics {
+  totalLeads: number;
+  statusBreakdown: Record<LeadLifecycleStatus, number>;
+  conversionRate: number; // Won / Total * 100
+  topSourcePages: Array<{ page: string; count: number; wonCount: number }>;
 }
 
 /**
@@ -73,6 +127,11 @@ export interface AdminReview {
   review_text: string;
   review: string;
   image_url?: string | null;
+  avatar?: string | null;
+  role?: string | null;
+  project_id?: string | null;
+  service_id?: string | null;
+  industry_id?: string | null;
   website_publish_permission?: string | null;
   can_publish_review: boolean;
   identity_display_permission?: string | null;
@@ -382,4 +441,37 @@ export interface AdminComplianceSettingsInput {
   slaValue?: string;
   slaLabel?: string;
   clientLogos?: ClientLogoItem[] | string;
+}
+
+/**
+ * Relational CMS Admin Control Types
+ */
+export interface CmsEntityPublicationUpdate {
+  id: string;
+  status?: 'published' | 'draft' | 'archived' | 'active';
+  published?: boolean;
+  active?: boolean;
+}
+
+export interface CmsEntityFeaturedUpdate {
+  id: string;
+  featured: boolean;
+}
+
+export interface CmsEntityOrderUpdate {
+  id: string;
+  orderIndex: number;
+}
+
+export interface CmsEntitySeoUpdate {
+  id: string;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+}
+
+export interface CmsEntityRelationshipUpdate {
+  sourceEntityType: 'service' | 'solution' | 'industry' | 'case_study' | 'article';
+  sourceId: string;
+  targetEntityType: 'service' | 'solution' | 'industry' | 'technology' | 'case_study' | 'article';
+  targetIds: string[];
 }
