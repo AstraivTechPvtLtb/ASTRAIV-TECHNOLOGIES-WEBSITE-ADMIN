@@ -73,10 +73,16 @@ export async function sendSupabaseAuthOtp(
   if (supabaseReady) {
     try {
       const supabase = await createClient();
+      const redirectUrl =
+        process.env.NEXT_PUBLIC_APP_URL ||
+        process.env.BETTER_AUTH_URL ||
+        'http://localhost:3001';
+
       const { error } = await supabase.auth.signInWithOtp({
         email: cleanEmail,
         options: {
           shouldCreateUser: true,
+          emailRedirectTo: redirectUrl,
         },
       });
 
@@ -155,11 +161,27 @@ export async function verifySupabaseAuthOtp(
   if (isSupabaseConfigured()) {
     try {
       const supabase = await createClient();
-      const { data, error } = await supabase.auth.verifyOtp({
+      
+      // Attempt verification with 'email' (standard login OTP / magic link)
+      let { data, error } = await supabase.auth.verifyOtp({
         email: cleanEmail,
         token: cleanToken,
         type: 'email',
       });
+
+      // If 'email' failed (e.g. for first-time unconfirmed signup token), try 'signup'
+      if (error || !data?.user) {
+        const signupRes = await supabase.auth.verifyOtp({
+          email: cleanEmail,
+          token: cleanToken,
+          type: 'signup',
+        });
+
+        if (!signupRes.error && signupRes.data?.user) {
+          data = signupRes.data;
+          error = null;
+        }
+      }
 
       if (!error && data?.user) {
         localOtpStore.delete(cleanEmail);

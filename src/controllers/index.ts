@@ -14,3 +14,5 @@ export * from './footer.controller';
 export * from './recruitment.controller';
 export * from './pricing.controller';
 export * from './compliance.controller';
+export * from './leads.controller';
+export * from './cms.controller';

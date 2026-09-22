@@ -17,6 +17,10 @@ export async function getDashboardStats(): Promise<AdminDashboardStats> {
   // 1. Primary PostgreSQL Engine via Prisma ORM
   try {
     const [
+      totalLeads,
+      newLeads,
+      qualifiedLeads,
+      wonLeads,
       totalEnquiries,
       pendingEnquiries,
       contactedEnquiries,
@@ -32,6 +36,10 @@ export async function getDashboardStats(): Promise<AdminDashboardStats> {
       totalJobOpenings,
       totalPricingPlans,
     ] = await Promise.all([
+      db.cRMLead.count(),
+      db.cRMLead.count({ where: { status: 'NEW' } }),
+      db.cRMLead.count({ where: { status: 'QUALIFIED' } }),
+      db.cRMLead.count({ where: { status: 'WON' } }),
       db.contactSubmission.count(),
       db.contactSubmission.count({ where: { status: 'pending' } }),
       db.contactSubmission.count({ where: { status: 'contacted' } }),
@@ -49,6 +57,10 @@ export async function getDashboardStats(): Promise<AdminDashboardStats> {
     ]);
 
     return {
+      totalLeads,
+      newLeads,
+      qualifiedLeads,
+      wonLeads,
       totalEnquiries,
       pendingEnquiries,
       contactedEnquiries,

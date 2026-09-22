@@ -22,6 +22,7 @@ import {
   Briefcase,
   CreditCard,
   BarChart3,
+  Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/views/ui/button';
@@ -56,6 +57,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+    { name: 'Project Leads', href: '/leads', icon: Target },
     { name: 'Enquiries', href: '/enquiries', icon: MessageSquare },
     { name: 'Reviews Queue', href: '/reviews', icon: Star },
     { name: 'Projects CMS', href: '/projects', icon: FolderKanban },

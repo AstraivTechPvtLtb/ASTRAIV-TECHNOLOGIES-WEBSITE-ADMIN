@@ -34,6 +34,7 @@ model User {
   assignedTickets  ClientTicket[]  @relation("AssignedTickets")
   projects         Project[]       @relation("ClientProjects")
   managedProjects  Project[]       @relation("ManagedProjects")
+  assignedLeads    CRMLead[]       @relation("AssignedLeads")
 
   @@map("user")
 }
@@ -82,7 +83,7 @@ model Verification {
   @@map("verification")
 }
 
-// Blog System (CMS)
+// Blog System / Articles (CMS)
 model BlogPost {
   id            String       @id @default(uuid())
   title         String
@@ -91,12 +92,28 @@ model BlogPost {
   summary       String       @db.Text
   published     Boolean      @default(false)
   featuredImage String?
+  readingTime   String?      @map("reading_time")
+  authorName    String?      @map("author_name")
+  authorRole    String?      @map("author_role")
+  authorImage   String?      @map("author_image")
+  tags          String[]     @default([])
+  status        String       @default("published")
+  featured      Boolean      @default(false)
+  orderIndex    Int          @default(0) @map("order_index")
+  metaTitle     String?      @map("meta_title")
+  metaDescription String?    @map("meta_description") @db.Text
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   authorId      String
   author        User         @relation(fields: [authorId], references: [id])
   categoryId    String
   category      BlogCategory @relation(fields: [categoryId], references: [id])
+
+  // Bidirectional CMS Relations
+  services      ArticleService[]
+  solutions     ArticleSolution[]
+  industries    ArticleIndustry[]
+  caseStudies   ArticleCaseStudy[]
 
   @@map("blog_post")
 }
@@ -110,19 +127,54 @@ model BlogCategory {
   @@map("blog_category")
 }
 
-// Portfolio
+// Case Studies (Portfolio Projects)
 model PortfolioProject {
-  id          String   @id @default(uuid())
-  title       String
-  slug        String   @unique
-  description String   @db.Text
-  content     String   @db.Text
-  imageUrl    String?
-  projectUrl  String?
-  tags        String[]
-  published   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                     String   @id @default(uuid())
+  title                  String
+  slug                   String   @unique
+  subtitle               String?
+  projectType            String   @default("Client Project") @map("project_type")
+  credibilityBadge       String?  @map("credibility_badge")
+  credibilityNote        String?  @map("credibility_note")
+  isRealClient           Boolean  @default(true) @map("is_real_client")
+  verifiedOutcome        Boolean  @default(true) @map("verified_outcome")
+  client                 String?
+  clientContext          String?  @map("client_context") @db.Text
+  timeline               String?
+  category               String   @default("Software Engineering")
+  categoryType           String[] @default([]) @map("category_type")
+  industrySlug           String?  @map("industry_slug")
+  industryName           String?  @map("industry_name")
+  description            String   @db.Text
+  content                String   @db.Text
+  imageUrl               String?
+  projectUrl             String?
+  tags                   String[] @default([])
+  challenge              String?  @db.Text
+  challengeDetails       String[] @default([]) @map("challenge_details")
+  requirements           String[] @default([])
+  solutionDetails        String[] @default([]) @map("solution_details")
+  architectureApproach   String?  @map("architecture_approach") @db.Text
+  architectureHighlights Json?    @default("[]") @map("architecture_highlights")
+  developmentProcess     Json?    @default("[]") @map("development_process")
+  measurableResults      Json?    @default("[]") @map("measurable_results")
+  techStackByCategory    Json?    @default("[]") @map("tech_stack_by_category")
+  testimonialId          String?  @map("testimonial_id")
+  published              Boolean  @default(false)
+  status                 String   @default("published")
+  featured               Boolean  @default(false)
+  orderIndex             Int      @default(0) @map("order_index")
+  metaTitle              String?  @map("meta_title")
+  metaDescription        String?  @map("meta_description") @db.Text
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  // Bidirectional CMS Relations
+  services               CaseStudyService[]
+  solutions              CaseStudySolution[]
+  industries             CaseStudyIndustry[]
+  technologies           CaseStudyTechnology[]
+  articles               ArticleCaseStudy[]
 
   @@map("portfolio_project")
 }
@@ -165,16 +217,29 @@ model Project {
 
 // CRM Lead Management
 model CRMLead {
-  id        String   @id @default(uuid())
-  name      String
-  email     String
-  phone     String?
-  company   String?
-  status    String   @default("NEW") // NEW, CONTACTED, QUALIFIED, PROPOSAL_SENT, WON, LOST
-  source    String?  // WEBSITE, REFERRAL, SOCIAL_MEDIA, OUTREACH
-  notes     String?  @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String    @id @default(uuid())
+  leadNumber         String?   @unique @map("lead_number")
+  name               String
+  email              String
+  phone              String?
+  company            String?
+  serviceId          String?   @map("service_id")
+  solutionId         String?   @map("solution_id")
+  industryId         String?   @map("industry_id")
+  projectDescription String?   @map("project_description") @db.Text
+  budgetRange        String?   @map("budget_range")
+  timeline           String?
+  sourcePage         String?   @map("source_page")
+  utmSource          String?   @map("utm_source")
+  utmMedium          String?   @map("utm_medium")
+  utmCampaign        String?   @map("utm_campaign")
+  status             String    @default("NEW") // NEW, QUALIFIED, CONTACTED, PROPOSAL, NEGOTIATION, WON, LOST
+  assignedTo         String?   @map("assigned_to")
+  assignedUser       User?     @relation("AssignedLeads", fields: [assignedTo], references: [id])
+  source             String?   // WEBSITE_START_PROJECT, REFERRAL, SOCIAL_MEDIA, OUTREACH
+  notes              String?   @db.Text
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   @@map("crm_lead")
 }
@@ -224,12 +289,17 @@ model Review {
   review                      String    @default("") @db.Text
   imageUrl                    String?   @map("image_url")
 
+  projectId                   String?   @map("project_id")
+  serviceId                   String?   @map("service_id")
+  industryId                  String?   @map("industry_id")
+
   websitePublishPermission    String?   @map("website_publish_permission")
   canPublishReview            Boolean   @default(false) @map("can_publish_review")
   identityDisplayPermission   String?   @default("Yes") @map("identity_display_permission")
 
   status                      String    @default("pending") // pending, approved, rejected
   featured                    Boolean   @default(false)
+  orderIndex                  Int       @default(0) @map("order_index")
   adminNote                   String?   @map("admin_note") @db.Text
 
   submittedAt                 DateTime? @map("submitted_at")
@@ -240,23 +310,317 @@ model Review {
   @@map("reviews")
 }
 
-// Services Management
+// Services Management (WHAT ASTRAIV DOES)
 model ServiceItem {
-  id          String   @id @default(uuid())
-  title       String
-  slug        String   @unique
-  category    String   @default("Development")
-  shortDesc   String   @map("short_desc") @db.Text
-  fullDesc    String   @map("full_desc") @db.Text
-  features    String[]
-  badge       String?
-  icon        String   @default("Code2")
-  active      Boolean  @default(true)
-  orderIndex  Int      @default(0) @map("order_index")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id              String   @id @default(uuid())
+  title           String
+  slug            String   @unique
+  category        String   @default("Development")
+  shortDesc       String   @map("short_desc") @db.Text
+  fullDesc        String   @map("full_desc") @db.Text
+  features        String[] @default([])
+  badge           String?
+  icon            String   @default("Code2")
+  active          Boolean  @default(true)
+  status          String   @default("published") // published, draft, archived
+  featured        Boolean  @default(false)
+  orderIndex      Int      @default(0) @map("order_index")
+  metaTitle       String?  @map("meta_title")
+  metaDescription String?  @map("meta_description") @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Bidirectional CMS Relations
+  solutions       ServiceSolution[]
+  industries      ServiceIndustry[]
+  technologies    ServiceTechnology[]
+  caseStudies     CaseStudyService[]
+  articles        ArticleService[]
 
   @@map("services")
+}
+
+// Solutions Management (WHAT BUSINESS PROBLEMS ASTRAIV SOLVES)
+model SolutionItem {
+  id              String   @id @default(uuid())
+  title           String
+  slug            String   @unique
+  category        String   @default("intelligent-systems")
+  categoryLabel   String?  @map("category_label")
+  tagline         String?
+  shortDesc       String   @map("short_desc") @db.Text
+  fullDesc        String?  @map("full_desc") @db.Text
+  metricValue     String?  @map("metric_value")
+  metricLabel     String?  @map("metric_label")
+  features        String[] @default([])
+  technologies    String[] @default([])
+  capabilities    Json?    @default("[]")
+  businessProblem Json?    @default("{}") @map("business_problem")
+  astraivApproach Json?    @default("{}") @map("astraiv_approach")
+  active          Boolean  @default(true)
+  status          String   @default("published")
+  featured        Boolean  @default(false)
+  orderIndex      Int      @default(0) @map("order_index")
+  metaTitle       String?  @map("meta_title")
+  metaDescription String?  @map("meta_description") @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Bidirectional CMS Relations
+  services        ServiceSolution[]
+  industries      SolutionIndustry[]
+  caseStudies     CaseStudySolution[]
+  articles        ArticleSolution[]
+
+  @@map("solutions")
+}
+
+// Industries Management (VERTICAL DOMAINS)
+model IndustryItem {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  code            String?
+  label           String
+  tagline         String?
+  headline        String?
+  image           String?
+  imageAlt        String?  @map("image_alt")
+  accentColor     String?  @map("accent_color")
+  statusText      String?  @map("status_text")
+  complianceBadge String?  @map("compliance_badge")
+  challenge       String?  @db.Text
+  solution        String?  @db.Text
+  pillars         Json?    @default("[]")
+  techStack       String[] @default([]) @map("tech_stack")
+  kpis            Json?    @default("[]")
+  active          Boolean  @default(true)
+  status          String   @default("published")
+  featured        Boolean  @default(false)
+  orderIndex      Int      @default(0) @map("order_index")
+  metaTitle       String?  @map("meta_title")
+  metaDescription String?  @map("meta_description") @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Bidirectional CMS Relations
+  services        ServiceIndustry[]
+  solutions       SolutionIndustry[]
+  caseStudies     CaseStudyIndustry[]
+  articles        ArticleIndustry[]
+
+  @@map("industries")
+}
+
+// Technologies Management (PRODUCTION PRIMITIVES)
+model TechnologyItem {
+  id              String   @id @default(uuid())
+  name            String
+  slug            String   @unique
+  category        String
+  icon            String   @default("Cpu")
+  description     String?  @db.Text
+  active          Boolean  @default(true)
+  status          String   @default("published")
+  featured        Boolean  @default(false)
+  orderIndex      Int      @default(0) @map("order_index")
+  metaTitle       String?  @map("meta_title")
+  metaDescription String?  @map("meta_description") @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Bidirectional CMS Relations
+  services        ServiceTechnology[]
+  caseStudies     CaseStudyTechnology[]
+
+  @@map("technologies")
+}
+
+// Awards & Accolades
+model AwardItem {
+  id                String   @id @default(uuid())
+  type              String   @default("award") // award, certification, partnership, recognition
+  title             String
+  organization      String
+  year              String
+  category          String
+  description       String   @db.Text
+  achievement       String   @db.Text
+  verificationUrl   String?  @map("verification_url")
+  verificationLabel String?  @map("verification_label")
+  badgeText         String   @map("badge_text")
+  status            String   @default("verified")
+  published         Boolean  @default(true)
+  featured          Boolean  @default(false)
+  orderIndex        Int      @default(0) @map("order_index")
+  icon              String   @default("Award")
+  highlights        String[] @default([])
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("awards")
+}
+
+// Frequently Asked Questions
+model FaqItem {
+  id         String   @id @default(uuid())
+  category   String   @default("general") // general, services, pricing, engineering, process
+  question   String
+  answer     String   @db.Text
+  isFeatured Boolean  @default(false) @map("is_featured")
+  status     String   @default("published")
+  orderIndex Int      @default(0) @map("order_index")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("faqs")
+}
+
+// -----------------------------------------------------------------------------
+// RELATIONAL JOIN MODELS (All 12 Bidirectional Cross-Entity Connectors)
+// -----------------------------------------------------------------------------
+
+model ServiceSolution {
+  serviceId   String       @map("service_id")
+  solutionId  String       @map("solution_id")
+  orderIndex  Int          @default(0) @map("order_index")
+
+  service     ServiceItem  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  solution    SolutionItem @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+
+  @@id([serviceId, solutionId])
+  @@map("service_solutions")
+}
+
+model ServiceIndustry {
+  serviceId   String       @map("service_id")
+  industryId  String       @map("industry_id")
+  orderIndex  Int          @default(0) @map("order_index")
+
+  service     ServiceItem  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  industry    IndustryItem @relation(fields: [industryId], references: [id], onDelete: Cascade)
+
+  @@id([serviceId, industryId])
+  @@map("service_industries")
+}
+
+model ServiceTechnology {
+  serviceId    String         @map("service_id")
+  technologyId String         @map("technology_id")
+  orderIndex   Int            @default(0) @map("order_index")
+
+  service      ServiceItem    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  technology   TechnologyItem @relation(fields: [technologyId], references: [id], onDelete: Cascade)
+
+  @@id([serviceId, technologyId])
+  @@map("service_technologies")
+}
+
+model CaseStudyService {
+  caseStudyId String           @map("case_study_id")
+  serviceId   String           @map("service_id")
+  orderIndex  Int              @default(0) @map("order_index")
+
+  caseStudy   PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+  service     ServiceItem      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([caseStudyId, serviceId])
+  @@map("case_study_services")
+}
+
+model CaseStudySolution {
+  caseStudyId String           @map("case_study_id")
+  solutionId  String           @map("solution_id")
+  orderIndex  Int              @default(0) @map("order_index")
+
+  caseStudy   PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+  solution    SolutionItem     @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+
+  @@id([caseStudyId, solutionId])
+  @@map("case_study_solutions")
+}
+
+model CaseStudyIndustry {
+  caseStudyId String           @map("case_study_id")
+  industryId  String           @map("industry_id")
+  orderIndex  Int              @default(0) @map("order_index")
+
+  caseStudy   PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+  industry    IndustryItem     @relation(fields: [industryId], references: [id], onDelete: Cascade)
+
+  @@id([caseStudyId, industryId])
+  @@map("case_study_industries")
+}
+
+model CaseStudyTechnology {
+  caseStudyId  String           @map("case_study_id")
+  technologyId String           @map("technology_id")
+  orderIndex   Int              @default(0) @map("order_index")
+
+  caseStudy    PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+  technology   TechnologyItem   @relation(fields: [technologyId], references: [id], onDelete: Cascade)
+
+  @@id([caseStudyId, technologyId])
+  @@map("case_study_technologies")
+}
+
+model SolutionIndustry {
+  solutionId String       @map("solution_id")
+  industryId String       @map("industry_id")
+  orderIndex Int          @default(0) @map("order_index")
+
+  solution   SolutionItem @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  industry   IndustryItem @relation(fields: [industryId], references: [id], onDelete: Cascade)
+
+  @@id([solutionId, industryId])
+  @@map("solution_industries")
+}
+
+model ArticleService {
+  articleId  String      @map("article_id")
+  serviceId  String      @map("service_id")
+  orderIndex Int         @default(0) @map("order_index")
+
+  article    BlogPost    @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  service    ServiceItem @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, serviceId])
+  @@map("article_services")
+}
+
+model ArticleSolution {
+  articleId  String       @map("article_id")
+  solutionId String       @map("solution_id")
+  orderIndex Int          @default(0) @map("order_index")
+
+  article    BlogPost     @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  solution   SolutionItem @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, solutionId])
+  @@map("article_solutions")
+}
+
+model ArticleIndustry {
+  articleId  String       @map("article_id")
+  industryId String       @map("industry_id")
+  orderIndex Int          @default(0) @map("order_index")
+
+  article    BlogPost     @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  industry   IndustryItem @relation(fields: [industryId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, industryId])
+  @@map("article_industries")
+}
+
+model ArticleCaseStudy {
+  articleId   String           @map("article_id")
+  caseStudyId String           @map("case_study_id")
+  orderIndex  Int              @default(0) @map("order_index")
+
+  article     BlogPost         @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  caseStudy   PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, caseStudyId])
+  @@map("article_case_studies")
 }
 
 // Footer & Company Information Configuration
@@ -291,21 +655,25 @@ model SocialLink {
 
 // Recruitment & Job Openings
 model JobOpening {
-  id          String   @id @default(uuid())
-  title       String
-  slug        String   @unique
-  department  String   @default("Engineering")
-  type        String   @default("Full-Time / Remote")
-  location    String   @default("Remote")
-  experience  String?
-  description String   @db.Text
-  skills      String[]
-  salary      String?
-  applyUrl    String?  @default("/contact") @map("apply_url")
-  active      Boolean  @default(true)
-  orderIndex  Int      @default(0) @map("order_index")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id              String   @id @default(uuid())
+  title           String
+  slug            String   @unique
+  department      String   @default("Engineering")
+  type            String   @default("Full-Time / Remote")
+  location        String   @default("Remote")
+  experience      String?
+  description     String   @db.Text
+  skills          String[] @default([])
+  salary          String?
+  applyUrl        String?  @default("/contact") @map("apply_url")
+  active          Boolean  @default(true)
+  status          String   @default("active")
+  featured        Boolean  @default(false)
+  orderIndex      Int      @default(0) @map("order_index")
+  metaTitle       String?  @map("meta_title")
+  metaDescription String?  @map("meta_description") @db.Text
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   @@map("job_openings")
 }
@@ -324,7 +692,7 @@ model PricingPlan {
   priceMonthlyUsd  Float?   @map("price_monthly_usd")
   priceYearlyUsd   Float?   @map("price_yearly_usd")
   customPriceLabel String?  @default("Custom") @map("custom_price_label")
-  features         String[]
+  features         String[] @default([])
   buttonText       String   @default("Start Building") @map("button_text")
   buttonUrl        String   @default("/contact") @map("button_url")
   active           Boolean  @default(true)

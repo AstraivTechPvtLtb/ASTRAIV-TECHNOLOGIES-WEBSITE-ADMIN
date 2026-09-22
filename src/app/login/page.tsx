@@ -107,7 +107,7 @@ function LoginForm() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!otp || otp.trim().length < 6) {
-      setError('Please enter the complete 6-digit verification code.');
+      setError('Please enter the complete verification code.');
       return;
     }
 
@@ -398,19 +398,19 @@ function LoginForm() {
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                    Enter 6-Digit Verification Code
+                    Enter Verification Code
                   </label>
                   <Input
                     type="text"
                     inputMode="numeric"
-                    maxLength={6}
+                    maxLength={8}
                     pattern="[0-9]*"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                    placeholder="------"
+                    placeholder="--------"
                     autoFocus
                     required
-                    className="h-12 bg-slate-950 border-slate-800 text-slate-100 text-center font-mono text-xl tracking-[0.5em] font-bold focus-visible:border-blue-500"
+                    className="h-12 bg-slate-950 border-slate-800 text-slate-100 text-center font-mono text-xl tracking-[0.35em] font-bold focus-visible:border-blue-500"
                   />
                 </div>
 
@@ -610,19 +610,19 @@ function LoginForm() {
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                    Enter 6-Digit Verification Code
+                    Enter Verification Code
                   </label>
                   <Input
                     type="text"
                     inputMode="numeric"
-                    maxLength={6}
+                    maxLength={8}
                     pattern="[0-9]*"
                     value={forgotOtp}
                     onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, ''))}
-                    placeholder="------"
+                    placeholder="--------"
                     autoFocus
                     required
-                    className="h-12 bg-slate-950 border-slate-800 text-slate-100 text-center font-mono text-xl tracking-[0.5em] font-bold focus-visible:border-blue-500"
+                    className="h-12 bg-slate-950 border-slate-800 text-slate-100 text-center font-mono text-xl tracking-[0.35em] font-bold focus-visible:border-blue-500"
                   />
                 </div>
 

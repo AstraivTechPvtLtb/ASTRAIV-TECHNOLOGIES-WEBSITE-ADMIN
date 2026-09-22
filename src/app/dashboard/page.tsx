@@ -4,6 +4,7 @@ import { getAdminUser } from '@/controllers/auth.controller';
 import { getDashboardStats } from '@/controllers/stats.controller';
 import { getEnquiries } from '@/controllers/enquiries.controller';
 import { getReviews } from '@/controllers/reviews.controller';
+import { getLeads } from '@/controllers/leads.controller';
 import { AdminHeader } from '@/views/layouts/admin-header';
 import { AdminStatCard } from '@/views/cards/admin-stat-card';
 import {
@@ -14,6 +15,7 @@ import {
   Clock,
   ArrowUpRight,
   AlertCircle,
+  Target,
 } from 'lucide-react';
 import { Button } from '@/views/ui/button';
 import { Badge } from '@/views/ui/badge';
@@ -26,12 +28,14 @@ export default async function AdminDashboardPage() {
     redirect('/login');
   }
 
-  const [stats, recentEnquiriesRes, pendingReviewsRes] = await Promise.all([
+  const [stats, recentLeadsRes, recentEnquiriesRes, pendingReviewsRes] = await Promise.all([
     getDashboardStats(),
+    getLeads({ limit: 5 }),
     getEnquiries({ limit: 5 }),
     getReviews({ status: 'pending', limit: 5 }),
   ]);
 
+  const recentLeads = recentLeadsRes.data;
   const recentEnquiries = recentEnquiriesRes.data;
   const pendingReviews = pendingReviewsRes.data;
 
@@ -45,13 +49,21 @@ export default async function AdminDashboardPage() {
 
       <main className="p-6 md:p-8 space-y-8 max-w-7xl">
         {/* KPI Statistics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <AdminStatCard
+            title="Project Leads"
+            value={stats.totalLeads ?? 0}
+            description={`${stats.newLeads ?? 0} new, ${stats.wonLeads ?? 0} won`}
+            icon={Target}
+            iconColor="text-blue-400"
+            badge={stats.newLeads && stats.newLeads > 0 ? `${stats.newLeads} New` : undefined}
+          />
           <AdminStatCard
             title="Total Enquiries"
             value={stats.totalEnquiries}
             description={`${stats.pendingEnquiries} pending review`}
             icon={MessageSquare}
-            iconColor="text-blue-400"
+            iconColor="text-cyan-400"
             badge={stats.pendingEnquiries > 0 ? `${stats.pendingEnquiries} New` : undefined}
           />
           <AdminStatCard
@@ -102,14 +114,79 @@ export default async function AdminDashboardPage() {
           </div>
         )}
 
-        {/* 2-Column Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* 3-Column Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Recent Project Leads Preview */}
+          <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <Target className="h-4.5 w-4.5 text-blue-400" />
+                  <h3 className="text-base font-bold text-white">Recent Project Leads</h3>
+                </div>
+                <Link
+                  href="/leads"
+                  className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                >
+                  <span>View All</span>
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {recentLeads.length === 0 ? (
+                  <p className="text-xs text-slate-500 py-6 text-center">No project leads captured yet.</p>
+                ) : (
+                  recentLeads.map((lead) => (
+                    <div
+                      key={lead.id}
+                      className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between gap-3 hover:border-slate-700 transition-colors"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[10px] font-bold text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
+                            {lead.lead_number}
+                          </span>
+                          <h4 className="text-xs font-bold text-slate-200 truncate">{lead.name}</h4>
+                        </div>
+                        <p className="text-[11px] text-slate-400 truncate mt-0.5 font-mono">
+                          {lead.source_page || '/start-project'}
+                        </p>
+                      </div>
+
+                      <Badge
+                        variant="outline"
+                        className={
+                          lead.status === 'NEW'
+                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/30 text-[10px]'
+                            : lead.status === 'WON'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px]'
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/30 text-[10px]'
+                        }
+                      >
+                        {lead.status}
+                      </Badge>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-800/80">
+              <Link href="/leads">
+                <Button variant="outline" className="w-full h-9 border-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-800">
+                  Manage All Leads
+                </Button>
+              </Link>
+            </div>
+          </div>
+
           {/* Recent Enquiries Table Preview */}
           <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-4 border-b border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <MessageSquare className="h-4.5 w-4.5 text-blue-400" />
+                  <MessageSquare className="h-4.5 w-4.5 text-cyan-400" />
                   <h3 className="text-base font-bold text-white">Recent Enquiries</h3>
                 </div>
                 <Link

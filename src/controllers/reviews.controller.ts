@@ -125,6 +125,11 @@ export async function getReviews({
         review_text: r.reviewText || r.review || '',
         review: r.reviewText || r.review || '',
         image_url: r.imageUrl || null,
+        avatar: r.imageUrl || null,
+        role: r.designation || null,
+        project_id: r.projectId || null,
+        service_id: r.serviceId || null,
+        industry_id: r.industryId || null,
         website_publish_permission: r.websitePublishPermission || null,
         can_publish_review: r.canPublishReview,
         identity_display_permission: r.identityDisplayPermission || 'Yes',
@@ -442,6 +447,9 @@ export async function updateReview(
       if (updates.featured !== undefined) updateData.featured = updates.featured;
       if (updates.admin_note !== undefined) updateData.adminNote = updates.admin_note;
       if (updates.image_url !== undefined) updateData.imageUrl = updates.image_url;
+      if (updates.project_id !== undefined) updateData.projectId = updates.project_id;
+      if (updates.service_id !== undefined) updateData.serviceId = updates.service_id;
+      if (updates.industry_id !== undefined) updateData.industryId = updates.industry_id;
 
       await db.review.update({
         where: { id },
