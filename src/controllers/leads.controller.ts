@@ -126,11 +126,38 @@ export async function getLeads({
       );
     }
 
+interface SupabaseLeadRecord {
+  id: string;
+  lead_number?: string | null;
+  name: string;
+  email: string;
+  phone?: string | null;
+  company?: string | null;
+  service_id?: string | null;
+  solution_id?: string | null;
+  industry_id?: string | null;
+  project_description?: string | null;
+  budget_range?: string | null;
+  timeline?: string | null;
+  source_page?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  status?: string | null;
+  assigned_to?: string | null;
+  user?: { name?: string | null } | null;
+  notes?: string | null;
+  createdAt?: string | Date | null;
+  created_at?: string | Date | null;
+  updatedAt?: string | Date | null;
+  updated_at?: string | Date | null;
+}
+
     const { data, count, error } = await query.range(offset, offset + limit - 1);
 
     if (error) throw error;
 
-    const mapped: AdminLead[] = (data || []).map((r: any) => ({
+    const mapped: AdminLead[] = ((data as unknown as SupabaseLeadRecord[]) || []).map((r) => ({
       id: r.id,
       lead_number: r.lead_number || 'AST-LEAD-PENDING',
       name: r.name,
@@ -151,8 +178,8 @@ export async function getLeads({
       assigned_to: r.assigned_to,
       assigned_user_name: r.user?.name || null,
       notes: r.notes,
-      created_at: r.createdAt || r.created_at,
-      updated_at: r.updatedAt || r.updated_at,
+      created_at: String(r.createdAt || r.created_at || new Date().toISOString()),
+      updated_at: r.updatedAt || r.updated_at ? String(r.updatedAt || r.updated_at) : undefined,
     }));
 
     return { data: mapped, total: count || 0 };
@@ -323,7 +350,7 @@ export async function getLeadsAnalytics(): Promise<AdminLeadAnalytics> {
     } else {
       const supabase = await createSupabaseClient();
       const { data } = await supabase.from('crm_lead').select('status, source_page');
-      records = (data || []).map((r: any) => ({
+      records = ((data as unknown as Array<{ status: string; source_page: string | null }>) || []).map((r) => ({
         status: r.status,
         sourcePage: r.source_page,
       }));

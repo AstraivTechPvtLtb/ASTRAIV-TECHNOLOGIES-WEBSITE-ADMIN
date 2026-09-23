@@ -9,7 +9,7 @@
 
 import { useState } from 'react';
 import { AdminLead, LeadLifecycleStatus } from '@/models/types';
-import { updateLeadStatus, updateLeadNotes, assignLead, deleteLead } from '@/controllers/leads.controller';
+import { updateLeadStatus, updateLeadNotes, deleteLead } from '@/controllers/leads.controller';
 import {
   Search,
   Trash2,
@@ -18,18 +18,9 @@ import {
   Building,
   Eye,
   X,
-  ExternalLink,
-  Target,
-  ArrowRight,
-  Sparkles,
-  Calendar,
   Layers,
   Compass,
-  CheckCircle2,
-  XCircle,
-  Clock,
   Filter,
-  UserCheck,
 } from 'lucide-react';
 import { Button } from '@/views/ui/button';
 import { Input } from '@/views/ui/input';

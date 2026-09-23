@@ -243,7 +243,7 @@ export function normalizeDateRange(
 /**
  * Generates realistic demonstration data for immediate UI preview when GA4 credentials are not yet added.
  */
-function getDemoAnalytics(range: { startDate: string; endDate: string }) {
+function getDemoAnalytics(_range?: { startDate: string; endDate: string }) {
   const realtime: AnalyticsRealtime = {
     activeUsers: 0,
     topCountries: [],

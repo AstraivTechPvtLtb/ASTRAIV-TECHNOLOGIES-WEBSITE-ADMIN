@@ -26,7 +26,6 @@ import {
   Globe2,
   Share2,
   AlertCircle,
-  Sparkles,
   Layers,
 } from 'lucide-react';
 import {
@@ -82,8 +81,8 @@ export function AnalyticsDashboardView() {
   const [realtime, setRealtime] = useState<AnalyticsRealtime | null>(null);
 
   // Status States
-  const [isConfigured, setIsConfigured] = useState<boolean>(true);
-  const [configReason, setConfigReason] = useState<string | null>(null);
+  const [_isConfigured, setIsConfigured] = useState<boolean>(true);
+  const [_configReason, setConfigReason] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
