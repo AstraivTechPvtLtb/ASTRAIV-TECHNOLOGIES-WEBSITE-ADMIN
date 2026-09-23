@@ -644,6 +644,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
                   {/* Small Circle Profile Picture Preview */}
                   <div className="w-10 h-10 aspect-square rounded-full bg-[#101726] border border-slate-700/80 flex items-center justify-center overflow-hidden shrink-0 shadow-inner ring-1 ring-white/10">
                     {item.imageUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
                       <img
                         src={item.imageUrl}
                         alt={item.name}
