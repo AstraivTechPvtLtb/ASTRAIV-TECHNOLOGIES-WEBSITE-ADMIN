@@ -42,7 +42,20 @@ export const REFRESH_TOKEN_EXPIRY_SECONDS = 30 * 24 * 60 * 60;
  * Ensures the key is at least 64 bytes (512 bits).
  */
 export function getJwtSecretKey(): Uint8Array {
-  const secret = process.env.JWT_SECRET || process.env.BETTER_AUTH_SECRET || DEFAULT_64_BYTE_SECRET;
+  const secret = process.env.JWT_SECRET || process.env.BETTER_AUTH_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        '[SECURITY CRITICAL] JWT_SECRET or BETTER_AUTH_SECRET environment variable must be set in production.'
+      );
+    }
+    return new TextEncoder().encode(DEFAULT_64_BYTE_SECRET);
+  }
+  if (process.env.NODE_ENV === 'production' && secret === DEFAULT_64_BYTE_SECRET) {
+    throw new Error(
+      '[SECURITY CRITICAL] Default example JWT secret key cannot be used in production. Please set a unique JWT_SECRET.'
+    );
+  }
   // Pad secret if shorter than 64 bytes
   const paddedSecret = secret.length >= 64 ? secret : secret.padEnd(64, '_');
   return new TextEncoder().encode(paddedSecret);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/models/db';
 import { isSupabaseConfigured, createClient as createSupabaseClient } from '@/models/supabase';
 import { Prisma } from '@prisma/client';
+import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,18 +78,30 @@ interface FormPayload {
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Validate x-webhook-secret
+    // 1. Validate webhook secret from headers only (reject secrets in query params to prevent log exposure)
     const secret =
       req.headers.get('x-webhook-secret') ||
-      req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ||
-      req.nextUrl.searchParams.get('secret');
+      req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
 
     const expectedSecret =
       process.env.GOOGLE_FORM_WEBHOOK_SECRET ||
       process.env.GOOGLE_SHEET_WEBHOOK_SECRET ||
-      'astraiv_gsheet_webhook_secret_2026';
+      (process.env.NODE_ENV !== 'production' ? 'astraiv_gsheet_webhook_secret_2026' : '');
 
-    if (!secret || secret !== expectedSecret) {
+    if (!secret || !expectedSecret) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Invalid or missing webhook secret token.' },
+        { status: 401 }
+      );
+    }
+
+    const secretBuffer = Buffer.from(secret);
+    const expectedBuffer = Buffer.from(expectedSecret);
+    const isAuthorized =
+      secretBuffer.length === expectedBuffer.length &&
+      crypto.timingSafeEqual(secretBuffer, expectedBuffer);
+
+    if (!isAuthorized) {
       console.warn('[Webhook Auth Warning]: Unauthorized attempt to access Admin Google Form webhook route.');
       return NextResponse.json(
         { error: 'Unauthorized: Invalid or missing webhook secret token.' },

@@ -16,6 +16,7 @@ import {
   CmsEntitySeoUpdate,
   CmsEntityRelationshipUpdate,
 } from '@/models/types';
+import { requireAdminUser } from './auth.controller';
 
 /**
  * Updates publication or active status for a given CMS entity.
@@ -25,6 +26,7 @@ export async function updateEntityPublicationStatus(
   payload: CmsEntityPublicationUpdate
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     const { id, status, published, active } = payload;
 
     switch (entityType) {
@@ -126,6 +128,7 @@ export async function updateEntityFeatured(
   payload: CmsEntityFeaturedUpdate
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     const { id, featured } = payload;
 
     switch (entityType) {
@@ -167,6 +170,7 @@ export async function updateEntityDisplayOrder(
   payload: CmsEntityOrderUpdate
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     const { id, orderIndex } = payload;
 
     switch (entityType) {
@@ -211,6 +215,7 @@ export async function updateEntitySeoMetadata(
   payload: CmsEntitySeoUpdate
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     const { id, metaTitle, metaDescription } = payload;
 
     switch (entityType) {
@@ -245,6 +250,7 @@ export async function updateEntityRelationships(
   payload: CmsEntityRelationshipUpdate
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     const { sourceEntityType, sourceId, targetEntityType, targetIds } = payload;
 
     if (sourceEntityType === 'service' && targetEntityType === 'solution') {

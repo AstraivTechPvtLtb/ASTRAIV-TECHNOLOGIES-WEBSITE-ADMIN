@@ -7,9 +7,13 @@
 
 import { isSupabaseConfigured, createClient } from './supabase';
 import { db } from './db';
+import { randomInt } from 'crypto';
 
 // In-memory fallback OTP storage (useful during local development or when Supabase keys are pending)
 const localOtpStore = new Map<string, { otp: string; expiresAt: number }>();
+
+// Brute-force protection: track failed OTP attempts (max 5 attempts before 15-minute lockout)
+const otpAttemptTracker = new Map<string, { attempts: number; lockedUntil: number }>();
 
 export interface SupabaseOtpResponse {
   success: boolean;
@@ -30,7 +34,8 @@ export async function sendSupabaseAuthOtp(
   const cleanEmail = email.toLowerCase().trim();
   const isLocal = process.env.NODE_ENV !== 'production';
   const supabaseReady = isSupabaseConfigured();
-  const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  // Cryptographically secure 6-digit OTP generation
+  const generatedOtp = randomInt(100000, 1000000).toString();
   const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
 
   // Store locally in-memory and in DB verification table
@@ -97,7 +102,7 @@ export async function sendSupabaseAuthOtp(
         }
         return {
           success: false,
-          error: `Email OTP dispatch failed: ${error.message}. Please check NEXT_PUBLIC_SUPABASE_ANON_KEY in hosting environment variables or sign in using Password.`,
+          error: 'Email OTP dispatch failed. Please sign in using your Administrator Password or contact system operations.',
           isLocalDev: false,
         };
       }
@@ -116,10 +121,9 @@ export async function sendSupabaseAuthOtp(
           isLocalDev: true,
         };
       }
-      const msg = error instanceof Error ? error.message : 'Unknown error';
       return {
         success: false,
-        error: `Supabase authentication error: ${msg}. Please sign in with your Password.`,
+        error: 'Authentication service temporarily unavailable. Please sign in with your Password.',
         isLocalDev: false,
       };
     }
@@ -157,6 +161,17 @@ export async function verifySupabaseAuthOtp(
     return { success: false, error: 'Please enter a valid 6-digit verification code.' };
   }
 
+  // Brute-force rate limiting: check if email is currently locked out
+  const now = Date.now();
+  const attemptInfo = otpAttemptTracker.get(cleanEmail);
+  if (attemptInfo && attemptInfo.lockedUntil > now) {
+    const remainingMinutes = Math.ceil((attemptInfo.lockedUntil - now) / 60000);
+    return {
+      success: false,
+      error: `Too many failed attempts. Security lockout active for ${remainingMinutes} minute(s). Please try again later.`,
+    };
+  }
+
   // 1. If Supabase is configured, try live Supabase verification
   if (isSupabaseConfigured()) {
     try {
@@ -185,6 +200,7 @@ export async function verifySupabaseAuthOtp(
 
       if (!error && data?.user) {
         localOtpStore.delete(cleanEmail);
+        otpAttemptTracker.delete(cleanEmail);
         return { success: true };
       }
     } catch {
@@ -197,6 +213,7 @@ export async function verifySupabaseAuthOtp(
   if (cached && cached.expiresAt > Date.now()) {
     if (cached.otp === cleanToken) {
       localOtpStore.delete(cleanEmail);
+      otpAttemptTracker.delete(cleanEmail);
       return { success: true };
     }
   }
@@ -212,11 +229,34 @@ export async function verifySupabaseAuthOtp(
         where: { id: record.id },
       }).catch(() => {});
       localOtpStore.delete(cleanEmail);
+      otpAttemptTracker.delete(cleanEmail);
       return { success: true };
     }
   } catch {
     // Non-blocking
   }
 
-  return { success: false, error: 'Invalid or expired verification code. Please request a new one.' };
+  // Record failed attempt and apply lockout if threshold reached
+  const newAttempts = (attemptInfo?.attempts || 0) + 1;
+  if (newAttempts >= 5) {
+    otpAttemptTracker.set(cleanEmail, {
+      attempts: newAttempts,
+      lockedUntil: now + 15 * 60 * 1000,
+    });
+    return {
+      success: false,
+      error: 'Too many failed verification attempts. Account locked for 15 minutes. Please try again later.',
+    };
+  }
+
+  otpAttemptTracker.set(cleanEmail, {
+    attempts: newAttempts,
+    lockedUntil: 0,
+  });
+
+  const remainingAttempts = 5 - newAttempts;
+  return {
+    success: false,
+    error: `Invalid or expired verification code. ${remainingAttempts} attempt(s) remaining before temporary lockout.`,
+  };
 }

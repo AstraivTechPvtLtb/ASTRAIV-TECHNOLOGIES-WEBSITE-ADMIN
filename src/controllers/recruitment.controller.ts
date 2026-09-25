@@ -10,6 +10,7 @@ import { revalidatePath } from 'next/cache';
 import { isSupabaseConfigured, createClient as createSupabaseClient } from '@/models/supabase';
 import { AdminJobOpening, AdminJobOpeningInput, AdminActionResponse } from '@/models/types';
 import { Prisma } from '@prisma/client';
+import { requireAdminUser } from './auth.controller';
 
 function safeRevalidate(path: string) {
   try {
@@ -120,6 +121,7 @@ export async function createJobOpening(
   data: AdminJobOpeningInput
 ): Promise<AdminActionResponse<AdminJobOpening>> {
   try {
+    await requireAdminUser();
     const rawSlug = data.slug || data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     let slug = rawSlug || `job-${Date.now()}`;
     try {
@@ -253,6 +255,7 @@ export async function updateJobOpening(
   data: Partial<AdminJobOpeningInput>
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     let updated = false;
 
     // 1. Update via Prisma
@@ -326,6 +329,7 @@ export async function updateJobOpening(
  */
 export async function deleteJobOpening(id: string): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     let deleted = false;
 
     // 1. Prisma delete
@@ -369,6 +373,7 @@ export async function reorderJobOpening(
   direction: 'up' | 'down'
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     const openings = await db.jobOpening.findMany({
       orderBy: { orderIndex: 'asc' },
     });

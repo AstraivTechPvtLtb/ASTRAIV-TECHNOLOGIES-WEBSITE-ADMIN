@@ -10,6 +10,7 @@
 import { db } from '@/models/db';
 import { revalidatePath } from 'next/cache';
 import { isSupabaseConfigured, createClient as createSupabaseClient } from '@/models/supabase';
+import { requireAdminUser } from './auth.controller';
 import {
   AdminLead,
   LeadLifecycleStatus,
@@ -198,6 +199,7 @@ export async function updateLeadStatus(
   newStatus: LeadLifecycleStatus
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     if (!isSupabaseConfigured()) {
       await db.cRMLead.update({
         where: { id },
@@ -234,6 +236,7 @@ export async function assignLead(
   assignedTo: string | null
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     if (!isSupabaseConfigured()) {
       await db.cRMLead.update({
         where: { id },
@@ -294,6 +297,7 @@ export async function updateLeadNotes(id: string, notes: string): Promise<AdminA
  */
 export async function deleteLead(id: string): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     if (!isSupabaseConfigured()) {
       await db.cRMLead.delete({
         where: { id },

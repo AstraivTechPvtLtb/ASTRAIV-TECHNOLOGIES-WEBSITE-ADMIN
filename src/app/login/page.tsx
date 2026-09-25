@@ -37,7 +37,12 @@ import { Input } from '@/views/ui/input';
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTarget = searchParams.get('redirect') || '/dashboard';
+  const rawRedirect = searchParams.get('redirect') || '/dashboard';
+  // Strictly prevent Open Redirect vulnerabilities: allow only local relative paths
+  const redirectTarget =
+    rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') && !rawRedirect.includes(':')
+      ? rawRedirect
+      : '/dashboard';
 
   // Auth Mode: 'otp' (default) | 'password' | 'forgot_password'
   const [authMode, setAuthMode] = useState<'otp' | 'password' | 'forgot_password'>('otp');
