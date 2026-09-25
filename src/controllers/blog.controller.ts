@@ -10,6 +10,7 @@ import { revalidatePath } from 'next/cache';
 import { isSupabaseConfigured, createClient as createSupabaseClient } from '@/models/supabase';
 import { AdminBlogPost, AdminBlogInput, AdminActionResponse } from '@/models/types';
 import { Prisma } from '@prisma/client';
+import { requireAdminUser } from './auth.controller';
 
 function safeRevalidate(path: string) {
   try {
@@ -79,6 +80,7 @@ export async function getBlogArticles(): Promise<{ data: AdminBlogPost[]; error?
  */
 export async function createBlogPost(data: AdminBlogInput): Promise<AdminActionResponse<AdminBlogPost>> {
   try {
+    await requireAdminUser();
     let createdPost: AdminBlogPost | null = null;
     const isPublished = data.status === 'published';
 
@@ -191,6 +193,7 @@ export async function updateBlogPost(
   data: Partial<AdminBlogInput>
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     // 1. Primary: Prisma DB
     try {
       const updateData: Prisma.BlogPostUpdateInput = {};
@@ -255,6 +258,7 @@ export async function toggleBlogVisibility(
   newStatus: 'published' | 'draft'
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     const isPublished = newStatus === 'published';
 
     // 1. Primary: Prisma DB
@@ -298,6 +302,7 @@ export async function toggleBlogVisibility(
  */
 export async function deleteBlogPost(id: string): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     // 1. Primary: Prisma DB
     try {
       await db.blogPost.delete({

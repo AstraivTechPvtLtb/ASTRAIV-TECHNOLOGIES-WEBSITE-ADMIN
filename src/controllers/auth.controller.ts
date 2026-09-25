@@ -96,7 +96,7 @@ export async function getAdminUser(): Promise<AdminUserSession | null> {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get('astraiv_admin_access_token')?.value;
     const refreshToken = cookieStore.get('astraiv_admin_refresh_token')?.value;
-    const legacySessionId = cookieStore.get('astraiv_admin_session')?.value;
+    const _legacySessionId = cookieStore.get('astraiv_admin_session')?.value;
 
     let targetUserId: string | null = null;
     let targetEmail: string | null = null;
@@ -127,11 +127,6 @@ export async function getAdminUser(): Promise<AdminUserSession | null> {
           await setAuthCookies(newTokens, targetUserId);
         }
       }
-    }
-
-    // 3. Fallback to legacy session cookie if migrating from previous session
-    if (!targetUserId && legacySessionId) {
-      targetUserId = legacySessionId;
     }
 
     if (!targetUserId) {
@@ -173,6 +168,18 @@ export async function getAdminUser(): Promise<AdminUserSession | null> {
     console.error('[Get Admin User Error]:', error);
     return null;
   }
+}
+
+/**
+ * Asserts that the active caller has a verified administrator session.
+ * Throws or returns an unauthorized response if not authenticated.
+ */
+export async function requireAdminUser(): Promise<AdminUserSession> {
+  const user = await getAdminUser();
+  if (!user || user.role !== 'ADMIN') {
+    throw new Error('Unauthorized: Valid administrator privileges required.');
+  }
+  return user;
 }
 
 /**

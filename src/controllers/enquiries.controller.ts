@@ -10,6 +10,7 @@ import { revalidatePath } from 'next/cache';
 import { isSupabaseConfigured, createClient as createSupabaseClient } from '@/models/supabase';
 import { AdminEnquiry, EnquiryStatus, AdminActionResponse } from '@/models/types';
 import { Prisma } from '@prisma/client';
+import { requireAdminUser } from './auth.controller';
 
 export interface GetEnquiriesParams {
   search?: string;
@@ -108,6 +109,7 @@ export async function updateEnquiryStatus(
   newStatus: EnquiryStatus
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     if (!isSupabaseConfigured()) {
       await db.contactSubmission.update({
         where: { id },
@@ -139,6 +141,7 @@ export async function updateEnquiryStatus(
  */
 export async function deleteEnquiry(id: string): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     if (!isSupabaseConfigured()) {
       await db.contactSubmission.delete({
         where: { id },

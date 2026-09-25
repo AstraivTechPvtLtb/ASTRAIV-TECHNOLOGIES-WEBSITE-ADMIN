@@ -10,6 +10,7 @@ import { revalidatePath } from 'next/cache';
 import { isSupabaseConfigured, createClient as createSupabaseClient } from '@/models/supabase';
 import { AdminProject, AdminProjectInput, AdminActionResponse } from '@/models/types';
 import { Prisma } from '@prisma/client';
+import { requireAdminUser } from './auth.controller';
 
 export interface GetProjectsParams {
   search?: string;
@@ -132,6 +133,7 @@ export async function getProjects({
  */
 export async function createProject(data: AdminProjectInput): Promise<AdminActionResponse<AdminProject>> {
   try {
+    await requireAdminUser();
     if (!isSupabaseConfigured()) {
       const created = await db.portfolioProject.create({
         data: {
@@ -201,6 +203,7 @@ export async function updateProject(
   data: Partial<AdminProjectInput>
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     if (!isSupabaseConfigured()) {
       const updateData: Prisma.PortfolioProjectUpdateInput = {};
       if (data.title) updateData.title = data.title;
@@ -246,6 +249,7 @@ export async function updateProject(
  */
 export async function deleteProject(id: string): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     if (!isSupabaseConfigured()) {
       await db.portfolioProject.delete({
         where: { id },

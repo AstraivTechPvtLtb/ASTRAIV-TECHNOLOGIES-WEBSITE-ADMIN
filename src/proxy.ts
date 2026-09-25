@@ -4,14 +4,14 @@ import { jwtVerify } from 'jose';
 import { getJwtSecretKey } from '@/lib/jwt';
 
 /**
- * Edge middleware to enforce strict JWT authentication across all admin portal routes.
+ * Next.js 16 Edge proxy to enforce strict JWT authentication across all admin portal routes.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const accessTokenCookie = request.cookies.get('astraiv_admin_access_token')?.value;
   const refreshTokenCookie = request.cookies.get('astraiv_admin_refresh_token')?.value;
-  const legacySessionCookie = request.cookies.get('astraiv_admin_session')?.value;
+  const _legacySessionCookie = request.cookies.get('astraiv_admin_session')?.value;
 
   let isAuthenticated = false;
 
@@ -45,10 +45,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 3. Fallback to legacy session cookie
-  if (!isAuthenticated && legacySessionCookie) {
-    isAuthenticated = true;
-  }
 
   // Root path redirects to /dashboard if logged in, or /login if not
   if (pathname === '/') {
@@ -95,6 +91,9 @@ export async function middleware(request: NextRequest) {
 
   return NextResponse.next();
 }
+
+// Backward-compatible named export
+export const middleware = proxy;
 
 export const config = {
   matcher: [

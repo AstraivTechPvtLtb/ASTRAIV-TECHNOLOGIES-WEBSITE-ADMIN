@@ -10,6 +10,7 @@ import { revalidatePath } from 'next/cache';
 import { isSupabaseConfigured, createClient as createSupabaseClient } from '@/models/supabase';
 import { AdminPricingPlan, AdminPricingPlanInput, AdminActionResponse } from '@/models/types';
 import { Prisma } from '@prisma/client';
+import { requireAdminUser } from './auth.controller';
 
 function safeRevalidate(path: string) {
   try {
@@ -132,6 +133,7 @@ export async function createPricingPlan(
   data: AdminPricingPlanInput
 ): Promise<AdminActionResponse<AdminPricingPlan>> {
   try {
+    await requireAdminUser();
     const rawSlug = data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     let slug = rawSlug || `plan-${Date.now()}`;
     try {
@@ -280,6 +282,7 @@ export async function updatePricingPlan(
   data: Partial<AdminPricingPlanInput>
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     let updated = false;
 
     // 1. Update via Prisma
@@ -361,6 +364,7 @@ export async function updatePricingPlan(
  */
 export async function deletePricingPlan(id: string): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     let deleted = false;
 
     // 1. Prisma delete
@@ -404,6 +408,7 @@ export async function reorderPricingPlan(
   direction: 'up' | 'down'
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     const plans = await db.pricingPlan.findMany({
       orderBy: { orderIndex: 'asc' },
     });

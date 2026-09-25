@@ -12,6 +12,7 @@ import {
   AdminComplianceSettingsInput,
   AdminActionResponse,
 } from '@/models/types';
+import { requireAdminUser } from './auth.controller';
 
 const DEFAULT_CLIENT_LOGOS = [
   { id: 'acme', name: 'ACME CORP', iconKey: 'acme', imageUrl: null },
@@ -328,6 +329,7 @@ export async function updateComplianceSettings(
   input: AdminComplianceSettingsInput
 ): Promise<AdminActionResponse & { settings?: AdminComplianceSettings }> {
   try {
+    await requireAdminUser();
     const payload = {
       isoNumber: input.isoNumber.trim() || 'ISO 27001:2022',
       isoLabel: input.isoLabel.trim(),

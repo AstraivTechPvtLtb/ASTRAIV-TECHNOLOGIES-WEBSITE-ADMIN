@@ -14,6 +14,7 @@ import {
   AdminSocialLinkInput,
   AdminActionResponse,
 } from '@/models/types';
+import { requireAdminUser } from './auth.controller';
 
 const DEFAULT_SETTINGS = {
   brandTagline: 'Your trusted partner for AI, enterprise software, and scalable cloud systems.',
@@ -92,6 +93,7 @@ export async function updateFooterSettings(
   data: AdminFooterSettingsInput
 ): Promise<AdminActionResponse<AdminFooterSettings>> {
   try {
+    await requireAdminUser();
     let record = await db.footerSetting.findFirst();
 
     if (!record) {
@@ -147,6 +149,7 @@ export async function createSocialLink(
   data: AdminSocialLinkInput
 ): Promise<AdminActionResponse<AdminSocialLink>> {
   try {
+    await requireAdminUser();
     const count = await db.socialLink.count();
     const orderIndex = data.orderIndex !== undefined ? data.orderIndex : count;
 
@@ -190,6 +193,7 @@ export async function updateSocialLink(
   data: Partial<AdminSocialLinkInput>
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     const updatePayload: {
       platform?: string;
       name?: string;
@@ -226,6 +230,7 @@ export async function toggleSocialVisibility(
   active: boolean
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     await db.socialLink.update({
       where: { id },
       data: { active },
@@ -247,6 +252,7 @@ export async function reorderSocialLink(
   direction: 'up' | 'down'
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     const records = await db.socialLink.findMany({
       orderBy: { orderIndex: 'asc' },
     });
@@ -286,6 +292,7 @@ export async function reorderSocialLink(
  */
 export async function deleteSocialLink(id: string): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     await db.socialLink.delete({
       where: { id },
     });

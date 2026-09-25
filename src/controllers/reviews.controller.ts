@@ -8,6 +8,7 @@
 import { db } from '@/models/db';
 import { revalidatePath } from 'next/cache';
 import { isSupabaseConfigured, createClient as createSupabaseClient } from '@/models/supabase';
+import { requireAdminUser } from './auth.controller';
 import { AdminReview, ReviewStatus, AdminActionResponse } from '@/models/types';
 import { Prisma } from '@prisma/client';
 
@@ -222,6 +223,7 @@ export async function getReviews({
  */
 export async function approveReview(id: string): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     const publishedAt = new Date();
     let updated = false;
     let canPublish = false;
@@ -291,7 +293,7 @@ export async function approveReview(id: string): Promise<AdminActionResponse> {
     };
   } catch (error) {
     console.error('[Approve Review Error]:', error);
-    return { success: false, error: (error as Error)?.message || 'Failed to approve review' };
+    return { success: false, error: 'Failed to approve review. Please try again.' };
   }
 }
 
@@ -300,6 +302,7 @@ export async function approveReview(id: string): Promise<AdminActionResponse> {
  */
 export async function rejectReview(id: string): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     let updated = false;
 
     // 1. Primary PostgreSQL execution via Prisma ORM
@@ -349,7 +352,7 @@ export async function rejectReview(id: string): Promise<AdminActionResponse> {
     return { success: true, message: 'Review marked as rejected.' };
   } catch (error) {
     console.error('[Reject Review Error]:', error);
-    return { success: false, error: (error as Error)?.message || 'Failed to reject review' };
+    return { success: false, error: 'Failed to reject review. Please try again.' };
   }
 }
 
@@ -358,6 +361,7 @@ export async function rejectReview(id: string): Promise<AdminActionResponse> {
  */
 export async function toggleFeatureReview(id: string, featured: boolean): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     let updated = false;
 
     // 1. Primary PostgreSQL execution via Prisma ORM
@@ -405,7 +409,7 @@ export async function toggleFeatureReview(id: string, featured: boolean): Promis
     return { success: true, message: featured ? 'Review marked as featured.' : 'Review removed from featured.' };
   } catch (error) {
     console.error('[Toggle Feature Review Error]:', error);
-    return { success: false, error: (error as Error)?.message || 'Failed to toggle featured status' };
+    return { success: false, error: 'Failed to toggle featured status. Please try again.' };
   }
 }
 
@@ -418,6 +422,7 @@ export async function updateReview(
   updates: Partial<Omit<AdminReview, 'id' | 'original_review' | 'created_at' | 'updated_at'>>
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     let updated = false;
 
     // 1. Primary PostgreSQL execution via Prisma ORM

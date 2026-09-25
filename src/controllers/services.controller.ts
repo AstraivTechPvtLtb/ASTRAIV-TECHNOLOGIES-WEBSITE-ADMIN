@@ -10,6 +10,7 @@ import { revalidatePath } from 'next/cache';
 import { isSupabaseConfigured, createClient as createSupabaseClient } from '@/models/supabase';
 import { AdminService, AdminServiceInput, AdminActionResponse } from '@/models/types';
 import { Prisma } from '@prisma/client';
+import { requireAdminUser } from './auth.controller';
 
 /**
  * Retrieves all services ordered by display order.
@@ -109,6 +110,7 @@ export async function getServices(): Promise<{ data: AdminService[]; error?: str
  */
 export async function createService(data: AdminServiceInput): Promise<AdminActionResponse<AdminService>> {
   try {
+    await requireAdminUser();
     const orderIndex = data.display_order ?? 0;
     const shortDesc = data.shortDesc || '';
     const fullDesc = data.fullDesc || shortDesc;
@@ -224,6 +226,7 @@ export async function updateService(
   data: Partial<AdminServiceInput>
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     let updated = false;
 
     // 1. Update via Prisma
@@ -296,6 +299,7 @@ export async function toggleServiceVisibility(
   newStatus: 'active' | 'draft'
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     const active = newStatus === 'active';
     let updated = false;
 
@@ -345,6 +349,7 @@ export async function reorderService(
   direction: 'up' | 'down'
 ): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     const records = await db.serviceItem.findMany({
       orderBy: { orderIndex: 'asc' },
     });
@@ -398,6 +403,7 @@ export async function reorderService(
  */
 export async function deleteService(id: string): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     let deleted = false;
 
     // 1. Delete via Prisma
