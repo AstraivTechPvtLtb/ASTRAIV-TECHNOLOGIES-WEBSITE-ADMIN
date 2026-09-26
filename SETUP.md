@@ -1,6 +1,6 @@
 # Google Analytics 4 (GA4) Integration Setup Guide
 
-This guide walks you step-by-step through setting up **Google Analytics 4 (Standard / Free)**, connecting the **Google Analytics Data API**, and viewing live analytics natively in your AstraIV Admin Portal.
+This guide walks you step-by-step through setting up **Google Analytics 4 (Standard / Free)**, connecting the **Google Analytics Data API**, and viewing live analytics natively in your Astraiv Admin Portal.
 
 > [!NOTE]
 > - **Cost**: 100% Free (Uses GA4 Standard and free Google Cloud Service Account tier).
@@ -95,7 +95,7 @@ NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 2. Click **+ Create Service Account** at the top:
    - **Service account name**: `ga4-admin-reader`
    - **Service account ID**: `ga4-admin-reader`
-   - **Description**: `Read-only service account for AstraIV Admin Analytics Dashboard`
+   - **Description**: `Read-only service account for Astraiv Admin Analytics Dashboard`
 3. Click **Create and Continue**.
 4. **Grant access to project**: You can leave this role optional or select *Project > Viewer*. Click **Continue**.
 5. Click **Done**.

@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS public.blog_posts (
     excerpt TEXT,
     content TEXT NOT NULL,
     cover_image TEXT,
-    author TEXT NOT NULL DEFAULT 'AstraIV Engineering Team',
+    author TEXT NOT NULL DEFAULT 'Astraiv Engineering Team',
     category TEXT NOT NULL DEFAULT 'Engineering',
     status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
     published_at TIMESTAMPTZ,
