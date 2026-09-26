@@ -4,8 +4,8 @@ import { AdminSidebar } from '@/views/layouts/admin-sidebar';
 import { getAdminUser } from '@/controllers/auth.controller';
 
 export const metadata: Metadata = {
-  title: 'AstraIV Admin Portal | Operations, Moderation & CMS',
-  description: 'Enterprise control panel for AstraIV Technologies client inquiries, reviews, and CMS management.',
+  title: 'Astraiv Admin Portal | Operations, Moderation & CMS',
+  description: 'Enterprise control panel for Astraiv Technologies client inquiries, reviews, and CMS management.',
   icons: {
     icon: [
       { url: '/favicon.ico' },

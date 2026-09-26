@@ -56,7 +56,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
   const [excerpt, setExcerpt] = useState('');
   const [content, setContent] = useState('');
   const [coverImage, setCoverImage] = useState('');
-  const [author, setAuthor] = useState('AstraIV Engineering Team');
+  const [author, setAuthor] = useState('Astraiv Engineering Team');
   const [category, setCategory] = useState('Technology & AI');
   const [status, setStatus] = useState<'draft' | 'published' | 'archived'>('published');
 
@@ -77,7 +77,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
     setExcerpt('');
     setContent('');
     setCoverImage('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800&auto=format&fit=crop');
-    setAuthor('AstraIV Engineering Team');
+    setAuthor('Astraiv Engineering Team');
     setCategory('Technology & AI');
     setStatus('published');
     setIsModalOpen(true);
@@ -484,7 +484,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                   <Input
                     value={author}
                     onChange={(e) => setAuthor(e.target.value)}
-                    placeholder="e.g. AstraIV Engineering Team"
+                    placeholder="e.g. Astraiv Engineering Team"
                     className="mt-1.5 bg-slate-950 border-slate-800 text-slate-200 focus:border-blue-500"
                   />
                 </div>

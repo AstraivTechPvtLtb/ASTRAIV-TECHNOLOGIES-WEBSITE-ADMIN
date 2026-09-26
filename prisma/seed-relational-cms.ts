@@ -1,6 +1,6 @@
 /**
  * @file prisma/seed-relational-cms.ts
- * @description Relational CMS Seeding Script for AstraIV Technologies.
+ * @description Relational CMS Seeding Script for Astraiv Technologies.
  * Populates and connects all 11 core entities and their join tables.
  */
 

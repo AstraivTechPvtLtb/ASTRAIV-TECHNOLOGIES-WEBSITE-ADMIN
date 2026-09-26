@@ -302,7 +302,7 @@ export function EnquiriesTable({ initialData }: EnquiriesTableProps) {
                 </div>
               </div>
 
-              <a href={`mailto:${selectedEnquiry.email}?subject=Re: Your enquiry with AstraIV Technologies`}>
+              <a href={`mailto:${selectedEnquiry.email}?subject=Re: Your enquiry with Astraiv Technologies`}>
                 <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center gap-2">
                   <Mail className="h-4 w-4" /> Reply via Email
                 </Button>

@@ -1,5 +1,5 @@
 -- 005_create_services.sql
--- Table for managing AstraIV services dynamically
+-- Table for managing Astraiv services dynamically
 
 CREATE TABLE IF NOT EXISTS public.services (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

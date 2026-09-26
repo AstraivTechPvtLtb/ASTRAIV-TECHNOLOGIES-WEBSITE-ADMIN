@@ -6,7 +6,7 @@ import { AnalyticsDashboardView } from '@/views/sections/analytics-dashboard-vie
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Website Analytics & Telemetry | AstraIV Admin',
+  title: 'Website Analytics & Telemetry | Astraiv Admin',
   description: 'Google Analytics 4 traffic data, user engagement, and real-time visitor statistics.',
 };
 

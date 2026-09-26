@@ -9,7 +9,7 @@ const SERVICES_DATA = [
     shortDesc: 'Integration of Large Language Models, custom agents, and predictive analytics into your pipelines.',
     fullDesc: `### Cognitive Intelligence & Custom AI Systems
 
-At AstraIV Technologies, we build next-generation Artificial Intelligence solutions that transform complex enterprise data into actionable automated workflows. Our AI engineering squad specializes in custom Large Language Model (LLM) fine-tuning, Retrieval-Augmented Generation (RAG) knowledge systems, autonomous agent swarms, and predictive machine learning models.
+At Astraiv Technologies, we build next-generation Artificial Intelligence solutions that transform complex enterprise data into actionable automated workflows. Our AI engineering squad specializes in custom Large Language Model (LLM) fine-tuning, Retrieval-Augmented Generation (RAG) knowledge systems, autonomous agent swarms, and predictive machine learning models.
 
 #### Key Capabilities & Architecture
 - **Autonomous Agent Swarms**: Multi-agent task execution systems capable of reasoning, researching, and orchestrating complex business processes without human bottlenecks.
@@ -62,7 +62,7 @@ We engineer high-performance, mission-critical web applications designed for hyp
     shortDesc: 'Bespoke, high-performance software engineered specifically for your core business operations.',
     fullDesc: `### Tailored Software Engineering for High-Stakes Operations
 
-Off-the-shelf software often forces growing enterprises into rigid, inefficient workflows. AstraIV designs and builds bespoke software systems tailored precisely to your company's operational blueprint, data architecture, and commercial objectives.
+Off-the-shelf software often forces growing enterprises into rigid, inefficient workflows. Astraiv designs and builds bespoke software systems tailored precisely to your company's operational blueprint, data architecture, and commercial objectives.
 
 #### What We Deliver
 - **Bespoke Enterprise Systems**: Custom ERP, CRM, and order fulfillment systems built from the ground up to support unique proprietary logic.
@@ -112,7 +112,7 @@ Modern digital applications require cloud architectures that scale automatically
     shortDesc: 'Premium, pixel-perfect, and highly optimized corporate websites utilizing the latest frameworks.',
     fullDesc: `### High-Converting Digital Storefronts & Corporate Websites
 
-Your website is the single most important digital touchpoint for your brand. AstraIV crafts visually arresting, ultra-fast corporate websites that establish immediate market authority, captivate visitors, and drive commercial conversions.
+Your website is the single most important digital touchpoint for your brand. Astraiv crafts visually arresting, ultra-fast corporate websites that establish immediate market authority, captivate visitors, and drive commercial conversions.
 
 #### Engineering & Design Standards
 - **Pixel-Perfect Execution**: Precision typography, harmonious color systems, custom layout grids, and bespoke micro-interactions.
@@ -237,7 +237,7 @@ Eliminate repetitive manual tasks and eliminate operational bottlenecks across y
     shortDesc: 'Highly available databases, microservices architectures, and legacy system refactoring.',
     fullDesc: `### Mission-Critical Enterprise Platforms & Legacy Modernization
 
-Large enterprises face complex integration challenges, strict compliance mandates, and high transaction volumes. AstraIV provides senior architectural engineering to refactor legacy monoliths and build secure, resilient enterprise platforms.
+Large enterprises face complex integration challenges, strict compliance mandates, and high transaction volumes. Astraiv provides senior architectural engineering to refactor legacy monoliths and build secure, resilient enterprise platforms.
 
 #### Enterprise Engineering Focus
 - **Microservices & Modular Monoliths**: Decoupled service boundaries that allow independent scaling, localized deployments, and fault isolation.
@@ -287,7 +287,7 @@ Transition your organization away from slow, analog workflows and fragmented spr
     shortDesc: 'Senior architectural audits, technology risk assessment, and system optimization plans.',
     fullDesc: `### Senior Technical Advisory, Architecture Audits & Strategic Guidance
 
-Navigate complex technology decisions with seasoned principal software architects. AstraIV provides Fractional CTO advisory, deep architectural audits, cybersecurity evaluations, and roadmap planning for scaling companies.
+Navigate complex technology decisions with seasoned principal software architects. Astraiv provides Fractional CTO advisory, deep architectural audits, cybersecurity evaluations, and roadmap planning for scaling companies.
 
 #### Advisory Services
 - **Full-Stack Architecture Audits**: Deep-dive code reviews, database performance tuning, security vulnerability scans, and scalability assessments.
@@ -308,7 +308,7 @@ Navigate complex technology decisions with seasoned principal software architect
 ];
 
 async function seedServices() {
-  console.log('🚀 Starting AstraIV Services database synchronization...');
+  console.log('🚀 Starting Astraiv Services database synchronization...');
 
   for (const s of SERVICES_DATA) {
     const existing = await db.serviceItem.findUnique({

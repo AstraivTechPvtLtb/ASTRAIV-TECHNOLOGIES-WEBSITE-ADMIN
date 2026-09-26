@@ -40,7 +40,7 @@ export async function getBlogArticles(): Promise<{ data: AdminBlogPost[]; error?
         slug: p.slug,
         excerpt: p.summary,
         content: p.content,
-        author: p.author?.name || 'AstraIV Engineering Team',
+        author: p.author?.name || 'Astraiv Engineering Team',
         category: p.category?.name || 'Engineering',
         status: p.published ? 'published' : 'draft',
         cover_image: p.featuredImage,
@@ -90,7 +90,7 @@ export async function createBlogPost(data: AdminBlogInput): Promise<AdminActionR
       if (!author) {
         author = await db.user.create({
           data: {
-            name: data.author || 'AstraIV Admin',
+            name: data.author || 'Astraiv Admin',
             email: 'astraivtechnologies@gmail.com',
             emailVerified: true,
             role: 'ADMIN',
