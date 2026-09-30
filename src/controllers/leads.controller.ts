@@ -41,7 +41,7 @@ export async function getLeads({
     const offset = (page - 1) * limit;
 
     // 1. Primary PostgreSQL Engine via Prisma ORM
-    if (!isSupabaseConfigured()) {
+    try {
       const where: Prisma.CRMLeadWhereInput = {};
 
       if (status !== 'all') {
@@ -104,88 +104,93 @@ export async function getLeads({
       }));
 
       return { data: mapped, total };
+    } catch (prismaErr) {
+      console.warn('[Admin Leads Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
     }
 
     // 2. Supabase Cloud Fallback
-    const supabase = await createSupabaseClient();
-    let query = supabase
-      .from('crm_lead')
-      .select('*, user:assigned_to(name, email)', { count: 'exact' })
-      .order('createdAt', { ascending: false });
+    if (isSupabaseConfigured()) {
+      const supabase = await createSupabaseClient();
+      let query = supabase
+        .from('crm_lead')
+        .select('*', { count: 'exact' })
+        .order('createdAt', { ascending: false });
 
-    if (status !== 'all') {
-      query = query.eq('status', status);
+      if (status !== 'all') {
+        query = query.eq('status', status);
+      }
+
+      if (sourcePage.trim()) {
+        query = query.ilike('source_page', `%${sourcePage.trim()}%`);
+      }
+
+      if (search.trim()) {
+        query = query.or(
+          `lead_number.ilike.%${search}%,name.ilike.%${search}%,email.ilike.%${search}%,company.ilike.%${search}%,source_page.ilike.%${search}%`
+        );
+      }
+
+      interface SupabaseLeadRecord {
+        id: string;
+        lead_number?: string | null;
+        name: string;
+        email: string;
+        phone?: string | null;
+        company?: string | null;
+        service_id?: string | null;
+        solution_id?: string | null;
+        industry_id?: string | null;
+        project_description?: string | null;
+        budget_range?: string | null;
+        timeline?: string | null;
+        source_page?: string | null;
+        utm_source?: string | null;
+        utm_medium?: string | null;
+        utm_campaign?: string | null;
+        status?: string | null;
+        assigned_to?: string | null;
+        notes?: string | null;
+        createdAt?: string | Date | null;
+        created_at?: string | Date | null;
+        updatedAt?: string | Date | null;
+        updated_at?: string | Date | null;
+      }
+
+      const { data, count, error } = await query.range(offset, offset + limit - 1);
+
+      if (error) throw error;
+
+      const mapped: AdminLead[] = ((data as unknown as SupabaseLeadRecord[]) || []).map((r) => ({
+        id: r.id,
+        lead_number: r.lead_number || 'AST-LEAD-PENDING',
+        name: r.name,
+        email: r.email,
+        phone: r.phone,
+        company: r.company,
+        service_id: r.service_id,
+        solution_id: r.solution_id,
+        industry_id: r.industry_id,
+        project_description: r.project_description,
+        budget_range: r.budget_range,
+        timeline: r.timeline,
+        source_page: r.source_page,
+        utm_source: r.utm_source,
+        utm_medium: r.utm_medium,
+        utm_campaign: r.utm_campaign,
+        status: (r.status as LeadLifecycleStatus) || 'NEW',
+        assigned_to: r.assigned_to,
+        assigned_user_name: null,
+        notes: r.notes,
+        created_at: String(r.createdAt || r.created_at || new Date().toISOString()),
+        updated_at: r.updatedAt || r.updated_at ? String(r.updatedAt || r.updated_at) : undefined,
+      }));
+
+      return { data: mapped, total: count || 0 };
     }
 
-    if (sourcePage.trim()) {
-      query = query.ilike('source_page', `%${sourcePage.trim()}%`);
-    }
-
-    if (search.trim()) {
-      query = query.or(
-        `lead_number.ilike.%${search}%,name.ilike.%${search}%,email.ilike.%${search}%,company.ilike.%${search}%,source_page.ilike.%${search}%`
-      );
-    }
-
-interface SupabaseLeadRecord {
-  id: string;
-  lead_number?: string | null;
-  name: string;
-  email: string;
-  phone?: string | null;
-  company?: string | null;
-  service_id?: string | null;
-  solution_id?: string | null;
-  industry_id?: string | null;
-  project_description?: string | null;
-  budget_range?: string | null;
-  timeline?: string | null;
-  source_page?: string | null;
-  utm_source?: string | null;
-  utm_medium?: string | null;
-  utm_campaign?: string | null;
-  status?: string | null;
-  assigned_to?: string | null;
-  user?: { name?: string | null } | null;
-  notes?: string | null;
-  createdAt?: string | Date | null;
-  created_at?: string | Date | null;
-  updatedAt?: string | Date | null;
-  updated_at?: string | Date | null;
-}
-
-    const { data, count, error } = await query.range(offset, offset + limit - 1);
-
-    if (error) throw error;
-
-    const mapped: AdminLead[] = ((data as unknown as SupabaseLeadRecord[]) || []).map((r) => ({
-      id: r.id,
-      lead_number: r.lead_number || 'AST-LEAD-PENDING',
-      name: r.name,
-      email: r.email,
-      phone: r.phone,
-      company: r.company,
-      service_id: r.service_id,
-      solution_id: r.solution_id,
-      industry_id: r.industry_id,
-      project_description: r.project_description,
-      budget_range: r.budget_range,
-      timeline: r.timeline,
-      source_page: r.source_page,
-      utm_source: r.utm_source,
-      utm_medium: r.utm_medium,
-      utm_campaign: r.utm_campaign,
-      status: (r.status as LeadLifecycleStatus) || 'NEW',
-      assigned_to: r.assigned_to,
-      assigned_user_name: r.user?.name || null,
-      notes: r.notes,
-      created_at: String(r.createdAt || r.created_at || new Date().toISOString()),
-      updated_at: r.updatedAt || r.updated_at ? String(r.updatedAt || r.updated_at) : undefined,
-    }));
-
-    return { data: mapped, total: count || 0 };
+    return { data: [], total: 0 };
   } catch (error) {
-    console.error('[Get Leads Controller Error]:', error);
+    console.error('[Get Leads Controller Error]:', (error as Error)?.message || error);
     return { data: [], total: 0, error: 'Failed to fetch leads' };
   }
 }
@@ -200,7 +205,7 @@ export async function updateLeadStatus(
 ): Promise<AdminActionResponse> {
   try {
     await requireAdminUser();
-    if (!isSupabaseConfigured()) {
+    try {
       await db.cRMLead.update({
         where: { id },
         data: { status: newStatus },
@@ -209,6 +214,9 @@ export async function updateLeadStatus(
       revalidatePath('/dashboard');
       revalidatePath('/enquiries');
       return { success: true };
+    } catch (prismaErr) {
+      if (!isSupabaseConfigured()) throw prismaErr;
+      console.warn('[Update Lead Status Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
     }
 
     const supabase = await createSupabaseClient();
@@ -223,7 +231,7 @@ export async function updateLeadStatus(
     revalidatePath('/enquiries');
     return { success: true };
   } catch (error) {
-    console.error('[Update Lead Status Error]:', error);
+    console.error('[Update Lead Status Error]:', (error as Error)?.message || error);
     return { success: false, error: 'Failed to update lead lifecycle status' };
   }
 }
@@ -237,7 +245,7 @@ export async function assignLead(
 ): Promise<AdminActionResponse> {
   try {
     await requireAdminUser();
-    if (!isSupabaseConfigured()) {
+    try {
       await db.cRMLead.update({
         where: { id },
         data: { assignedTo },
@@ -245,6 +253,9 @@ export async function assignLead(
       revalidatePath('/leads');
       revalidatePath('/dashboard');
       return { success: true };
+    } catch (prismaErr) {
+      if (!isSupabaseConfigured()) throw prismaErr;
+      console.warn('[Assign Lead Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
     }
 
     const supabase = await createSupabaseClient();
@@ -258,7 +269,7 @@ export async function assignLead(
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {
-    console.error('[Assign Lead Error]:', error);
+    console.error('[Assign Lead Error]:', (error as Error)?.message || error);
     return { success: false, error: 'Failed to assign lead' };
   }
 }
@@ -268,13 +279,16 @@ export async function assignLead(
  */
 export async function updateLeadNotes(id: string, notes: string): Promise<AdminActionResponse> {
   try {
-    if (!isSupabaseConfigured()) {
+    try {
       await db.cRMLead.update({
         where: { id },
         data: { notes },
       });
       revalidatePath('/leads');
       return { success: true };
+    } catch (prismaErr) {
+      if (!isSupabaseConfigured()) throw prismaErr;
+      console.warn('[Update Lead Notes Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
     }
 
     const supabase = await createSupabaseClient();
@@ -287,7 +301,7 @@ export async function updateLeadNotes(id: string, notes: string): Promise<AdminA
     revalidatePath('/leads');
     return { success: true };
   } catch (error) {
-    console.error('[Update Lead Notes Error]:', error);
+    console.error('[Update Lead Notes Error]:', (error as Error)?.message || error);
     return { success: false, error: 'Failed to update lead notes' };
   }
 }
@@ -298,13 +312,16 @@ export async function updateLeadNotes(id: string, notes: string): Promise<AdminA
 export async function deleteLead(id: string): Promise<AdminActionResponse> {
   try {
     await requireAdminUser();
-    if (!isSupabaseConfigured()) {
+    try {
       await db.cRMLead.delete({
         where: { id },
       });
       revalidatePath('/leads');
       revalidatePath('/dashboard');
       return { success: true };
+    } catch (prismaErr) {
+      if (!isSupabaseConfigured()) throw prismaErr;
+      console.warn('[Delete Lead Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
     }
 
     const supabase = await createSupabaseClient();
@@ -315,7 +332,7 @@ export async function deleteLead(id: string): Promise<AdminActionResponse> {
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {
-    console.error('[Delete Lead Error]:', error);
+    console.error('[Delete Lead Error]:', (error as Error)?.message || error);
     return { success: false, error: 'Failed to delete lead' };
   }
 }
@@ -343,7 +360,7 @@ export async function getLeadsAnalytics(): Promise<AdminLeadAnalytics> {
   try {
     let records: Array<{ status: string; sourcePage: string | null }> = [];
 
-    if (!isSupabaseConfigured()) {
+    try {
       const dbRecords = await db.cRMLead.findMany({
         select: { status: true, sourcePage: true },
       });
@@ -351,7 +368,9 @@ export async function getLeadsAnalytics(): Promise<AdminLeadAnalytics> {
         status: r.status,
         sourcePage: r.sourcePage,
       }));
-    } else {
+    } catch (prismaErr) {
+      if (!isSupabaseConfigured()) throw prismaErr;
+      console.warn('[Get Leads Analytics Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
       const supabase = await createSupabaseClient();
       const { data } = await supabase.from('crm_lead').select('status, source_page');
       records = ((data as unknown as Array<{ status: string; source_page: string | null }>) || []).map((r) => ({

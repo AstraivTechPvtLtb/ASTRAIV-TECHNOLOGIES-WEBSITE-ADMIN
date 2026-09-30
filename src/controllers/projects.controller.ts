@@ -134,7 +134,7 @@ export async function getProjects({
 export async function createProject(data: AdminProjectInput): Promise<AdminActionResponse<AdminProject>> {
   try {
     await requireAdminUser();
-    if (!isSupabaseConfigured()) {
+    try {
       const created = await db.portfolioProject.create({
         data: {
           title: data.title,
@@ -162,11 +162,14 @@ export async function createProject(data: AdminProjectInput): Promise<AdminActio
           technologies: created.tags,
         },
       };
+    } catch (prismaErr) {
+      if (!isSupabaseConfigured()) throw prismaErr;
+      console.warn('[Create Project Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
     }
 
     const supabase = await createSupabaseClient();
     const { data: created, error } = await supabase
-      .from('projects')
+      .from('portfolio_project')
       .insert({
         title: data.title,
         slug: data.slug,
@@ -190,7 +193,7 @@ export async function createProject(data: AdminProjectInput): Promise<AdminActio
 
     return { success: true, data: created as AdminProject };
   } catch (error) {
-    console.error('[Create Project Error]:', error);
+    console.error('[Create Project Error]:', (error as Error)?.message || error);
     return { success: false, error: 'Failed to create project' };
   }
 }
@@ -204,7 +207,7 @@ export async function updateProject(
 ): Promise<AdminActionResponse> {
   try {
     await requireAdminUser();
-    if (!isSupabaseConfigured()) {
+    try {
       const updateData: Prisma.PortfolioProjectUpdateInput = {};
       if (data.title) updateData.title = data.title;
       if (data.slug) updateData.slug = data.slug;
@@ -223,11 +226,14 @@ export async function updateProject(
       revalidatePath('/projects');
       revalidatePath('/dashboard');
       return { success: true };
+    } catch (prismaErr) {
+      if (!isSupabaseConfigured()) throw prismaErr;
+      console.warn('[Update Project Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
     }
 
     const supabase = await createSupabaseClient();
     const { error } = await supabase
-      .from('projects')
+      .from('portfolio_project')
       .update({
         ...data,
         updated_at: new Date().toISOString(),
@@ -239,7 +245,7 @@ export async function updateProject(
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {
-    console.error('[Update Project Error]:', error);
+    console.error('[Update Project Error]:', (error as Error)?.message || error);
     return { success: false, error: 'Failed to update project' };
   }
 }
@@ -250,24 +256,27 @@ export async function updateProject(
 export async function deleteProject(id: string): Promise<AdminActionResponse> {
   try {
     await requireAdminUser();
-    if (!isSupabaseConfigured()) {
+    try {
       await db.portfolioProject.delete({
         where: { id },
       });
       revalidatePath('/projects');
       revalidatePath('/dashboard');
       return { success: true };
+    } catch (prismaErr) {
+      if (!isSupabaseConfigured()) throw prismaErr;
+      console.warn('[Delete Project Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
     }
 
     const supabase = await createSupabaseClient();
-    const { error } = await supabase.from('projects').delete().eq('id', id);
+    const { error } = await supabase.from('portfolio_project').delete().eq('id', id);
 
     if (error) throw error;
     revalidatePath('/projects');
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {
-    console.error('[Delete Project Error]:', error);
+    console.error('[Delete Project Error]:', (error as Error)?.message || error);
     return { success: false, error: 'Failed to delete project' };
   }
 }
