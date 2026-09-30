@@ -139,9 +139,15 @@ export async function getAdminUser(): Promise<AdminUserSession | null> {
       return cached.user;
     }
 
-    const user = await db.user.findUnique({
-      where: { id: targetUserId },
-    });
+    let user = null;
+    try {
+      user = await db.user.findUnique({
+        where: { id: targetUserId },
+      });
+    } catch (dbErr) {
+      console.warn('[Get Admin User]: Database lookup failed for user session:', (dbErr as Error)?.message || dbErr);
+      return null;
+    }
 
     if (user && user.role === 'ADMIN') {
       const sessionUser: AdminUserSession = {
@@ -165,7 +171,7 @@ export async function getAdminUser(): Promise<AdminUserSession | null> {
     if (error && typeof error === 'object' && 'digest' in error && error.digest === 'DYNAMIC_SERVER_USAGE') {
       throw error;
     }
-    console.error('[Get Admin User Error]:', error);
+    console.warn('[Get Admin User Error]:', (error as Error)?.message || error);
     return null;
   }
 }

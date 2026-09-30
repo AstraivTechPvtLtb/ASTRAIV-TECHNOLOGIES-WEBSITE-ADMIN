@@ -32,7 +32,7 @@ export async function getEnquiries({
     const offset = (page - 1) * limit;
 
     // 1. Primary PostgreSQL Engine via Prisma ORM
-    if (!isSupabaseConfigured()) {
+    try {
       const where: Prisma.ContactSubmissionWhereInput = {};
 
       if (status !== 'all') {
@@ -72,31 +72,37 @@ export async function getEnquiries({
       }));
 
       return { data: mapped, total };
+    } catch (prismaErr) {
+      console.warn('[Admin Enquiries Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
     }
 
     // 2. Supabase Cloud Fallback
-    const supabase = await createSupabaseClient();
-    let query = supabase
-      .from('contact_submissions')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false });
+    if (isSupabaseConfigured()) {
+      const supabase = await createSupabaseClient();
+      let query = supabase
+        .from('contact_submissions')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false });
 
-    if (status !== 'all') {
-      query = query.eq('status', status);
+      if (status !== 'all') {
+        query = query.eq('status', status);
+      }
+
+      if (search.trim()) {
+        query = query.or(
+          `name.ilike.%${search}%,email.ilike.%${search}%,company.ilike.%${search}%,service.ilike.%${search}%`
+        );
+      }
+
+      const { data, count, error } = await query.range(offset, offset + limit - 1);
+
+      if (error) throw error;
+      return { data: (data as AdminEnquiry[]) || [], total: count || 0 };
     }
 
-    if (search.trim()) {
-      query = query.or(
-        `name.ilike.%${search}%,email.ilike.%${search}%,company.ilike.%${search}%,service.ilike.%${search}%`
-      );
-    }
-
-    const { data, count, error } = await query.range(offset, offset + limit - 1);
-
-    if (error) throw error;
-    return { data: (data as AdminEnquiry[]) || [], total: count || 0 };
+    return { data: [], total: 0 };
   } catch (error) {
-    console.error('[Get Enquiries Controller Error]:', error);
+    console.error('[Get Enquiries Controller Error]:', (error as Error)?.message || error);
     return { data: [], total: 0, error: 'Failed to fetch enquiries' };
   }
 }
@@ -110,7 +116,7 @@ export async function updateEnquiryStatus(
 ): Promise<AdminActionResponse> {
   try {
     await requireAdminUser();
-    if (!isSupabaseConfigured()) {
+    try {
       await db.contactSubmission.update({
         where: { id },
         data: { status: newStatus },
@@ -118,6 +124,9 @@ export async function updateEnquiryStatus(
       revalidatePath('/enquiries');
       revalidatePath('/dashboard');
       return { success: true };
+    } catch (prismaErr) {
+      if (!isSupabaseConfigured()) throw prismaErr;
+      console.warn('[Update Enquiry Status Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
     }
 
     const supabase = await createSupabaseClient();
@@ -131,7 +140,7 @@ export async function updateEnquiryStatus(
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {
-    console.error('[Update Enquiry Status Error]:', error);
+    console.error('[Update Enquiry Status Error]:', (error as Error)?.message || error);
     return { success: false, error: 'Failed to update enquiry status' };
   }
 }
@@ -142,13 +151,16 @@ export async function updateEnquiryStatus(
 export async function deleteEnquiry(id: string): Promise<AdminActionResponse> {
   try {
     await requireAdminUser();
-    if (!isSupabaseConfigured()) {
+    try {
       await db.contactSubmission.delete({
         where: { id },
       });
       revalidatePath('/enquiries');
       revalidatePath('/dashboard');
       return { success: true };
+    } catch (prismaErr) {
+      if (!isSupabaseConfigured()) throw prismaErr;
+      console.warn('[Delete Enquiry Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
     }
 
     const supabase = await createSupabaseClient();
@@ -159,7 +171,7 @@ export async function deleteEnquiry(id: string): Promise<AdminActionResponse> {
     revalidatePath('/dashboard');
     return { success: true };
   } catch (error) {
-    console.error('[Delete Enquiry Error]:', error);
+    console.error('[Delete Enquiry Error]:', (error as Error)?.message || error);
     return { success: false, error: 'Failed to delete enquiry' };
   }
 }

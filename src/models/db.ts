@@ -10,6 +10,7 @@ import pg from 'pg';
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
   pool: pg.Pool | undefined;
+  connStr: string | undefined;
 };
 
 const SUPABASE_PROD_URL =
@@ -44,6 +45,16 @@ function getCleanConnectionString(): string {
 const connectionString = getCleanConnectionString();
 const isLocalhost = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
 
+// If connection string changed during hot reload (e.g. switching between local and Supabase), reset cached pool and client
+if (globalForPrisma.connStr && globalForPrisma.connStr !== connectionString) {
+  if (globalForPrisma.pool) {
+    globalForPrisma.pool.end().catch(() => {});
+    globalForPrisma.pool = undefined;
+  }
+  globalForPrisma.prisma = undefined;
+}
+globalForPrisma.connStr = connectionString;
+
 const pool =
   globalForPrisma.pool ??
   new pg.Pool({
@@ -54,11 +65,6 @@ const pool =
     idleTimeoutMillis: 30000,
   });
 const adapter = new PrismaPg(pool);
-
-// If Prisma client was cached in memory before complianceSetting model was added, discard it
-if (globalForPrisma.prisma && !(globalForPrisma.prisma as unknown as { complianceSetting?: unknown }).complianceSetting) {
-  globalForPrisma.prisma = undefined;
-}
 
 export const db =
   globalForPrisma.prisma ??
