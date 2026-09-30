@@ -351,7 +351,8 @@ export async function loginAdmin(email: string, password?: string): Promise<Admi
     return { success: true };
   } catch (error) {
     console.error('[Login Admin Error]:', error);
-    return { success: false, error: 'Failed to sign in. Please check database connection.' };
+    const msg = error instanceof Error ? error.message : 'Unknown error';
+    return { success: false, error: `Failed to sign in: ${msg}` };
   }
 }
 
