@@ -34,19 +34,38 @@ export async function getBlogArticles(): Promise<{ data: AdminBlogPost[]; error?
     });
 
     if (records && records.length > 0) {
-      const mapped: AdminBlogPost[] = records.map((p) => ({
-        id: p.id,
-        title: p.title,
-        slug: p.slug,
-        excerpt: p.summary,
-        content: p.content,
-        author: p.author?.name || 'Astraiv Engineering Team',
-        category: p.category?.name || 'Engineering',
-        status: p.published ? 'published' : 'draft',
-        cover_image: p.featuredImage,
-        created_at: p.createdAt.toISOString(),
-        updated_at: p.updatedAt.toISOString(),
-      }));
+      const mapped: AdminBlogPost[] = records.map((p) => {
+        const isAi =
+          p.tags?.includes('section:ai-research') ||
+          p.tags?.includes('ai-research') ||
+          (!p.tags?.includes('section:engineering') &&
+            (p.category?.name?.toLowerCase().includes('ai') ||
+             p.category?.name?.toLowerCase().includes('research') ||
+             p.category?.name?.toLowerCase().includes('neural') ||
+             p.category?.name?.toLowerCase().includes('agent') ||
+             p.category?.name?.toLowerCase().includes('machine learning') ||
+             p.title.toLowerCase().includes('rag') ||
+             p.title.toLowerCase().includes('vector')));
+
+        return {
+          id: p.id,
+          title: p.title,
+          slug: p.slug,
+          excerpt: p.summary,
+          content: p.content,
+          author: p.authorName || p.author?.name || 'Astraiv Engineering Team',
+          author_role: p.authorRole || 'Senior Systems Architect',
+          author_image: p.authorImage || p.author?.image || null,
+          category: p.category?.name || 'Engineering',
+          section: isAi ? 'ai-research' : 'engineering',
+          tags: p.tags || [],
+          reading_time: p.readingTime || '5 min read',
+          status: p.published ? 'published' : 'draft',
+          cover_image: p.featuredImage,
+          created_at: p.createdAt.toISOString(),
+          updated_at: p.updatedAt.toISOString(),
+        };
+      });
 
       return { data: mapped };
     }
@@ -59,12 +78,27 @@ export async function getBlogArticles(): Promise<{ data: AdminBlogPost[]; error?
     try {
       const supabase = await createSupabaseClient();
       const { data, error } = await supabase
-        .from('blog_posts')
+        .from('blog_post')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (!error && data && data.length > 0) {
-        return { data: data as AdminBlogPost[] };
+        return {
+          data: data.map((p) => {
+            const isAi =
+              p.tags?.includes('section:ai-research') ||
+              p.tags?.includes('ai-research') ||
+              (!p.tags?.includes('section:engineering') &&
+                (p.category?.toLowerCase().includes('ai') ||
+                 p.category?.toLowerCase().includes('research') ||
+                 p.title?.toLowerCase().includes('ai')));
+
+            return {
+              ...p,
+              section: isAi ? 'ai-research' : 'engineering',
+            } as AdminBlogPost;
+          }),
+        };
       }
     } catch (supaErr) {
       console.warn('[Admin Supabase Blog Query Notice]:', (supaErr as Error)?.message || supaErr);
@@ -102,11 +136,15 @@ export async function createBlogPost(data: AdminBlogInput): Promise<AdminActionR
       if (!category) {
         category = await db.blogCategory.create({
           data: {
-            name: data.category || 'Engineering',
-            slug: (data.category || 'engineering').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            name: data.category || (data.section === 'ai-research' ? 'Artificial Intelligence' : 'Software Engineering'),
+            slug: (data.category || (data.section === 'ai-research' ? 'ai' : 'engineering')).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
           },
         });
       }
+
+      const sectionTag = data.section === 'ai-research' ? 'section:ai-research' : 'section:engineering';
+      const existingTags = data.tags || [];
+      const tags = Array.from(new Set([...existingTags.filter(t => !t.startsWith('section:')), sectionTag]));
 
       const created = await db.blogPost.create({
         data: {
@@ -116,6 +154,12 @@ export async function createBlogPost(data: AdminBlogInput): Promise<AdminActionR
           content: data.content,
           published: isPublished,
           featuredImage: data.cover_image || null,
+          readingTime: data.reading_time || '5 min read',
+          authorName: data.author || 'Astraiv Engineering Team',
+          authorRole: data.author_role || (data.section === 'ai-research' ? 'Principal AI Architect' : 'Senior Systems Engineer'),
+          authorImage: data.author_image || null,
+          tags,
+          status: data.status,
           authorId: author.id,
           categoryId: category.id,
         },
@@ -128,8 +172,13 @@ export async function createBlogPost(data: AdminBlogInput): Promise<AdminActionR
         slug: created.slug,
         excerpt: created.summary,
         content: created.content,
-        author: created.author?.name || data.author,
+        author: created.authorName || created.author?.name || data.author,
+        author_role: created.authorRole || data.author_role || null,
+        author_image: created.authorImage || null,
+        reading_time: created.readingTime || '5 min read',
         category: created.category?.name || data.category,
+        section: data.section || (data.category.toLowerCase().includes('ai') ? 'ai-research' : 'engineering'),
+        tags: created.tags,
         status: created.published ? 'published' : 'draft',
         cover_image: created.featuredImage,
         created_at: created.createdAt.toISOString(),
@@ -158,7 +207,7 @@ export async function createBlogPost(data: AdminBlogInput): Promise<AdminActionR
         }
 
         const { data: supaCreated, error } = await supabase
-          .from('blog_posts')
+          .from('blog_post')
           .upsert(payload)
           .select()
           .single();
@@ -201,8 +250,28 @@ export async function updateBlogPost(
       if (data.slug !== undefined) updateData.slug = data.slug;
       if (data.excerpt !== undefined) updateData.summary = data.excerpt;
       if (data.content !== undefined) updateData.content = data.content;
-      if (data.status !== undefined) updateData.published = data.status === 'published';
+      if (data.status !== undefined) {
+        updateData.status = data.status;
+        updateData.published = data.status === 'published';
+      }
       if (data.cover_image !== undefined) updateData.featuredImage = data.cover_image;
+      if (data.reading_time !== undefined) updateData.readingTime = data.reading_time;
+      if (data.author !== undefined) updateData.authorName = data.author;
+      if (data.author_role !== undefined) updateData.authorRole = data.author_role;
+      if (data.author_image !== undefined) updateData.authorImage = data.author_image;
+
+      if (data.section !== undefined || data.tags !== undefined) {
+        const existing = await db.blogPost.findUnique({ where: { id }, select: { tags: true } });
+        let currentTags = (existing?.tags || []).filter(t => !t.startsWith('section:'));
+        if (data.tags) {
+          currentTags = data.tags.filter(t => !t.startsWith('section:'));
+        }
+        if (data.section) {
+          const sectionTag = data.section === 'ai-research' ? 'section:ai-research' : 'section:engineering';
+          currentTags.push(sectionTag);
+        }
+        updateData.tags = Array.from(new Set(currentTags));
+      }
 
       if (data.category) {
         let category = await db.blogCategory.findFirst({ where: { name: data.category } });
@@ -230,7 +299,7 @@ export async function updateBlogPost(
       try {
         const supabase = await createSupabaseClient();
         await supabase
-          .from('blog_posts')
+          .from('blog_post')
           .update({
             ...data,
             updated_at: new Date().toISOString(),
@@ -276,7 +345,7 @@ export async function toggleBlogVisibility(
       try {
         const supabase = await createSupabaseClient();
         await supabase
-          .from('blog_posts')
+          .from('blog_post')
           .update({
             status: newStatus,
             published_at: isPublished ? new Date().toISOString() : null,
@@ -316,7 +385,7 @@ export async function deleteBlogPost(id: string): Promise<AdminActionResponse> {
     if (isSupabaseConfigured()) {
       try {
         const supabase = await createSupabaseClient();
-        await supabase.from('blog_posts').delete().eq('id', id);
+        await supabase.from('blog_post').delete().eq('id', id);
       } catch (supaErr) {
         console.warn('[Admin Delete Blog Post Supabase Notice]:', (supaErr as Error)?.message || supaErr);
       }

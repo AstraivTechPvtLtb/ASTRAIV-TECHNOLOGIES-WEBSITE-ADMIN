@@ -4,12 +4,19 @@
  * @file admin/src/views/tables/leads-table.tsx
  * @description [VIEW] Enterprise data table and inspector modal for managing Start a Project leads,
  * lifecycle progression (NEW -> QUALIFIED -> CONTACTED -> PROPOSAL -> NEGOTIATION -> WON / LOST),
- * source page attribution, and team assignments.
+ * portal access approval, 24-hour credential dispatch, and agile client telemetry.
  */
 
 import { useState } from 'react';
 import { AdminLead, LeadLifecycleStatus } from '@/models/types';
-import { updateLeadStatus, updateLeadNotes, deleteLead } from '@/controllers/leads.controller';
+import {
+  updateLeadStatus,
+  updateLeadNotes,
+  deleteLead,
+  approveLeadPortalAccess,
+  revokeLeadPortalAccess,
+  resetLeadLoginWindow,
+} from '@/controllers/leads.controller';
 import {
   Search,
   Trash2,
@@ -21,6 +28,16 @@ import {
   Layers,
   Compass,
   Filter,
+  Key,
+  ShieldCheck,
+  ShieldAlert,
+  Clock,
+  CheckCircle2,
+  Copy,
+  Check,
+  RotateCcw,
+  Sparkles,
+  ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/views/ui/button';
 import { Input } from '@/views/ui/input';
@@ -51,6 +68,10 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
   const [selectedLead, setSelectedLead] = useState<AdminLead | null>(null);
   const [notesEdit, setNotesEdit] = useState<string>('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [customPasswordInput, setCustomPasswordInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [portalActionMsg, setPortalActionMsg] = useState<string | null>(null);
 
   // Derive unique source pages from current data if not provided
   const sourcePages =
@@ -79,6 +100,14 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
   const handleOpenLead = (lead: AdminLead) => {
     setSelectedLead(lead);
     setNotesEdit(lead.notes || '');
+    setCustomPasswordInput(lead.portal_password || 'Password123');
+    setPortalActionMsg(null);
+  };
+
+  const handleCopy = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
   };
 
   const handleStatusChange = async (id: string, newStatus: LeadLifecycleStatus) => {
@@ -91,6 +120,104 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
         );
         if (selectedLead && selectedLead.id === id) {
           setSelectedLead((prev) => (prev ? { ...prev, status: newStatus } : null));
+        }
+      }
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleApprovePortal = async (leadId: string) => {
+    setIsUpdating(true);
+    setPortalActionMsg(null);
+    try {
+      const res = await approveLeadPortalAccess(leadId, customPasswordInput);
+      if (res.success && res.data) {
+        setPortalActionMsg(`Approved! Credentials dispatched to client: ${res.data.leadNumber} (${res.data.email})`);
+        setData((prev) =>
+          prev.map((item) =>
+            item.id === leadId
+              ? {
+                  ...item,
+                  portal_approved: true,
+                  portal_password: res.data!.password,
+                  first_login_expires_at: res.data!.expiresAt,
+                  has_logged_in: false,
+                }
+              : item
+          )
+        );
+        if (selectedLead && selectedLead.id === leadId) {
+          setSelectedLead((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  portal_approved: true,
+                  portal_password: res.data!.password,
+                  first_login_expires_at: res.data!.expiresAt,
+                  has_logged_in: false,
+                }
+              : null
+          );
+        }
+      } else {
+        setPortalActionMsg(res.error || 'Failed to approve portal access.');
+      }
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleRevokePortal = async (leadId: string) => {
+    if (!confirm('Are you sure you want to revoke portal access for this lead?')) return;
+    setIsUpdating(true);
+    setPortalActionMsg(null);
+    try {
+      const res = await revokeLeadPortalAccess(leadId);
+      if (res.success) {
+        setPortalActionMsg('Portal access revoked.');
+        setData((prev) =>
+          prev.map((item) =>
+            item.id === leadId ? { ...item, portal_approved: false } : item
+          )
+        );
+        if (selectedLead && selectedLead.id === leadId) {
+          setSelectedLead((prev) => (prev ? { ...prev, portal_approved: false } : null));
+        }
+      }
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleResetWindow = async (leadId: string) => {
+    setIsUpdating(true);
+    setPortalActionMsg(null);
+    try {
+      const res = await resetLeadLoginWindow(leadId);
+      if (res.success && res.data) {
+        setPortalActionMsg('24-Hour activation window renewed for another 24 hours!');
+        setData((prev) =>
+          prev.map((item) =>
+            item.id === leadId
+              ? {
+                  ...item,
+                  first_login_expires_at: res.data!.expiresAt,
+                  has_logged_in: false,
+                }
+              : item
+          )
+        );
+        if (selectedLead && selectedLead.id === leadId) {
+          setSelectedLead((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  first_login_expires_at: res.data!.expiresAt,
+                  has_logged_in: false,
+                }
+              : null
+          );
         }
       }
     } finally {
@@ -153,6 +280,45 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
       default:
         return 'bg-slate-800 text-slate-300 border-slate-700';
     }
+  };
+
+  const renderPortalBadge = (lead: AdminLead) => {
+    if (!lead.portal_approved) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800/80 text-slate-400 border border-slate-700/60">
+          <Key className="h-2.5 w-2.5" />
+          No Access
+        </span>
+      );
+    }
+
+    if (lead.has_logged_in) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+          <CheckCircle2 className="h-2.5 w-2.5" />
+          Portal Active
+        </span>
+      );
+    }
+
+    const isExpired =
+      lead.first_login_expires_at && new Date(lead.first_login_expires_at) < new Date();
+
+    if (isExpired) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+          <Clock className="h-2.5 w-2.5" />
+          24h Expired
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+        <Clock className="h-2.5 w-2.5 animate-pulse" />
+        Approved (24h Pending)
+      </span>
+    );
   };
 
   return (
@@ -238,7 +404,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                 <th className="py-3.5 px-4">Lead #</th>
                 <th className="py-3.5 px-4">Client Contact</th>
                 <th className="py-3.5 px-4">Discipline & Scope</th>
-                <th className="py-3.5 px-4">Source Page</th>
+                <th className="py-3.5 px-4">Portal Access</th>
                 <th className="py-3.5 px-4">Lifecycle Status</th>
                 <th className="py-3.5 px-4">Date</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
@@ -294,20 +460,9 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                       </div>
                     </td>
 
-                    {/* Source Page Attribution */}
-                    <td className="py-4 px-4">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (lead.source_page) setSourcePageFilter(lead.source_page);
-                        }}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-800/90 text-slate-300 hover:text-white hover:bg-slate-700/80 font-mono text-[11px] border border-slate-700/60 transition-colors truncate max-w-[200px]"
-                        title={lead.source_page || '/start-project'}
-                      >
-                        <Compass className="h-3 w-3 text-blue-400 shrink-0" />
-                        <span className="truncate">{lead.source_page || '/start-project'}</span>
-                      </button>
+                    {/* Portal Access Status */}
+                    <td className="py-4 px-4 whitespace-nowrap">
+                      {renderPortalBadge(lead)}
                     </td>
 
                     {/* Lifecycle Status */}
@@ -369,10 +524,11 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                   <Badge variant="outline" className={cn('text-xs font-bold uppercase', getStatusBadgeClass(selectedLead.status))}>
                     {selectedLead.status}
                   </Badge>
+                  {renderPortalBadge(selectedLead)}
                 </div>
                 <h3 className="text-2xl font-black text-white mt-1">{selectedLead.name}</h3>
                 <p className="text-xs text-slate-400">
-                  Ingested on {new Date(selectedLead.created_at).toLocaleString()}
+                  Captured on {new Date(selectedLead.created_at).toLocaleString()}
                 </p>
               </div>
               <button
@@ -381,6 +537,179 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
               >
                 <X className="h-5 w-5" />
               </button>
+            </div>
+
+            {/* Client Portal Access & 24-Hour Onboarding Engine */}
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/30 border border-blue-500/30 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Key className="h-4 w-4 text-blue-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-white">
+                    Client Portal &amp; Agile Tracker Access
+                  </span>
+                </div>
+                {selectedLead.portal_approved ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Approved for Portal
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                    <ShieldAlert className="h-3.5 w-3.5" />
+                    Unapproved Lead (Login Locked)
+                  </span>
+                )}
+              </div>
+
+              {portalActionMsg && (
+                <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-blue-400 shrink-0" />
+                  <span>{portalActionMsg}</span>
+                </div>
+              )}
+
+              {/* Approval & Credentials Box */}
+              {!selectedLead.portal_approved ? (
+                <div className="space-y-3 pt-1">
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Client cannot log in until approved. Approving will generate login credentials and dispatch an email with the <strong>Lead Number ({selectedLead.lead_number})</strong>, <strong>Email ({selectedLead.email})</strong>, and a temporary password. The client has <strong>24 hours</strong> for their initial login.
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+                    <Input
+                      type="text"
+                      placeholder="Custom Password (Default: Password123)"
+                      value={customPasswordInput}
+                      onChange={(e) => setCustomPasswordInput(e.target.value)}
+                      className="bg-slate-900 border-slate-700 text-xs h-9 font-mono"
+                    />
+                    <Button
+                      onClick={() => handleApprovePortal(selectedLead.id)}
+                      disabled={isUpdating}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs h-9 px-4 rounded-xl shrink-0 w-full sm:w-auto"
+                    >
+                      <ShieldCheck className="h-4 w-4 mr-1.5" />
+                      Approve &amp; Dispatch Credentials
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                    {/* Lead Number */}
+                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                        Lead Number
+                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-bold text-blue-400 text-sm">{selectedLead.lead_number}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(selectedLead.lead_number, 'leadNum')}
+                          className="text-slate-400 hover:text-white"
+                        >
+                          {copiedKey === 'leadNum' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Client Email */}
+                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                        Portal Email ID
+                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-200 truncate pr-1">{selectedLead.email}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(selectedLead.email, 'email')}
+                          className="text-slate-400 hover:text-white shrink-0"
+                        >
+                          {copiedKey === 'email' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Portal Password */}
+                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">
+                          Portal Password
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="text-[10px] text-blue-400 hover:underline"
+                        >
+                          {showPassword ? 'Hide' : 'Reveal'}
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-slate-200">
+                          {showPassword ? (selectedLead.portal_password || 'Password123') : '••••••••••••'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(selectedLead.portal_password || 'Password123', 'pwd')}
+                          className="text-slate-400 hover:text-white"
+                        >
+                          {copiedKey === 'pwd' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 24-Hour Expiration Telemetry */}
+                  <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                    <div>
+                      {selectedLead.has_logged_in ? (
+                        <div className="flex items-center gap-2 text-emerald-400">
+                          <CheckCircle2 className="h-4 w-4 shrink-0" />
+                          <span className="font-bold">
+                            Client has completed their first login! Access is permanently unlocked for project duration.
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1.5 text-amber-300 font-bold">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>Initial 24-Hour Login Countdown</span>
+                          </div>
+                          <span className="text-slate-400 text-[11px] block">
+                            Expires at:{' '}
+                            <strong className="text-slate-200">
+                              {selectedLead.first_login_expires_at
+                                ? new Date(selectedLead.first_login_expires_at).toLocaleString()
+                                : 'Pending Activation'}
+                            </strong>
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        onClick={() => handleResetWindow(selectedLead.id)}
+                        disabled={isUpdating}
+                        className="h-8 border-slate-700 text-slate-300 hover:text-white text-xs rounded-lg"
+                      >
+                        <RotateCcw className="h-3 w-3 mr-1" />
+                        Reset 24h Window
+                      </Button>
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        onClick={() => handleRevokePortal(selectedLead.id)}
+                        disabled={isUpdating}
+                        className="h-8 text-rose-400 hover:bg-rose-500/10 text-xs rounded-lg"
+                      >
+                        Revoke Access
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Lifecycle Progression Stepper */}
@@ -462,7 +791,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
             <div className="p-4 rounded-2xl bg-blue-950/30 border border-blue-500/20 space-y-2 text-xs">
               <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
                 <Compass className="h-3.5 w-3.5" />
-                Attribution & Lead Source Telemetry
+                Attribution &amp; Lead Source Telemetry
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div>
@@ -482,12 +811,12 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
               </div>
             </div>
 
-            {/* Project Description / Dossier */}
+            {/* Project Requirements */}
             <div className="space-y-2">
               <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
-                Project Requirements & Specifications
+                Project Requirements &amp; Specifications
               </label>
-              <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 text-slate-200 text-xs leading-relaxed whitespace-pre-wrap font-sans max-h-60 overflow-y-auto">
+              <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 text-slate-200 text-xs leading-relaxed whitespace-pre-wrap font-sans max-h-48 overflow-y-auto">
                 {selectedLead.project_description || selectedLead.notes || 'No project description submitted.'}
               </div>
             </div>
@@ -518,25 +847,25 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
 
             {/* Footer Actions */}
             <div className="pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDelete(selectedLead.id)}
-                  disabled={isUpdating}
-                  className="border-slate-800 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 text-xs h-9 rounded-xl"
-                >
-                  <Trash2 className="h-4 w-4 mr-1.5" /> Delete Lead
-                </Button>
-              </div>
-
-              <a
-                href={`mailto:${selectedLead.email}?subject=Astraiv Technologies - Project Brief [${selectedLead.lead_number}]`}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleDelete(selectedLead.id)}
+                disabled={isUpdating}
+                className="border-slate-800 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 text-xs h-9 rounded-xl"
               >
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center gap-2 h-9 px-4">
-                  <Mail className="h-4 w-4" /> Reply via Email
-                </Button>
-              </a>
+                <Trash2 className="h-4 w-4 mr-1.5" /> Delete Lead
+              </Button>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href={`mailto:${selectedLead.email}?subject=Astraiv Technologies - Project Portal Credentials [${selectedLead.lead_number}]`}
+                >
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center gap-2 h-9 px-4">
+                    <Mail className="h-4 w-4" /> Email Client
+                  </Button>
+                </a>
+              </div>
             </div>
           </div>
         </div>
