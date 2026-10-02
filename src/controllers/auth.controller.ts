@@ -202,9 +202,14 @@ export async function sendAdminLoginOtp(email: string): Promise<AdminActionRespo
     const adminEmail = getAdminEmail();
 
     // Check if email matches configured admin email or an existing admin in database
-    const user = await db.user.findUnique({
-      where: { email: cleanEmail },
-    });
+    let user = null;
+    try {
+      user = await db.user.findUnique({
+        where: { email: cleanEmail },
+      });
+    } catch (dbErr) {
+      console.warn('[sendAdminLoginOtp] Non-fatal DB user lookup warning:', dbErr);
+    }
 
     const isAuthorized = cleanEmail === adminEmail || (user && user.role === 'ADMIN');
     if (!isAuthorized) {
