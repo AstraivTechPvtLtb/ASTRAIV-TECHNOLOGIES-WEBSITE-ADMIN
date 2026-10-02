@@ -96,15 +96,15 @@ fi
 echo "🚀 Deploying to Vercel..."
 if [ "$USING_ENV_CREDS" = true ]; then
   if [ "$ENV" == "production" ]; then
-    vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+    vercel deploy --prebuilt --prod --archive=tgz --token="$VERCEL_TOKEN"
   else
-    vercel deploy --prebuilt --token="$VERCEL_TOKEN"
+    vercel deploy --prebuilt --archive=tgz --token="$VERCEL_TOKEN"
   fi
 else
   if [ "$ENV" == "production" ]; then
-    vercel deploy --prebuilt --prod
+    vercel deploy --prebuilt --prod --archive=tgz
   else
-    vercel deploy --prebuilt
+    vercel deploy --prebuilt --archive=tgz
   fi
 fi
 
