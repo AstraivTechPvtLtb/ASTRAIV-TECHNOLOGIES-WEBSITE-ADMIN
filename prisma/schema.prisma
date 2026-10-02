@@ -238,6 +238,12 @@ model CRMLead {
   assignedUser       User?     @relation("AssignedLeads", fields: [assignedTo], references: [id])
   source             String?   // WEBSITE_START_PROJECT, REFERRAL, SOCIAL_MEDIA, OUTREACH
   notes              String?   @db.Text
+  portalApproved     Boolean   @default(false) @map("portal_approved")
+  portalPassword     String?   @map("portal_password")
+  approvedAt         DateTime? @map("approved_at")
+  firstLoginExpiresAt DateTime? @map("first_login_expires_at")
+  hasLoggedIn        Boolean   @default(false) @map("has_logged_in")
+  firstLoggedInAt    DateTime? @map("first_logged_in_at")
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 

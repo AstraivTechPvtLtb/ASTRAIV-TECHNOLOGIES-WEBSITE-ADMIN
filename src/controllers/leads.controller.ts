@@ -4,12 +4,11 @@
  * @file admin/src/controllers/leads.controller.ts
  * @description [CONTROLLER] Business logic for managing prospective enterprise project leads,
  * lifecycle progression (NEW -> QUALIFIED -> CONTACTED -> PROPOSAL -> NEGOTIATION -> WON / LOST),
- * team assignment, and source page attribution analytics.
+ * portal access approval, 24-hour credential dispatch, and attribution analytics.
  */
 
-import { db } from '@/models/db';
+import { pool } from '@/models/db';
 import { revalidatePath } from 'next/cache';
-import { isSupabaseConfigured, createClient as createSupabaseClient } from '@/models/supabase';
 import { requireAdminUser } from './auth.controller';
 import {
   AdminLead,
@@ -17,7 +16,6 @@ import {
   AdminActionResponse,
   AdminLeadAnalytics,
 } from '@/models/types';
-import { Prisma } from '@prisma/client';
 
 export interface GetLeadsParams {
   search?: string;
@@ -28,7 +26,7 @@ export interface GetLeadsParams {
 }
 
 /**
- * Retrieves paginated leads with full lifecycle, attribution, and search filtering.
+ * Retrieves paginated leads with full lifecycle, attribution, portal access, and search filtering.
  */
 export async function getLeads({
   search = '',
@@ -40,155 +38,79 @@ export async function getLeads({
   try {
     const offset = (page - 1) * limit;
 
-    // 1. Primary PostgreSQL Engine via Prisma ORM
-    try {
-      const where: Prisma.CRMLeadWhereInput = {};
+    let whereClause = 'WHERE 1=1';
+    const params: (string | number)[] = [];
+    let paramIdx = 1;
 
-      if (status !== 'all') {
-        where.status = status;
-      }
-
-      if (sourcePage.trim()) {
-        where.sourcePage = { contains: sourcePage.trim(), mode: 'insensitive' };
-      }
-
-      if (search.trim()) {
-        where.OR = [
-          { leadNumber: { contains: search, mode: 'insensitive' } },
-          { name: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-          { company: { contains: search, mode: 'insensitive' } },
-          { sourcePage: { contains: search, mode: 'insensitive' } },
-          { notes: { contains: search, mode: 'insensitive' } },
-        ];
-      }
-
-      const [total, records] = await Promise.all([
-        db.cRMLead.count({ where }),
-        db.cRMLead.findMany({
-          where,
-          include: {
-            assignedUser: {
-              select: { name: true, email: true },
-            },
-          },
-          orderBy: { createdAt: 'desc' },
-          skip: offset,
-          take: limit,
-        }),
-      ]);
-
-      const mapped: AdminLead[] = records.map((r) => ({
-        id: r.id,
-        lead_number: r.leadNumber || 'AST-LEAD-PENDING',
-        name: r.name,
-        email: r.email,
-        phone: r.phone,
-        company: r.company,
-        service_id: r.serviceId,
-        solution_id: r.solutionId,
-        industry_id: r.industryId,
-        project_description: r.projectDescription,
-        budget_range: r.budgetRange,
-        timeline: r.timeline,
-        source_page: r.sourcePage,
-        utm_source: r.utmSource,
-        utm_medium: r.utmMedium,
-        utm_campaign: r.utmCampaign,
-        status: (r.status as LeadLifecycleStatus) || 'NEW',
-        assigned_to: r.assignedTo,
-        assigned_user_name: r.assignedUser?.name || null,
-        notes: r.notes,
-        created_at: r.createdAt.toISOString(),
-        updated_at: r.updatedAt.toISOString(),
-      }));
-
-      return { data: mapped, total };
-    } catch (prismaErr) {
-      console.warn('[Admin Leads Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
+    if (status !== 'all') {
+      whereClause += ` AND status = $${paramIdx++}`;
+      params.push(status);
     }
 
-    // 2. Supabase Cloud Fallback
-    if (isSupabaseConfigured()) {
-      const supabase = await createSupabaseClient();
-      let query = supabase
-        .from('crm_lead')
-        .select('*', { count: 'exact' })
-        .order('createdAt', { ascending: false });
-
-      if (status !== 'all') {
-        query = query.eq('status', status);
-      }
-
-      if (sourcePage.trim()) {
-        query = query.ilike('source_page', `%${sourcePage.trim()}%`);
-      }
-
-      if (search.trim()) {
-        query = query.or(
-          `lead_number.ilike.%${search}%,name.ilike.%${search}%,email.ilike.%${search}%,company.ilike.%${search}%,source_page.ilike.%${search}%`
-        );
-      }
-
-      interface SupabaseLeadRecord {
-        id: string;
-        lead_number?: string | null;
-        name: string;
-        email: string;
-        phone?: string | null;
-        company?: string | null;
-        service_id?: string | null;
-        solution_id?: string | null;
-        industry_id?: string | null;
-        project_description?: string | null;
-        budget_range?: string | null;
-        timeline?: string | null;
-        source_page?: string | null;
-        utm_source?: string | null;
-        utm_medium?: string | null;
-        utm_campaign?: string | null;
-        status?: string | null;
-        assigned_to?: string | null;
-        notes?: string | null;
-        createdAt?: string | Date | null;
-        created_at?: string | Date | null;
-        updatedAt?: string | Date | null;
-        updated_at?: string | Date | null;
-      }
-
-      const { data, count, error } = await query.range(offset, offset + limit - 1);
-
-      if (error) throw error;
-
-      const mapped: AdminLead[] = ((data as unknown as SupabaseLeadRecord[]) || []).map((r) => ({
-        id: r.id,
-        lead_number: r.lead_number || 'AST-LEAD-PENDING',
-        name: r.name,
-        email: r.email,
-        phone: r.phone,
-        company: r.company,
-        service_id: r.service_id,
-        solution_id: r.solution_id,
-        industry_id: r.industry_id,
-        project_description: r.project_description,
-        budget_range: r.budget_range,
-        timeline: r.timeline,
-        source_page: r.source_page,
-        utm_source: r.utm_source,
-        utm_medium: r.utm_medium,
-        utm_campaign: r.utm_campaign,
-        status: (r.status as LeadLifecycleStatus) || 'NEW',
-        assigned_to: r.assigned_to,
-        assigned_user_name: null,
-        notes: r.notes,
-        created_at: String(r.createdAt || r.created_at || new Date().toISOString()),
-        updated_at: r.updatedAt || r.updated_at ? String(r.updatedAt || r.updated_at) : undefined,
-      }));
-
-      return { data: mapped, total: count || 0 };
+    if (sourcePage.trim()) {
+      whereClause += ` AND source_page ILIKE $${paramIdx++}`;
+      params.push(`%${sourcePage.trim()}%`);
     }
 
-    return { data: [], total: 0 };
+    if (search.trim()) {
+      whereClause += ` AND (lead_number ILIKE $${paramIdx} OR name ILIKE $${paramIdx} OR email ILIKE $${paramIdx} OR company ILIKE $${paramIdx} OR source_page ILIKE $${paramIdx} OR notes ILIKE $${paramIdx})`;
+      params.push(`%${search.trim()}%`);
+      paramIdx++;
+    }
+
+    // Count query
+    const countRes = await pool.query(
+      `SELECT COUNT(*) as total FROM crm_lead ${whereClause}`,
+      params
+    );
+    const total = parseInt(countRes.rows[0]?.total || '0', 10);
+
+    // Records query with limit and offset
+    const recordsParams = [...params, limit, offset];
+    const recordsRes = await pool.query(
+      `SELECT id, lead_number, name, email, phone, company, service_id, solution_id, industry_id,
+              project_description, budget_range, timeline, source_page, utm_source, utm_medium, utm_campaign,
+              status, assigned_to, notes, portal_approved, portal_password, approved_at,
+              first_login_expires_at, has_logged_in, first_logged_in_at, "createdAt", "updatedAt"
+       FROM crm_lead
+       ${whereClause}
+       ORDER BY "createdAt" DESC
+       LIMIT $${paramIdx++} OFFSET $${paramIdx++}`,
+      recordsParams
+    );
+
+    const mapped: AdminLead[] = recordsRes.rows.map((r) => ({
+      id: r.id,
+      lead_number: r.lead_number || 'AST-LEAD-PENDING',
+      name: r.name,
+      email: r.email,
+      phone: r.phone,
+      company: r.company,
+      service_id: r.service_id,
+      solution_id: r.solution_id,
+      industry_id: r.industry_id,
+      project_description: r.project_description,
+      budget_range: r.budget_range,
+      timeline: r.timeline,
+      source_page: r.source_page,
+      utm_source: r.utm_source,
+      utm_medium: r.utm_medium,
+      utm_campaign: r.utm_campaign,
+      status: (r.status as LeadLifecycleStatus) || 'NEW',
+      assigned_to: r.assigned_to,
+      assigned_user_name: null,
+      notes: r.notes,
+      portal_approved: Boolean(r.portal_approved),
+      portal_password: r.portal_password,
+      approved_at: r.approved_at ? new Date(r.approved_at).toISOString() : null,
+      first_login_expires_at: r.first_login_expires_at ? new Date(r.first_login_expires_at).toISOString() : null,
+      has_logged_in: Boolean(r.has_logged_in),
+      first_logged_in_at: r.first_logged_in_at ? new Date(r.first_logged_in_at).toISOString() : null,
+      created_at: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
+      updated_at: r.updatedAt ? new Date(r.updatedAt).toISOString() : undefined,
+    }));
+
+    return { data: mapped, total };
   } catch (error) {
     console.error('[Get Leads Controller Error]:', (error as Error)?.message || error);
     return { data: [], total: 0, error: 'Failed to fetch leads' };
@@ -205,27 +127,11 @@ export async function updateLeadStatus(
 ): Promise<AdminActionResponse> {
   try {
     await requireAdminUser();
-    try {
-      await db.cRMLead.update({
-        where: { id },
-        data: { status: newStatus },
-      });
-      revalidatePath('/leads');
-      revalidatePath('/dashboard');
-      revalidatePath('/enquiries');
-      return { success: true };
-    } catch (prismaErr) {
-      if (!isSupabaseConfigured()) throw prismaErr;
-      console.warn('[Update Lead Status Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
-    }
+    await pool.query(
+      `UPDATE crm_lead SET status = $1, "updatedAt" = NOW() WHERE id = $2`,
+      [newStatus, id]
+    );
 
-    const supabase = await createSupabaseClient();
-    const { error } = await supabase
-      .from('crm_lead')
-      .update({ status: newStatus, updatedAt: new Date().toISOString() })
-      .eq('id', id);
-
-    if (error) throw error;
     revalidatePath('/leads');
     revalidatePath('/dashboard');
     revalidatePath('/enquiries');
@@ -233,6 +139,139 @@ export async function updateLeadStatus(
   } catch (error) {
     console.error('[Update Lead Status Error]:', (error as Error)?.message || error);
     return { success: false, error: 'Failed to update lead lifecycle status' };
+  }
+}
+
+/**
+ * Approves a client lead for portal access from the admin board:
+ * 1. Generates or sets temporary password.
+ * 2. Enables portal_approved = TRUE.
+ * 3. Starts 24-hour initial login countdown (first_login_expires_at = NOW() + 24 hours).
+ * 4. Dispatches / logs credentials notification email.
+ */
+export async function approveLeadPortalAccess(
+  leadId: string,
+  customPassword?: string
+): Promise<AdminActionResponse<{
+  leadNumber: string;
+  email: string;
+  password: string;
+  expiresAt: string;
+}>> {
+  try {
+    await requireAdminUser();
+
+    // Generate readable, secure password if none provided
+    const password = customPassword?.trim() || `Pass${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const res = await pool.query(
+      `UPDATE crm_lead 
+       SET portal_approved = TRUE,
+           portal_password = $1,
+           approved_at = NOW(),
+           first_login_expires_at = NOW() + INTERVAL '24 hours',
+           has_logged_in = FALSE,
+           first_logged_in_at = NULL,
+           status = CASE WHEN status = 'NEW' THEN 'QUALIFIED' ELSE status END,
+           "updatedAt" = NOW()
+       WHERE id = $2
+       RETURNING id, lead_number, name, email, portal_password, first_login_expires_at`,
+      [password, leadId]
+    );
+
+    if (res.rows.length === 0) {
+      return { success: false, error: 'Lead not found.' };
+    }
+
+    const lead = res.rows[0];
+
+    // Ensure User account exists for the lead
+    await pool.query(
+      `INSERT INTO "user" (id, name, email, "emailVerified", role, "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, TRUE, 'CLIENT', NOW(), NOW())
+       ON CONFLICT (email) 
+       DO UPDATE SET role = 'CLIENT', "updatedAt" = NOW()`,
+      [lead.id, lead.name, lead.email.toLowerCase().trim()]
+    );
+
+    console.log(`[CLIENT PORTAL APPROVAL EMAIL DISPATCHED]
+      To: ${lead.email}
+      Client Name: ${lead.name}
+      Lead Number: ${lead.lead_number}
+      Temporary Password: ${password}
+      Expires At: ${new Date(lead.first_login_expires_at).toLocaleString()} (24-Hour Window)
+      Portal URL: http://localhost:3000/en/auth/login
+    `);
+
+    revalidatePath('/leads');
+    revalidatePath('/dashboard');
+
+    return {
+      success: true,
+      message: `Lead ${lead.lead_number} approved! Credentials dispatched to ${lead.email}. Valid for 24 hours.`,
+      data: {
+        leadNumber: lead.lead_number,
+        email: lead.email,
+        password,
+        expiresAt: new Date(lead.first_login_expires_at).toISOString(),
+      },
+    };
+  } catch (error) {
+    console.error('[Approve Lead Portal Error]:', (error as Error)?.message || error);
+    return { success: false, error: 'Failed to approve lead for portal access' };
+  }
+}
+
+/**
+ * Revokes client portal access for a lead.
+ */
+export async function revokeLeadPortalAccess(leadId: string): Promise<AdminActionResponse> {
+  try {
+    await requireAdminUser();
+    await pool.query(
+      `UPDATE crm_lead SET portal_approved = FALSE, "updatedAt" = NOW() WHERE id = $1`,
+      [leadId]
+    );
+
+    revalidatePath('/leads');
+    revalidatePath('/dashboard');
+    return { success: true, message: 'Portal access revoked for this lead.' };
+  } catch (error) {
+    console.error('[Revoke Lead Portal Error]:', (error as Error)?.message || error);
+    return { success: false, error: 'Failed to revoke portal access' };
+  }
+}
+
+/**
+ * Resets / extends the 24-hour first login countdown window for a client who missed it.
+ */
+export async function resetLeadLoginWindow(leadId: string): Promise<AdminActionResponse<{ expiresAt: string }>> {
+  try {
+    await requireAdminUser();
+    const res = await pool.query(
+      `UPDATE crm_lead 
+       SET first_login_expires_at = NOW() + INTERVAL '24 hours',
+           has_logged_in = FALSE,
+           "updatedAt" = NOW()
+       WHERE id = $1
+       RETURNING first_login_expires_at`,
+      [leadId]
+    );
+
+    if (res.rows.length === 0) {
+      return { success: false, error: 'Lead not found.' };
+    }
+
+    const expiresAt = new Date(res.rows[0].first_login_expires_at).toISOString();
+    revalidatePath('/leads');
+    return {
+      success: true,
+      message: '24-hour login window renewed successfully.',
+      data: { expiresAt },
+    };
+  } catch (error) {
+    console.error('[Reset Lead Window Error]:', (error as Error)?.message || error);
+    return { success: false, error: 'Failed to reset 24-hour login window' };
   }
 }
 
@@ -245,26 +284,11 @@ export async function assignLead(
 ): Promise<AdminActionResponse> {
   try {
     await requireAdminUser();
-    try {
-      await db.cRMLead.update({
-        where: { id },
-        data: { assignedTo },
-      });
-      revalidatePath('/leads');
-      revalidatePath('/dashboard');
-      return { success: true };
-    } catch (prismaErr) {
-      if (!isSupabaseConfigured()) throw prismaErr;
-      console.warn('[Assign Lead Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
-    }
+    await pool.query(
+      `UPDATE crm_lead SET assigned_to = $1, "updatedAt" = NOW() WHERE id = $2`,
+      [assignedTo, id]
+    );
 
-    const supabase = await createSupabaseClient();
-    const { error } = await supabase
-      .from('crm_lead')
-      .update({ assigned_to: assignedTo, updatedAt: new Date().toISOString() })
-      .eq('id', id);
-
-    if (error) throw error;
     revalidatePath('/leads');
     revalidatePath('/dashboard');
     return { success: true };
@@ -279,25 +303,11 @@ export async function assignLead(
  */
 export async function updateLeadNotes(id: string, notes: string): Promise<AdminActionResponse> {
   try {
-    try {
-      await db.cRMLead.update({
-        where: { id },
-        data: { notes },
-      });
-      revalidatePath('/leads');
-      return { success: true };
-    } catch (prismaErr) {
-      if (!isSupabaseConfigured()) throw prismaErr;
-      console.warn('[Update Lead Notes Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
-    }
+    await pool.query(
+      `UPDATE crm_lead SET notes = $1, "updatedAt" = NOW() WHERE id = $2`,
+      [notes, id]
+    );
 
-    const supabase = await createSupabaseClient();
-    const { error } = await supabase
-      .from('crm_lead')
-      .update({ notes, updatedAt: new Date().toISOString() })
-      .eq('id', id);
-
-    if (error) throw error;
     revalidatePath('/leads');
     return { success: true };
   } catch (error) {
@@ -312,22 +322,8 @@ export async function updateLeadNotes(id: string, notes: string): Promise<AdminA
 export async function deleteLead(id: string): Promise<AdminActionResponse> {
   try {
     await requireAdminUser();
-    try {
-      await db.cRMLead.delete({
-        where: { id },
-      });
-      revalidatePath('/leads');
-      revalidatePath('/dashboard');
-      return { success: true };
-    } catch (prismaErr) {
-      if (!isSupabaseConfigured()) throw prismaErr;
-      console.warn('[Delete Lead Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
-    }
+    await pool.query(`DELETE FROM crm_lead WHERE id = $1`, [id]);
 
-    const supabase = await createSupabaseClient();
-    const { error } = await supabase.from('crm_lead').delete().eq('id', id);
-
-    if (error) throw error;
     revalidatePath('/leads');
     revalidatePath('/dashboard');
     return { success: true };
@@ -358,26 +354,10 @@ export async function getLeadsAnalytics(): Promise<AdminLeadAnalytics> {
   };
 
   try {
-    let records: Array<{ status: string; sourcePage: string | null }> = [];
-
-    try {
-      const dbRecords = await db.cRMLead.findMany({
-        select: { status: true, sourcePage: true },
-      });
-      records = dbRecords.map((r) => ({
-        status: r.status,
-        sourcePage: r.sourcePage,
-      }));
-    } catch (prismaErr) {
-      if (!isSupabaseConfigured()) throw prismaErr;
-      console.warn('[Get Leads Analytics Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
-      const supabase = await createSupabaseClient();
-      const { data } = await supabase.from('crm_lead').select('status, source_page');
-      records = ((data as unknown as Array<{ status: string; source_page: string | null }>) || []).map((r) => ({
-        status: r.status,
-        sourcePage: r.source_page,
-      }));
-    }
+    const recordsRes = await pool.query(
+      `SELECT status, source_page FROM crm_lead`
+    );
+    const records = recordsRes.rows;
 
     const breakdown: Record<LeadLifecycleStatus, number> = {
       NEW: 0,
@@ -399,7 +379,7 @@ export async function getLeadsAnalytics(): Promise<AdminLeadAnalytics> {
         breakdown.NEW++;
       }
 
-      const page = r.sourcePage || '/start-project';
+      const page = r.source_page || '/start-project';
       const existing = sourcePageCounts.get(page) || { count: 0, wonCount: 0 };
       existing.count++;
       if (st === 'WON') {

@@ -71,6 +71,12 @@ export interface AdminLead {
   assigned_to?: string | null;
   assigned_user_name?: string | null;
   notes?: string | null;
+  portal_approved?: boolean;
+  portal_password?: string | null;
+  approved_at?: string | null;
+  first_login_expires_at?: string | null;
+  has_logged_in?: boolean;
+  first_logged_in_at?: string | null;
   created_at: string;
   updated_at?: string;
 }
@@ -168,6 +174,8 @@ export interface AdminProject {
 /**
  * Blog Article representation.
  */
+export type BlogSectionType = 'engineering' | 'ai-research';
+
 export interface AdminBlogPost {
   id: string;
   title: string;
@@ -175,7 +183,12 @@ export interface AdminBlogPost {
   excerpt?: string | null;
   content: string;
   author: string;
+  author_role?: string | null;
+  author_image?: string | null;
+  reading_time?: string | null;
   category: string;
+  section?: BlogSectionType;
+  tags?: string[];
   status: ContentStatus;
   cover_image?: string | null;
   published_at?: string | null;
@@ -245,7 +258,12 @@ export interface AdminBlogInput {
   excerpt?: string;
   content: string;
   author: string;
+  author_role?: string | null;
+  author_image?: string | null;
+  reading_time?: string | null;
   category: string;
+  section?: BlogSectionType;
+  tags?: string[];
   status: ContentStatus;
   cover_image?: string | null;
 }
