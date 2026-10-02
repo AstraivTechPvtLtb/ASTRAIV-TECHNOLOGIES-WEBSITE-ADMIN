@@ -91,15 +91,15 @@ if ($USING_ENV_CREDS) {
 Write-Host "🚀 Deploying to Vercel..." -ForegroundColor Cyan
 if ($USING_ENV_CREDS) {
     if ($PROD_FLAG) {
-        & vercel deploy --prebuilt --prod --token=$env:VERCEL_TOKEN
+        & vercel deploy --prebuilt --prod --archive=tgz --token=$env:VERCEL_TOKEN
     } else {
-        & vercel deploy --prebuilt --token=$env:VERCEL_TOKEN
+        & vercel deploy --prebuilt --archive=tgz --token=$env:VERCEL_TOKEN
     }
 } else {
     if ($PROD_FLAG) {
-        & vercel deploy --prebuilt --prod
+        & vercel deploy --prebuilt --prod --archive=tgz
     } else {
-        & vercel deploy --prebuilt
+        & vercel deploy --prebuilt --archive=tgz
     }
 }
 

@@ -82,7 +82,7 @@ jobs:
       - name: Deploy Prebuilt Artifacts to Vercel Preview
         id: deploy
         run: |
-          vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }} > deployment-output.txt
+          vercel deploy --prebuilt --archive=tgz --token=${{ secrets.VERCEL_TOKEN }} > deployment-output.txt
           cat deployment-output.txt
           PREVIEW_URL=$(grep -oEi "https://[a-zA-Z0-9.-]+\.vercel\.app" deployment-output.txt | head -n 1)
           if [ -z "$PREVIEW_URL" ]; then
