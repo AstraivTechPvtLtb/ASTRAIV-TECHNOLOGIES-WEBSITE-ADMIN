@@ -730,3 +730,106 @@ model ComplianceSetting {
 
   @@map("compliance_settings")
 }
+
+// Mandatory Legal Management (Versioned Governance)
+model LegalDocument {
+  id                String          @id @default(uuid())
+  slug              String          @unique // 'privacy', 'terms', 'dpa', etc.
+  title             String
+  description       String?         @db.Text
+  currentRevisionId String?         @map("current_revision_id")
+  revisions         LegalRevision[]
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  @@map("legal_documents")
+}
+
+model LegalRevision {
+  id            String        @id @default(uuid())
+  documentId    String        @map("document_id")
+  documentSlug  String        @map("document_slug")
+  versionNumber Int           @default(1) @map("version_number")
+  effectiveDate String        @map("effective_date")
+  title         String
+  summary       String?       @db.Text
+  sections      Json          @default("[]")
+  status        String        @default("published") // 'published', 'draft', 'archived'
+  authorId      String?       @map("author_id")
+  authorName    String?       @map("author_name")
+  changelog     String?       @db.Text
+  publishedAt   DateTime?     @map("published_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  document      LegalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("legal_revisions")
+}
+
+// Media Library Asset Management
+model MediaAsset {
+  id          String   @id @default(uuid())
+  url         String
+  filename    String
+  mimeType    String   @map("mime_type")
+  sizeBytes   Int      @map("size_bytes")
+  width       Int?
+  height      Int?
+  aspectRatio String?  @map("aspect_ratio")
+  altText     String?  @map("alt_text")
+  caption     String?  @db.Text
+  focalPoint  String?  @map("focal_point")
+  slot        String?
+  isPrivate   Boolean  @default(false) @map("is_private")
+  usageCount  Int      @default(0) @map("usage_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("media_assets")
+}
+
+// Standalone Static Page Sections Content Management
+model PageContent {
+  id              String   @id @default(uuid())
+  pageKey         String   @unique @map("page_key") // 'homepage', 'company', 'process', 'contact'
+  title           String
+  sections        Json     @default("{}")
+  metaTitle       String?  @map("meta_title")
+  metaDescription String?  @map("meta_description") @db.Text
+  status          String   @default("published")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("page_contents")
+}
+
+// SEO Slug Redirect Engine
+model SlugRedirect {
+  id              String   @id @default(uuid())
+  sourcePath      String   @unique @map("source_path")
+  destinationPath String   @map("destination_path")
+  statusCode      Int      @default(301) @map("status_code")
+  entityType      String?  @map("entity_type")
+  entityId        String?  @map("entity_id")
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("slug_redirects")
+}
+
+// Activity History & Audit Logging
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id")
+  userId     String?  @map("user_id")
+  userName   String?  @map("user_name")
+  details    Json?    @default("{}")
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}

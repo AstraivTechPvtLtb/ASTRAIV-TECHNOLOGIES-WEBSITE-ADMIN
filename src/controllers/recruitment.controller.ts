@@ -425,3 +425,73 @@ export async function toggleJobOpeningStatus(
 ): Promise<AdminActionResponse> {
   return updateJobOpening(id, { active });
 }
+
+export interface AdminJobApplication {
+  id: string;
+  applicantName: string;
+  email: string;
+  phone?: string | null;
+  role: string;
+  notes?: string | null;
+  status: 'pending' | 'reviewed' | 'interview' | 'rejected' | 'hired';
+  createdAt: string;
+}
+
+/**
+ * Retrieves all job applications submitted through the careers portal.
+ */
+export async function getJobApplications(): Promise<{ data: AdminJobApplication[]; total: number; error?: string }> {
+  try {
+    const submissions = await db.contactSubmission.findMany({
+      where: {
+        OR: [
+          { service: { contains: 'Job Application', mode: 'insensitive' } },
+          { service: { contains: 'Career', mode: 'insensitive' } },
+          { service: { contains: 'Recruitment', mode: 'insensitive' } },
+          { message: { contains: 'Resume', mode: 'insensitive' } },
+          { message: { contains: 'CV', mode: 'insensitive' } },
+          { message: { contains: 'Application', mode: 'insensitive' } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
+    const mapped: AdminJobApplication[] = submissions.map((s) => ({
+      id: s.id,
+      applicantName: s.name,
+      email: s.email,
+      phone: s.phone,
+      role: s.service?.replace(/^Job Application:\s*/i, '').trim() || 'Software Engineer',
+      notes: s.message,
+      status: (s.status as unknown as AdminJobApplication['status']) || 'pending',
+      createdAt: s.createdAt.toISOString(),
+    }));
+
+    return { data: mapped, total: mapped.length };
+  } catch (error) {
+    console.error('[Get JobApplications Error]:', error);
+    return { data: [], total: 0, error: 'Failed to fetch job applications' };
+  }
+}
+
+/**
+ * Updates the candidate review status of an application.
+ */
+export async function updateApplicationStatus(
+  id: string,
+  status: 'pending' | 'reviewed' | 'interview' | 'rejected' | 'hired'
+): Promise<AdminActionResponse> {
+  try {
+    await requireAdminUser();
+    await db.contactSubmission.update({
+      where: { id },
+      data: { status },
+    });
+    safeRevalidate('/recruitment/applications');
+    return { success: true, message: `Application status updated to ${status}` };
+  } catch (error) {
+    console.error('[Update ApplicationStatus Error]:', error);
+    return { success: false, error: 'Failed to update application status' };
+  }
+}
