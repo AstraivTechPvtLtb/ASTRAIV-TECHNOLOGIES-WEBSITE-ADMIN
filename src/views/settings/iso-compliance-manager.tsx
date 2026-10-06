@@ -278,7 +278,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
               : 'bg-slate-950/40 border-dashed border-slate-800/80 opacity-60'
           )}>
             {/* Top Scanning beam */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-blue-500/50 to-transparent pointer-events-none" />
 
             {/* ISO Seal Preview */}
             {showIsoSection && showIsoBadge && (
@@ -324,7 +324,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
               /* 4 Metric Cards Preview */
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center divide-y md:divide-y-0 md:divide-x divide-slate-800 pt-2">
                 <div className="p-2">
-                  <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-blue-400 via-indigo-300 to-white bg-clip-text text-transparent">
+                  <div className="text-2xl sm:text-3xl font-black bg-linear-to-r from-blue-400 via-indigo-300 to-white bg-clip-text text-transparent">
                     {uptimeValue || '99.99%'}
                   </div>
                   <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mt-1">
@@ -333,7 +333,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
                 </div>
 
                 <div className="p-2">
-                  <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-blue-400 via-indigo-300 to-white bg-clip-text text-transparent">
+                  <div className="text-2xl sm:text-3xl font-black bg-linear-to-r from-blue-400 via-indigo-300 to-white bg-clip-text text-transparent">
                     {savingsValue || '40%+'}
                   </div>
                   <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mt-1">
@@ -342,7 +342,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
                 </div>
 
                 <div className="p-2">
-                  <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-blue-400 via-indigo-300 to-white bg-clip-text text-transparent">
+                  <div className="text-2xl sm:text-3xl font-black bg-linear-to-r from-blue-400 via-indigo-300 to-white bg-clip-text text-transparent">
                     {actionsValue || '10M+'}
                   </div>
                   <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mt-1">
@@ -351,7 +351,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
                 </div>
 
                 <div className="p-2">
-                  <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-blue-400 via-indigo-300 to-white bg-clip-text text-transparent">
+                  <div className="text-2xl sm:text-3xl font-black bg-linear-to-r from-blue-400 via-indigo-300 to-white bg-clip-text text-transparent">
                     {slaValue || '100%'}
                   </div>
                   <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 mt-1">
@@ -719,7 +719,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
             <Button
               type="submit"
               disabled={isSaving}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs gap-2 rounded-xl h-10 px-6 shadow-lg shadow-blue-600/20"
+              className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs gap-2 rounded-xl h-10 px-6 shadow-lg shadow-blue-600/20"
             >
               {isSaving ? (
                 <>

@@ -447,7 +447,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
             <Sparkles className="h-3.5 w-3.5" />
             <span>Admin CMS & Publications</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.025em] text-white">
+          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-white">
             Insights & Engineering Publications
           </h1>
           <p className="text-sm text-slate-400 font-normal mt-1 max-w-2xl leading-relaxed">
@@ -481,7 +481,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
           {/* Add New Blog Button */}
           <Button
             onClick={() => openCreateModal()}
-            className="h-10 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-blue-950/50 flex items-center gap-2 cursor-pointer transition-all"
+            className="h-10 px-4 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-blue-950/50 flex items-center gap-2 cursor-pointer transition-all"
           >
             <Plus className="h-4 w-4" />
             <span>
@@ -634,7 +634,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
         <div className="relative overflow-hidden rounded-[28px] border border-slate-800 bg-slate-900/60 shadow-xl group hover:border-slate-700 transition-all duration-300">
           <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
             {/* Image Side */}
-            <div className="lg:col-span-7 relative min-h-[300px] sm:min-h-[360px] lg:min-h-[420px] overflow-hidden bg-slate-950">
+            <div className="lg:col-span-7 relative min-h-75 sm:min-h-[360px] lg:min-h-105 overflow-hidden bg-slate-950">
               {spotlightPost.cover_image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -643,7 +643,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103 opacity-90 group-hover:opacity-100"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-blue-900 via-indigo-950 to-slate-950 flex items-center justify-center text-slate-400 font-semibold text-sm">
+                <div className="w-full h-full bg-linear-to-br from-blue-900 via-indigo-950 to-slate-950 flex items-center justify-center text-slate-400 font-semibold text-sm">
                   Astraiv Featured Research
                 </div>
               )}
@@ -690,7 +690,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
             </div>
 
             {/* Content Side with Dedicated Admin Controls Bar */}
-            <div className="lg:col-span-5 p-7 sm:p-8 flex flex-col justify-between text-left bg-gradient-to-b from-slate-900/90 to-slate-950/90">
+            <div className="lg:col-span-5 p-7 sm:p-8 flex flex-col justify-between text-left bg-linear-to-b from-slate-900/90 to-slate-950/90">
               <div>
                 <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 font-medium mb-3">
                   <span className="px-2.5 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold uppercase text-[10.5px]">
@@ -847,7 +847,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-slate-900 via-blue-950/40 to-slate-950 flex items-center justify-center text-slate-600">
+                      <div className="w-full h-full bg-linear-to-br from-slate-900 via-blue-950/40 to-slate-950 flex items-center justify-center text-slate-600">
                         <ImageIcon className="h-8 w-8" />
                       </div>
                     )}
@@ -1185,7 +1185,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                           alt={preset.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-2">
+                        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent flex items-end p-2">
                           <span className="text-[10px] font-semibold text-white truncate">
                             {preset.title}
                           </span>

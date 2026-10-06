@@ -169,7 +169,7 @@ export function EnquiriesTable({ initialData }: EnquiriesTableProps) {
     <div className="space-y-6">
       {/* Real-Time Socket.IO Alert Banner */}
       {realtimeNotification && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 border-2 border-blue-500 shadow-2xl shadow-blue-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="p-4 sm:p-5 rounded-2xl bg-linear-to-r from-blue-950 via-slate-900 to-blue-950 border-2 border-blue-500 shadow-2xl shadow-blue-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="flex items-start sm:items-center gap-3.5">
             <div className="h-11 w-11 rounded-2xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-500/30">
               <BellRing className="h-5 w-5 animate-bounce" />

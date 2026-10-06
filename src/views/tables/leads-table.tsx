@@ -540,7 +540,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
             </div>
 
             {/* Client Portal Access & 24-Hour Onboarding Engine */}
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/30 border border-blue-500/30 space-y-4">
+            <div className="p-5 rounded-2xl bg-linear-to-br from-slate-950 via-slate-900 to-blue-950/30 border border-blue-500/30 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Key className="h-4 w-4 text-blue-400" />

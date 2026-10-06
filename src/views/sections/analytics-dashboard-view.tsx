@@ -652,7 +652,7 @@ export function AnalyticsDashboardView() {
                   <tbody className="divide-y divide-slate-800/40">
                     {paginatedPages.map((page, idx) => (
                       <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="py-3 pr-2 max-w-[200px]">
+                        <td className="py-3 pr-2 max-w-50">
                           <div className="font-bold text-slate-200 truncate">{page.path}</div>
                           <div className="text-[11px] text-slate-400 truncate">{page.title}</div>
                         </td>
