@@ -110,8 +110,7 @@ const NAV_GROUPS: NavGroup[] = [
     id: 'setup',
     title: 'Website Setup',
     items: [
-      { name: 'Navigation & Footer', href: '/footer', icon: PanelBottom },
-      { name: 'Company & Contact', href: '/setup/company', icon: Building },
+      { name: 'Company & Footer', href: '/footer', icon: PanelBottom },
       { name: 'Media Library', href: '/media', icon: ImageIcon },
       { name: 'SEO & Redirects', href: '/seo', icon: Search },
       { name: 'Content Relationships', href: '/relationships', icon: Network },

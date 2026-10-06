@@ -227,6 +227,23 @@ export function TrustTable({ initialData }: TrustTableProps) {
 
   return (
     <div className="space-y-6">
+      {/* Contextual Banner linking to Settings ISO compliance */}
+      <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2.5 text-slate-300">
+          <ShieldCheck className="h-4 w-4 text-blue-400 shrink-0" />
+          <span>
+            Looking to toggle the global ISO Trust Strip badge, configure live SLA/uptime KPI metrics, or update partner logos?
+          </span>
+        </div>
+        <a
+          href="/settings"
+          className="text-blue-400 hover:text-blue-300 font-bold underline flex items-center gap-1 shrink-0"
+        >
+          <span>Open Settings & ISO Metrics</span>
+          <ExternalLink className="h-3 w-3" />
+        </a>
+      </div>
+
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         {/* Category Tabs */}
         <div className="flex flex-wrap items-center gap-2">

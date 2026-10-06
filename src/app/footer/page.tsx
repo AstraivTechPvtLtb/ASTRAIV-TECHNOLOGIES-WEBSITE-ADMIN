@@ -17,8 +17,8 @@ export default async function AdminFooterPage() {
   return (
     <div className="flex-1 flex flex-col min-h-screen">
       <AdminHeader
-        title="Footer Section"
-        subtitle="Manage client website footer socials, phone numbers, email ID, physical address, and map location in real time."
+        title="Company & Footer Hub"
+        subtitle="Manage canonical corporate profile, direct inquiry contact channels, physical address, and global footer social media links."
         badge={`${socials.length} Socials`}
       />
 
