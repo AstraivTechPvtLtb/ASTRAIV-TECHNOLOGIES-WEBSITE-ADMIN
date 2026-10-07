@@ -9,6 +9,7 @@ import { db } from '@/models/db';
 import { revalidatePath } from 'next/cache';
 import { getAdminUser } from './auth.controller';
 import { logAuditAction } from './audit.controller';
+import { triggerClientRevalidation } from '@/lib/revalidate-client';
 
 export interface AdminPageContent {
   id: string;
@@ -89,6 +90,17 @@ export async function savePageContent(data: {
     await logAuditAction({ action: 'SAVE_PAGE_CONTENT', entityType: 'page', entityId: data.pageKey });
     revalidatePath('/');
     revalidatePath(`/${data.pageKey}`);
+
+    // Synchronize and revalidate public client CDN / edge caches immediately
+    const clientPaths =
+      data.pageKey === 'homepage'
+        ? ['/']
+        : data.pageKey === 'process'
+          ? ['/', '/company']
+          : [`/${data.pageKey}`];
+
+    await triggerClientRevalidation(clientPaths);
+
     return { success: true };
   } catch (err: unknown) {
     console.error('[savePageContent error]:', err);

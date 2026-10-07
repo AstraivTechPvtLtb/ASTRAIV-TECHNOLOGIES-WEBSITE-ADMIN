@@ -17,6 +17,7 @@ import {
 } from '@/models/types';
 import { Prisma } from '@prisma/client';
 import { requireAdminUser } from './auth.controller';
+import { triggerClientRevalidation } from '@/lib/revalidate-client';
 
 function safeRevalidate(path: string) {
   try {
@@ -584,6 +585,8 @@ export async function updatePricingPageSettings(
     safeRevalidate('/es/pricing');
     safeRevalidate('/hi/pricing');
     safeRevalidate('/ar/pricing');
+
+    await triggerClientRevalidation(['/pricing']);
 
     return { success: true, data: settings, message: 'Page image settings saved successfully' };
   } catch (error) {

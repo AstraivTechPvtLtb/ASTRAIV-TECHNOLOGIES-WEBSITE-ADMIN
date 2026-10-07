@@ -8,6 +8,7 @@
 import { revalidatePath } from 'next/cache';
 import { getAdminUser } from './auth.controller';
 import { logAuditAction } from './audit.controller';
+import { triggerClientRevalidation } from '@/lib/revalidate-client';
 
 export async function revalidatePublicCaches(paths: string[]): Promise<{ success: boolean; revalidated: string[]; error?: string }> {
   try {
@@ -23,6 +24,9 @@ export async function revalidatePublicCaches(paths: string[]): Promise<{ success
         console.warn(`Failed to revalidate path: ${path}`, e);
       }
     }
+
+    // Trigger revalidation on the public Client Next.js app
+    await triggerClientRevalidation(revalidated);
 
     await logAuditAction({ action: 'PURGE_CACHE', entityType: 'cache', details: { paths: revalidated } });
     return { success: true, revalidated };
