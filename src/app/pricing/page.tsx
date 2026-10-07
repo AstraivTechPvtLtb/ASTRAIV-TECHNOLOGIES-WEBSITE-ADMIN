@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getAdminUser } from '@/controllers/auth.controller';
-import { getPricingPlans } from '@/controllers/pricing.controller';
+import { getPricingPlans, getPricingPageSettings } from '@/controllers/pricing.controller';
+import { getMediaAssets } from '@/controllers/media.controller';
 import { AdminHeader } from '@/views/layouts/admin-header';
 import { PricingTable } from '@/views/tables/pricing-table';
 
@@ -12,18 +13,26 @@ export default async function AdminPricingPage() {
     redirect('/login');
   }
 
-  const { data: plans } = await getPricingPlans();
+  const [{ data: plans }, { data: pageSettings }, { data: mediaAssets }] = await Promise.all([
+    getPricingPlans(),
+    getPricingPageSettings(),
+    getMediaAssets(),
+  ]);
 
   return (
     <div className="flex-1 flex flex-col min-h-screen">
       <AdminHeader
-        title="Pricing & Engagement Models"
-        subtitle="Manage plans, pricing tiers, INR & USD rates, feature check-lists, and popular badges synced with the client website."
-        badge={`${plans.length} Plans`}
+        title="Engagement Models & Delivery Structures"
+        subtitle="Manage structured engagement tiers, scope inclusions, deliverables, quotation CTAs, and the public page hero image."
+        badge={`${plans.length} Engagement Models`}
       />
 
       <main className="p-6 md:p-8 max-w-7xl">
-        <PricingTable initialData={plans} />
+        <PricingTable
+          initialData={plans}
+          initialSettings={pageSettings}
+          mediaAssets={mediaAssets || []}
+        />
       </main>
     </div>
   );

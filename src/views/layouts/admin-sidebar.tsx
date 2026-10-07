@@ -93,7 +93,7 @@ const NAV_GROUPS: NavGroup[] = [
       { name: 'Insights & Blog', href: '/blog', icon: FileText },
       { name: 'Trust & Credentials', href: '/trust', icon: Award },
       { name: 'FAQs', href: '/faqs', icon: HelpCircle },
-      { name: 'Pricing & Models', href: '/pricing', icon: CreditCard },
+      { name: 'Engagement Models', href: '/pricing', icon: FileCheck },
       { name: 'Careers & Roles', href: '/recruitment', icon: Briefcase },
     ],
   },

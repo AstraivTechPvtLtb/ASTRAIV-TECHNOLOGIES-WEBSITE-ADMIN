@@ -369,9 +369,6 @@ export interface AdminJobOpeningInput {
   orderIndex?: number;
 }
 
-/**
- * Service Pricing & Engagement Model representation.
- */
 export interface AdminPricingPlan {
   id: string;
   name: string;
@@ -379,12 +376,6 @@ export interface AdminPricingPlan {
   description: string;
   badge?: string | null;
   isPopular: boolean;
-  priceType: 'fixed' | 'custom';
-  priceMonthlyInr?: number | null;
-  priceYearlyInr?: number | null;
-  priceMonthlyUsd?: number | null;
-  priceYearlyUsd?: number | null;
-  customPriceLabel?: string | null;
   features: string[];
   buttonText: string;
   buttonUrl: string;
@@ -400,18 +391,35 @@ export interface AdminPricingPlanInput {
   description: string;
   badge?: string | null;
   isPopular?: boolean;
-  priceType: 'fixed' | 'custom';
-  priceMonthlyInr?: number | null;
-  priceYearlyInr?: number | null;
-  priceMonthlyUsd?: number | null;
-  priceYearlyUsd?: number | null;
-  customPriceLabel?: string | null;
   features: string[];
   buttonText: string;
   buttonUrl?: string;
   active?: boolean;
   orderIndex?: number;
 }
+
+/**
+ * Admin Engagement Models Page Image & Header Settings.
+ */
+export interface AdminPricingPageSettings {
+  heroImageUrl?: string | null;
+  heroImageAlt?: string | null;
+  showHeroImage: boolean;
+  imageWidth?: number | null;
+  imageHeight?: number | null;
+  imageSizeBytes?: number | null;
+  imageSizeLabel?: string | null;
+}
+
+export const DEFAULT_ADMIN_PRICING_PAGE_SETTINGS: AdminPricingPageSettings = {
+  heroImageUrl: '/images/engagement-models-hero.jpg',
+  heroImageAlt: 'Astraiv Technologies engineering team collaborating on system architecture and milestone roadmaps',
+  showHeroImage: true,
+  imageWidth: 1792,
+  imageHeight: 1008,
+  imageSizeBytes: 752053,
+  imageSizeLabel: '734 KB',
+};
 
 /**
  * Enterprise client partner logo item for the proof ticker

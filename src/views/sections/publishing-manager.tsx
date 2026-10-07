@@ -28,7 +28,7 @@ const CACHE_TARGETS = [
   { path: '/work', label: 'Portfolio & Case Studies (/work)' },
   { path: '/blog', label: 'Engineering Blog & Insights (/blog)' },
   { path: '/faq', label: 'Frequently Asked Questions (/faq)' },
-  { path: '/pricing', label: 'Pricing & Engagement (/pricing)' },
+  { path: '/pricing', label: 'Engagement Models (/pricing)' },
   { path: '/careers', label: 'Careers & Recruitment (/careers)' },
   { path: '/privacy', label: 'Privacy Policy (/privacy)' },
   { path: '/terms', label: 'Terms of Service (/terms)' },
