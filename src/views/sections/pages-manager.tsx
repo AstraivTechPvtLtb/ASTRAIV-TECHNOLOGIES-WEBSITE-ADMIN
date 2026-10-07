@@ -29,6 +29,106 @@ interface PagesManagerProps {
   initialProcess?: Record<string, unknown>;
 }
 
+function HeadlinePreview({ text }: { text: string }) {
+  if (!text || !text.trim()) {
+    return <span className="text-slate-500 italic text-xs">Enter a headline to see live client typography preview</span>;
+  }
+
+  const rawTokens = text.trim().split(/\s+/);
+  const words: { word: string; isHighlighted: boolean }[] = [];
+  let inHighlight = false;
+  let hasExplicitHighlight = false;
+
+  for (const token of rawTokens) {
+    if (!token) continue;
+    let currentToken = token;
+
+    if (currentToken.includes('[')) {
+      inHighlight = true;
+      hasExplicitHighlight = true;
+      currentToken = currentToken.replace(/\[/g, '');
+    }
+
+    const highlighted = inHighlight;
+
+    if (currentToken.includes(']')) {
+      inHighlight = false;
+      currentToken = currentToken.replace(/\]/g, '');
+    }
+
+    if (currentToken) {
+      words.push({
+        word: currentToken,
+        isHighlighted: highlighted,
+      });
+    }
+  }
+
+  if (!hasExplicitHighlight && words.length > 0) {
+    if (words.length === 1) {
+      words[0].isHighlighted = true;
+    } else {
+      const splitIndex = Math.ceil(words.length / 2);
+      for (let i = splitIndex; i < words.length; i++) {
+        words[i].isHighlighted = true;
+      }
+    }
+  }
+
+  return (
+    <div className="space-y-2.5 mt-2.5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 text-xs">
+        {/* Light Theme Client Preview */}
+        <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-slate-100">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Light Client Mode</span>
+            <span className="text-[10px] text-blue-700 font-semibold bg-blue-50 px-1.5 py-0.5 rounded">50% Gradient</span>
+          </div>
+          <p className="text-sm font-bold text-[#0F172A] leading-snug">
+            {words.map((item, idx) => (
+              <span
+                key={idx}
+                className={
+                  item.isHighlighted
+                    ? "bg-linear-to-r from-[#0B3D91] via-[#1D4ED8] to-[#2563EB] bg-clip-text text-transparent font-extrabold"
+                    : "text-[#0F172A]"
+                }
+              >
+                {item.word}{idx < words.length - 1 ? ' ' : ''}
+              </span>
+            ))}
+          </p>
+        </div>
+
+        {/* Dark Theme Client Preview */}
+        <div className="p-3 rounded-xl bg-[#080C14] border border-slate-800 shadow-xs">
+          <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-slate-800">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Dark Client Mode</span>
+            <span className="text-[10px] text-cyan-400 font-semibold bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/40">50% Gradient</span>
+          </div>
+          <p className="text-sm font-bold text-[#F8FAFC] leading-snug">
+            {words.map((item, idx) => (
+              <span
+                key={idx}
+                className={
+                  item.isHighlighted
+                    ? "bg-linear-to-r from-[#38BDF8] via-[#60A5FA] to-[#93C5FD] bg-clip-text text-transparent font-extrabold"
+                    : "text-[#F8FAFC]"
+                }
+              >
+                {item.word}{idx < words.length - 1 ? ' ' : ''}
+              </span>
+            ))}
+          </p>
+        </div>
+      </div>
+      <p className="text-[11px] text-slate-400 leading-normal">
+        <span className="text-blue-400 font-semibold">Strict 50% Gradient Policy:</span> The first ~50% displays as standard solid foreground and the second ~50% automatically transitions through the Astraiv signature gradient across client light & dark modes. (You can also wrap words in <code className="bg-slate-800 px-1 py-0.5 rounded text-blue-300 font-mono text-[10px]">[brackets]</code> for custom highlighting).
+      </p>
+    </div>
+  );
+}
+
 export function PagesManager({ initialHomepage, initialCompany, initialProcess }: PagesManagerProps) {
   const [activeTab, setActiveTab] = useState<'homepage' | 'company' | 'process'>('homepage');
   const [isSaving, setIsSaving] = useState(false);
@@ -43,13 +143,13 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
   const [secondaryCtaUrl, setSecondaryCtaUrl] = useState((initialHomepage?.secondaryCtaUrl as string) || '/work');
 
   // Company Fields
-  const [companyHeadline, setCompanyHeadline] = useState((initialCompany?.headline as string) || 'Software Craftsmanship Driven by First-Principles Engineering');
-  const [companyStory, setCompanyStory] = useState((initialCompany?.story as string) || 'Astraiv Technologies was founded with a singular conviction: enterprise software must be engineered with uncompromising architectural precision, absolute client IP ownership, and zero technical bloat.');
-  const [companyValues, setCompanyValues] = useState((initialCompany?.values as string) || '1. Engineering Excellence Over Bloat\n2. 100% Unencumbered Client IP\n3. Transparent Agile Velocity\n4. Strict Institutional Security (ISO 27001)');
+  const [companyHeadline, setCompanyHeadline] = useState((initialCompany?.headline as string) || (initialCompany?.companyHeadline as string) || 'Software Craftsmanship Driven by First-Principles Engineering');
+  const [companyStory, setCompanyStory] = useState((initialCompany?.story as string) || (initialCompany?.companyStory as string) || 'Astraiv Technologies was founded with a singular conviction: enterprise software must be engineered with uncompromising architectural precision, absolute client IP ownership, and zero technical bloat.');
+  const [companyValues, setCompanyValues] = useState((initialCompany?.values as string) || (initialCompany?.companyValues as string) || '1. Engineering Excellence Over Bloat\n2. 100% Unencumbered Client IP\n3. Transparent Agile Velocity\n4. Strict Institutional Security (ISO 27001)');
 
   // Process Fields
-  const [processHeadline, setProcessHeadline] = useState((initialProcess?.headline as string) || 'Disciplined 6-Stage Engineering Delivery Roadmap');
-  const [processStages, setProcessStages] = useState((initialProcess?.stages as string) || '1. Discover: Deep architectural scoping and requirement taxonomy\n2. Strategize: Database schemas, tech stack selection, and milestone SOW\n3. Design: High-fidelity prototypes and design systems\n4. Build: Type-safe sprints with automated CI/CD security gates\n5. Launch: Zero-downtime production deployment and edge routing\n6. Scale: 24/7 telemetry monitoring and proactive SLA optimization');
+  const [processHeadline, setProcessHeadline] = useState((initialProcess?.headline as string) || (initialProcess?.processHeadline as string) || 'Disciplined 6-Stage Engineering Delivery Roadmap');
+  const [processStages, setProcessStages] = useState((initialProcess?.stages as string) || (initialProcess?.processStages as string) || '1. Discover: Deep architectural scoping and requirement taxonomy\n2. Strategize: Database schemas, tech stack selection, and milestone SOW\n3. Design: High-fidelity prototypes and design systems\n4. Build: Type-safe sprints with automated CI/CD security gates\n5. Launch: Zero-downtime production deployment and edge routing\n6. Scale: 24/7 telemetry monitoring and proactive SLA optimization');
 
   const handleSave = async (pageKey: 'homepage' | 'company' | 'process') => {
     setIsSaving(true);
@@ -63,10 +163,10 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
       sections = { heroHeadline, heroSubheadline, primaryCtaText, primaryCtaUrl, secondaryCtaText, secondaryCtaUrl };
     } else if (pageKey === 'company') {
       title = 'Company & About Content';
-      sections = { headline: companyHeadline, story: companyStory, values: companyValues };
+      sections = { headline: companyHeadline, companyHeadline, story: companyStory, values: companyValues };
     } else if (pageKey === 'process') {
       title = 'Engineering Process Content';
-      sections = { headline: processHeadline, stages: processStages };
+      sections = { headline: processHeadline, processHeadline, stages: processStages };
     }
 
     try {
@@ -151,7 +251,9 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
                 value={heroHeadline}
                 onChange={(e) => setHeroHeadline(e.target.value)}
                 className="bg-slate-950 border-slate-800 text-xs font-semibold"
+                placeholder="e.g. We engineer the digital future"
               />
+              <HeadlinePreview text={heroHeadline} />
             </div>
 
             <div className="space-y-1.5">
@@ -231,7 +333,9 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
                 value={companyHeadline}
                 onChange={(e) => setCompanyHeadline(e.target.value)}
                 className="bg-slate-950 border-slate-800 text-xs font-semibold"
+                placeholder="e.g. Software Craftsmanship Driven by First-Principles Engineering"
               />
+              <HeadlinePreview text={companyHeadline} />
             </div>
 
             <div className="space-y-1.5">
@@ -283,7 +387,9 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
                 value={processHeadline}
                 onChange={(e) => setProcessHeadline(e.target.value)}
                 className="bg-slate-950 border-slate-800 text-xs font-semibold"
+                placeholder="e.g. Disciplined 6-Stage Engineering Delivery Roadmap"
               />
+              <HeadlinePreview text={processHeadline} />
             </div>
 
             <div className="space-y-1.5">
