@@ -8,15 +8,11 @@
 import { useState } from 'react';
 import { savePageContent } from '@/controllers/pages.controller';
 import {
-  Layers,
   Save,
   Loader2,
   CheckCircle2,
   AlertTriangle,
-  ExternalLink,
   Sparkles,
-  Shield,
-  Clock,
   Compass,
   Building,
 } from 'lucide-react';
@@ -135,7 +131,29 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Homepage Fields
-  const [heroHeadline, setHeroHeadline] = useState((initialHomepage?.heroHeadline as string) || 'We Engineer High-Performance Enterprise Software & AI Systems');
+  const initialH1 =
+    (initialHomepage?.heroHeadline1 as string) ||
+    (initialHomepage?.hero_headline_1 as string) ||
+    (initialHomepage?.heroHeadline as string) ||
+    (Array.isArray(initialHomepage?.heroHeadlines) ? (initialHomepage.heroHeadlines[0] as string) : '') ||
+    'We Engineer High-Performance Enterprise Software & AI Systems';
+
+  const initialH2 =
+    (initialHomepage?.heroHeadline2 as string) ||
+    (initialHomepage?.hero_headline_2 as string) ||
+    (Array.isArray(initialHomepage?.heroHeadlines) ? (initialHomepage.heroHeadlines[1] as string) : '') ||
+    '';
+
+  const initialH3 =
+    (initialHomepage?.heroHeadline3 as string) ||
+    (initialHomepage?.hero_headline_3 as string) ||
+    (Array.isArray(initialHomepage?.heroHeadlines) ? (initialHomepage.heroHeadlines[2] as string) : '') ||
+    '';
+
+  const [heroHeadline1, setHeroHeadline1] = useState(initialH1);
+  const [heroHeadline2, setHeroHeadline2] = useState(initialH2);
+  const [heroHeadline3, setHeroHeadline3] = useState(initialH3);
+  const [activeHeadlinePreview, setActiveHeadlinePreview] = useState<1 | 2 | 3>(1);
   const [heroSubheadline, setHeroSubheadline] = useState((initialHomepage?.heroSubheadline as string) || 'From multi-agent AI platforms to distributed cloud microservices, Astraiv constructs mission-critical software with clean architecture and zero legacy debt.');
   const [primaryCtaText, setPrimaryCtaText] = useState((initialHomepage?.primaryCtaText as string) || 'Start a Project');
   const [primaryCtaUrl, setPrimaryCtaUrl] = useState((initialHomepage?.primaryCtaUrl as string) || '/start-project');
@@ -159,8 +177,32 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
     let sections: Record<string, unknown> = {};
 
     if (pageKey === 'homepage') {
+      const h1Trimmed = heroHeadline1.trim();
+      if (!h1Trimmed) {
+        setFeedback({ type: 'error', message: 'Hero Headline 1 (Primary) is required.' });
+        setIsSaving(false);
+        return;
+      }
+      const h2Trimmed = heroHeadline2.trim();
+      const h3Trimmed = heroHeadline3.trim();
+      const validHeadlines = [h1Trimmed, h2Trimmed, h3Trimmed].filter(Boolean);
+
       title = 'Homepage Content';
-      sections = { heroHeadline, heroSubheadline, primaryCtaText, primaryCtaUrl, secondaryCtaText, secondaryCtaUrl };
+      sections = {
+        heroHeadline: h1Trimmed,
+        heroHeadline1: h1Trimmed,
+        heroHeadline2: h2Trimmed || '',
+        heroHeadline3: h3Trimmed || '',
+        heroHeadlines: validHeadlines,
+        hero_headline_1: h1Trimmed,
+        hero_headline_2: h2Trimmed || '',
+        hero_headline_3: h3Trimmed || '',
+        heroSubheadline: heroSubheadline.trim(),
+        primaryCtaText: primaryCtaText.trim(),
+        primaryCtaUrl: primaryCtaUrl.trim(),
+        secondaryCtaText: secondaryCtaText.trim(),
+        secondaryCtaUrl: secondaryCtaUrl.trim(),
+      };
     } else if (pageKey === 'company') {
       title = 'Company & About Content';
       sections = { headline: companyHeadline, companyHeadline, story: companyStory, values: companyValues };
@@ -245,15 +287,127 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Hero Main Headline</label>
-              <Input
-                value={heroHeadline}
-                onChange={(e) => setHeroHeadline(e.target.value)}
-                className="bg-slate-950 border-slate-800 text-xs font-semibold"
-                placeholder="e.g. We engineer the digital future"
-              />
-              <HeadlinePreview text={heroHeadline} />
+            {/* Hero Headlines Group */}
+            <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-slate-800/60">
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <span>Hero Headlines</span>
+                    <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full font-semibold normal-case">
+                      Typewriter Rotation
+                    </span>
+                  </h4>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Headlines cycle sequentially on the client homepage using a typewriter animation. Leave optional headlines blank if they are not required.
+                  </p>
+                </div>
+              </div>
+
+              {/* Headline 1 — Primary */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                    <span>Hero Headline 1 — Primary</span>
+                    <span className="text-red-400 text-xs font-bold">*</span>
+                  </label>
+                  <span className="text-[10px] font-medium text-slate-500">Required</span>
+                </div>
+                <Input
+                  value={heroHeadline1}
+                  onChange={(e) => setHeroHeadline1(e.target.value)}
+                  className="bg-slate-900 border-slate-800 text-xs font-semibold"
+                  placeholder="e.g. We Engineer the Digital Future"
+                  required
+                />
+              </div>
+
+              {/* Headline 2 — Optional */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-300">
+                    Hero Headline 2 — Optional
+                  </label>
+                  <span className="text-[10px] font-medium text-slate-500">Optional</span>
+                </div>
+                <Input
+                  value={heroHeadline2}
+                  onChange={(e) => setHeroHeadline2(e.target.value)}
+                  className="bg-slate-900 border-slate-800 text-xs"
+                  placeholder="e.g. We Build Intelligent Digital Experiences"
+                />
+              </div>
+
+              {/* Headline 3 — Optional */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-slate-300">
+                    Hero Headline 3 — Optional
+                  </label>
+                  <span className="text-[10px] font-medium text-slate-500">Optional</span>
+                </div>
+                <Input
+                  value={heroHeadline3}
+                  onChange={(e) => setHeroHeadline3(e.target.value)}
+                  className="bg-slate-900 border-slate-800 text-xs"
+                  placeholder="e.g. We Transform Ideas Into Scalable Technology"
+                />
+              </div>
+
+              {/* Headline Preview */}
+              <div className="pt-2 border-t border-slate-800/60 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-slate-400">Live Typography Preview:</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setActiveHeadlinePreview(1)}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                        activeHeadlinePreview === 1
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-900 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Headline 1
+                    </button>
+                    {heroHeadline2.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveHeadlinePreview(2)}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                          activeHeadlinePreview === 2
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-900 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Headline 2
+                      </button>
+                    )}
+                    {heroHeadline3.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveHeadlinePreview(3)}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                          activeHeadlinePreview === 3
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-slate-900 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Headline 3
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <HeadlinePreview
+                  text={
+                    activeHeadlinePreview === 3
+                      ? heroHeadline3
+                      : activeHeadlinePreview === 2
+                        ? heroHeadline2
+                        : heroHeadline1
+                  }
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5">
