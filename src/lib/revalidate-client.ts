@@ -9,20 +9,27 @@ const CLIENT_BASE_URL =
     ? 'https://www.astraivtechnologies.com'
     : 'http://localhost:3000');
 
-const SHARED_SECRET =
-  process.env.REVALIDATE_SECRET ||
-  process.env.JWT_SECRET ||
-  'REDACTED_SHARED_64_BYTE_SECRET';
+function getRevalidateSecret(): string {
+  const secret = process.env.REVALIDATE_SECRET?.trim();
+  if (!secret) {
+    console.warn('[Revalidate Notice]: REVALIDATE_SECRET is not configured in Admin environment.');
+    return '';
+  }
+  return secret;
+}
 
 export async function triggerClientRevalidation(paths: string[], tags: string[] = []): Promise<boolean> {
   if (!paths.length && !tags.length) return true;
+
+  const secret = getRevalidateSecret();
+  if (!secret) return false;
 
   try {
     const res = await fetch(`${CLIENT_BASE_URL}/api/revalidate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-revalidate-secret': SHARED_SECRET,
+        'x-revalidate-secret': secret,
       },
       body: JSON.stringify({ paths, tags }),
       signal: AbortSignal.timeout(4000),

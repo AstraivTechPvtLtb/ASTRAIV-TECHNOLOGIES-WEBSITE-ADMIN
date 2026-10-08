@@ -4,7 +4,7 @@ async function migrate() {
   const connStr =
     process.argv[2] ||
     process.env.DATABASE_URL ||
-    'postgresql://postgres:REDACTED_DEV_PWDlocalhost:5432/astraiv_tech?schema=public';
+    'postgresql://postgres:postgres@localhost:5432/astraiv_tech?schema=public';
   const client = new Client({
     connectionString: connStr,
     ssl: connStr.includes('supabase') ? { rejectUnauthorized: false } : false,

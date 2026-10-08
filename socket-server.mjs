@@ -1,12 +1,32 @@
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import crypto from 'crypto';
 
 const PORT = parseInt(process.env.SOCKET_PORT || '4001', 10);
+const BROADCAST_SECRET = process.env.SOCKET_BROADCAST_SECRET || '';
+
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+  : [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://www.astraivtechnologies.com',
+      'https://superuser.admin.astraivtechnologies.com',
+    ];
+
+function isOriginAllowed(origin) {
+  if (!origin) return true; // Allow server-to-server or mobile requests
+  if (ALLOWED_ORIGINS.includes('*') || ALLOWED_ORIGINS.includes(origin)) return true;
+  return false;
+}
 
 const httpServer = createServer((req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  if (isOriginAllowed(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-broadcast-secret');
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -28,6 +48,16 @@ const httpServer = createServer((req, res) => {
   }
 
   if (req.method === 'POST' && req.url === '/api/broadcast') {
+    // Validate broadcast secret if configured
+    if (BROADCAST_SECRET) {
+      const authHeader = req.headers['x-broadcast-secret'] || req.headers['authorization']?.replace(/^Bearer\s+/i, '');
+      if (!authHeader || authHeader.length !== BROADCAST_SECRET.length || !crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(BROADCAST_SECRET))) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Unauthorized broadcast' }));
+        return;
+      }
+    }
+
     let body = '';
     req.on('data', (chunk) => {
       body += chunk;
@@ -56,7 +86,13 @@ const httpServer = createServer((req, res) => {
 
 const io = new Server(httpServer, {
   cors: {
-    origin: '*',
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST'],
   },
   pingTimeout: 60000,

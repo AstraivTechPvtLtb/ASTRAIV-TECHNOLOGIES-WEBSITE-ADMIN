@@ -29,6 +29,7 @@ export async function getEnquiries({
   limit = 50,
 }: GetEnquiriesParams = {}): Promise<{ data: AdminEnquiry[]; total: number; error?: string }> {
   try {
+    await requireAdminUser();
     const offset = (page - 1) * limit;
 
     // 1. Primary PostgreSQL Engine via Prisma ORM

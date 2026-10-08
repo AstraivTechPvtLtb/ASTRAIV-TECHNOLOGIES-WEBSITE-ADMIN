@@ -22,10 +22,30 @@ export async function register() {
           const { Server } = await import('socket.io');
 
           const PORT = parseInt(process.env.SOCKET_PORT || '4001', 10);
+          const crypto = await import('crypto');
+          const BROADCAST_SECRET = process.env.SOCKET_BROADCAST_SECRET || '';
+          const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+            ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+            : [
+                'http://localhost:3000',
+                'http://localhost:3001',
+                'https://www.astraivtechnologies.com',
+                'https://superuser.admin.astraivtechnologies.com',
+              ];
+
+          const isOriginAllowed = (origin?: string) => {
+            if (!origin) return true;
+            if (ALLOWED_ORIGINS.includes('*') || ALLOWED_ORIGINS.includes(origin)) return true;
+            return false;
+          };
+
           const httpServer = createServer((req, res) => {
-            res.setHeader('Access-Control-Allow-Origin', '*');
+            const origin = req.headers.origin;
+            if (isOriginAllowed(origin)) {
+              res.setHeader('Access-Control-Allow-Origin', origin || '*');
+            }
             res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-            res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-broadcast-secret');
 
             if (req.method === 'OPTIONS') {
               res.writeHead(204);
@@ -46,6 +66,15 @@ export async function register() {
             }
 
             if (req.method === 'POST' && req.url === '/api/broadcast') {
+              if (BROADCAST_SECRET) {
+                const authHeader = (req.headers['x-broadcast-secret'] as string) || (req.headers['authorization'] as string)?.replace(/^Bearer\s+/i, '');
+                if (!authHeader || authHeader.length !== BROADCAST_SECRET.length || !crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(BROADCAST_SECRET))) {
+                  res.writeHead(401, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ error: 'Unauthorized broadcast' }));
+                  return;
+                }
+              }
+
               let body = '';
               req.on('data', (chunk) => {
                 body += chunk;
@@ -73,7 +102,13 @@ export async function register() {
 
           const io = new Server(httpServer, {
             cors: {
-              origin: '*',
+              origin: (origin, callback) => {
+                if (isOriginAllowed(origin)) {
+                  callback(null, true);
+                } else {
+                  callback(new Error('Not allowed by CORS'));
+                }
+              },
               methods: ['GET', 'POST'],
             },
           });

@@ -100,7 +100,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
   const handleOpenLead = (lead: AdminLead) => {
     setSelectedLead(lead);
     setNotesEdit(lead.notes || '');
-    setCustomPasswordInput(lead.portal_password || 'Password123');
+    setCustomPasswordInput(lead.portal_password || '');
     setPortalActionMsg(null);
   };
 
@@ -577,7 +577,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                   <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
                     <Input
                       type="text"
-                      placeholder="Custom Password (Default: Password123)"
+                      placeholder="Custom Password (leave blank for auto-generated)"
                       value={customPasswordInput}
                       onChange={(e) => setCustomPasswordInput(e.target.value)}
                       className="bg-slate-900 border-slate-700 text-xs h-9 font-mono"
@@ -645,11 +645,11 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="font-mono text-slate-200">
-                          {showPassword ? (selectedLead.portal_password || 'Password123') : '••••••••••••'}
+                          {showPassword ? (selectedLead.portal_password || 'Not set') : '••••••••••••'}
                         </span>
                         <button
                           type="button"
-                          onClick={() => handleCopy(selectedLead.portal_password || 'Password123', 'pwd')}
+                          onClick={() => handleCopy(selectedLead.portal_password || '', 'pwd')}
                           className="text-slate-400 hover:text-white"
                         >
                           {copiedKey === 'pwd' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}

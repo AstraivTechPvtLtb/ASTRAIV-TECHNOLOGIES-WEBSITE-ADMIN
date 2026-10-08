@@ -10,19 +10,24 @@ Write-Host "=================================================" -ForegroundColor 
 Write-Host "   Syncing Database from Supabase to Local DB   " -ForegroundColor Cyan
 Write-Host "=================================================" -ForegroundColor Cyan
 
-# Supabase Connection Parameters (Connection Pooler Session Mode IPv4)
-$SUPABASE_HOST = "aws-0-ap-southeast-1.pooler.supabase.com"
-$SUPABASE_PORT = "5432"
-$SUPABASE_USER = "postgres.cvdiedebmguahkmzkwtd"
-$SUPABASE_PASS = "REDACTED_DATABASE_PASSWORD"
-$SUPABASE_DB   = "postgres"
+# Supabase Connection Parameters
+$SUPABASE_HOST = $env:SUPABASE_HOST ?? "aws-0-ap-southeast-1.pooler.supabase.com"
+$SUPABASE_PORT = $env:SUPABASE_PORT ?? "5432"
+$SUPABASE_USER = $env:SUPABASE_USER ?? "postgres.cvdiedebmguahkmzkwtd"
+$SUPABASE_PASS = $env:SUPABASE_PASS
+$SUPABASE_DB   = $env:SUPABASE_DB ?? "postgres"
+
+if (-not $SUPABASE_PASS) {
+    Write-Error "SUPABASE_PASS environment variable is required to run database sync."
+    exit 1
+}
 
 # Local PostgreSQL Parameters
-$LOCAL_HOST = "localhost"
-$LOCAL_PORT = "5432"
-$LOCAL_USER = "postgres"
-$LOCAL_PASS = "REDACTED_DEV_PWD"
-$LOCAL_DB   = "astraiv_tech"
+$LOCAL_HOST = $env:LOCAL_HOST ?? "localhost"
+$LOCAL_PORT = $env:LOCAL_PORT ?? "5432"
+$LOCAL_USER = $env:LOCAL_USER ?? "postgres"
+$LOCAL_PASS = $env:LOCAL_PASS ?? ""
+$LOCAL_DB   = $env:LOCAL_DB ?? "astraiv_tech"
 
 # Locate pg_dump and psql
 $PG_DIR = "C:\Program Files\PostgreSQL\18\bin"

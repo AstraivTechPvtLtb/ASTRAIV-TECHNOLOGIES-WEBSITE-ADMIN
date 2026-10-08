@@ -7,9 +7,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 
 // Default cryptographic secret (must be at least 64 bytes / 512 bits for HS512 / high-entropy HS256)
-const DEFAULT_64_BYTE_SECRET =
-  'REDACTED_SHARED_64_BYTE_SECRET';
-
 export interface JWTPayload {
   userId: string;
   email: string;
@@ -42,14 +39,22 @@ export const REFRESH_TOKEN_EXPIRY_SECONDS = 30 * 24 * 60 * 60;
  * Ensures the key is at least 64 bytes (512 bits).
  */
 export function getJwtSecretKey(): Uint8Array {
-  const raw = (process.env.JWT_SECRET || process.env.BETTER_AUTH_SECRET || DEFAULT_64_BYTE_SECRET)
-    .trim()
+  const raw = (process.env.JWT_SECRET || process.env.BETTER_AUTH_SECRET)
+    ?.trim()
     .replace(/^["']|["']$/g, '')
     .trim();
-  const secret = raw || DEFAULT_64_BYTE_SECRET;
+
+  if (!raw) {
+    if (process.env.NODE_ENV === 'test') {
+      return new TextEncoder().encode('test_fallback_jwt_secret_at_least_64_characters_for_vitest_runner_testing_only');
+    }
+    throw new Error(
+      '[JWT Security Error]: JWT_SECRET (or BETTER_AUTH_SECRET) environment variable is required.'
+    );
+  }
 
   // Pad secret if shorter than 64 bytes
-  const paddedSecret = secret.length >= 64 ? secret : secret.padEnd(64, '_');
+  const paddedSecret = raw.length >= 64 ? raw : raw.padEnd(64, '_');
   return new TextEncoder().encode(paddedSecret);
 }
 

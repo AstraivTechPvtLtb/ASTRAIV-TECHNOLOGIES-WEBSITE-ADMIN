@@ -1,18 +1,7 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
-const SUPABASE_PROD_URL =
-  "postgresql://postgres.cvdiedebmguahkmzkwtd:REDACTED_DATABASE_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true";
-
-const isProduction =
-  process.env.NODE_ENV === "production" ||
-  process.env.VERCEL === "1" ||
-  Boolean(process.env.VERCEL_URL);
-
-let rawUrl = process.env.DATABASE_URL?.trim();
-if (!rawUrl || (isProduction && (rawUrl.includes("localhost") || rawUrl.includes("127.0.0.1")))) {
-  rawUrl = SUPABASE_PROD_URL;
-}
+const rawUrl = process.env.DATABASE_URL?.trim() || "postgresql://postgres:postgres@localhost:5432/astraiv_db";
 
 let cleanUrl = rawUrl.trim().replace(/^["']|["']$/g, "").trim();
 if (cleanUrl.includes("pooler.supabase.com:5432")) {

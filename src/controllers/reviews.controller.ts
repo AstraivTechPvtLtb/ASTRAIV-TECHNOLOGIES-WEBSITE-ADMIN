@@ -67,6 +67,7 @@ export async function getReviews({
   limit = 50,
 }: GetReviewsParams = {}): Promise<{ data: AdminReview[]; total: number; error?: string }> {
   try {
+    await requireAdminUser();
     const offset = (page - 1) * limit;
 
     // 1. Primary PostgreSQL via Prisma ORM

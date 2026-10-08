@@ -36,6 +36,7 @@ export async function getLeads({
   limit = 50,
 }: GetLeadsParams = {}): Promise<{ data: AdminLead[]; total: number; error?: string }> {
   try {
+    await requireAdminUser();
     const offset = (page - 1) * limit;
 
     let whereClause = 'WHERE 1=1';
@@ -338,6 +339,7 @@ export async function deleteLead(id: string): Promise<AdminActionResponse> {
  * and top source pages to determine which pages generate the most leads.
  */
 export async function getLeadsAnalytics(): Promise<AdminLeadAnalytics> {
+  await requireAdminUser();
   const defaultAnalytics: AdminLeadAnalytics = {
     totalLeads: 0,
     statusBreakdown: {

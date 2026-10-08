@@ -83,23 +83,28 @@ export async function POST(req: NextRequest) {
       req.headers.get('x-webhook-secret') ||
       req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
 
-    const expectedSecret =
-      process.env.GOOGLE_FORM_WEBHOOK_SECRET ||
-      process.env.GOOGLE_SHEET_WEBHOOK_SECRET ||
-      (process.env.NODE_ENV !== 'production' ? 'REDACTED_WEBHOOK_SECRET' : '');
+    const primarySecret = process.env.GOOGLE_FORM_WEBHOOK_SECRET?.trim();
+    const fallbackSecret = process.env.GOOGLE_SHEET_WEBHOOK_SECRET?.trim();
 
-    if (!secret || !expectedSecret) {
+    if (!secret || (!primarySecret && !fallbackSecret)) {
       return NextResponse.json(
         { error: 'Unauthorized: Invalid or missing webhook secret token.' },
         { status: 401 }
       );
     }
 
-    const secretBuffer = Buffer.from(secret);
-    const expectedBuffer = Buffer.from(expectedSecret);
-    const isAuthorized =
-      secretBuffer.length === expectedBuffer.length &&
-      crypto.timingSafeEqual(secretBuffer, expectedBuffer);
+    const verifyMatch = (provided: string, expected?: string) => {
+      if (!expected) return false;
+      try {
+        const pBuf = Buffer.from(provided);
+        const eBuf = Buffer.from(expected);
+        return pBuf.length === eBuf.length && crypto.timingSafeEqual(pBuf, eBuf);
+      } catch {
+        return false;
+      }
+    };
+
+    const isAuthorized = verifyMatch(secret, primarySecret) || verifyMatch(secret, fallbackSecret);
 
     if (!isAuthorized) {
       console.warn('[Webhook Auth Warning]: Unauthorized attempt to access Admin Google Form webhook route.');

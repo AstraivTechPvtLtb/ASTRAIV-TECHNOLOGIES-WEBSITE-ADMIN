@@ -6,6 +6,8 @@
  */
 
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
+import fs from 'fs';
+import path from 'path';
 
 // Types for GA4 Reports
 export interface AnalyticsOverview {
@@ -125,8 +127,47 @@ async function fetchWithCache<T>(
 }
 
 const DEFAULT_GA_PROPERTY_ID = '555075963';
-const DEFAULT_SERVICE_ACCOUNT_B64 =
-  'ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAic3BhcnRhbi10aGVvcmVtLTUwOTEwMy1hMyIsCiAgInByaXZhdGVfa2V5X2lkIjogIjc2ZTg3OTlkNzhlNDNmYjg0NzVmZWExMTQ5YWE3MTBjNTdkNTU5OGUiLAogICJwcml2YXRlX2tleSI6ICItLS0tLUJFR0lOIFBSSVZBVEUgS0VZLS0tLS1cbk1JSUV2Z0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktnd2dnU2tBZ0VBQW9JQkFRRFJ0RmozNEY0Sm1OeTVcbnRuYW1NMk5IaFBwQWZFS3V1UTNKd096bFRtaUl2SlMyOEdBSFJzcVBrMndmeHRkRmJsQjZNMlZKOTlVWktWU0VcbnpzdGhjQjVnT3V2a1UrNjZTeDdVeFBzY2MzRUZUdU42RCtnTXdNM0tvZjJ2aTdidTlIVjNWV1ZJc1huSWcvcVFcbnQ1b2N6RmVDM2xNbFY0M3NsMnRtYWRld3VHeU02bWMwRjhVd1M5WGdYK1I0NmNZQjVPNFlMOUNVMUo2MnJEdTBcbkVnaHZpdUhBWFM4VUVCWWNrb0lUTHBVaG1wd0J3aTBKMWFsaFMxeThsSExrR25RVVFjTDF3VExvTWJjTTNUZHFcbjhoSTRFRWpXemxHb25Ga2tMQXJzVjlCRkkvNHFIS2FHSFRDTk85dk5yMFAzQnk1Sm9vVXYvdDVOMWZ2YVl1SmdcblVYVXRNazNwQWdNQkFBRUNnZ0VBQmwvb3BKMVk0blZpVlZDNmdJWWg5bXlRaW1sZlFnNHlTNlVqbG1ZT0o2K2FcbjNONUhxYStoVjB0a2FmNjFNSGFWdC9Ic0drWGxsVDFFUlFGcWN1TngxWnZ6bG9ZN2VpL2FmUWpoWWgybUZ5MXRcbkhSQVN6alliWGdyb3Fpb201UktWa21ETVRSdkhCTktkUHBlME5idjdvak9Wc2JZeUJHU0hJV1FtTXVpQ1NwSVpcbitOSjdXa0JmeGlib1Fra2l1SW9ONk42cmpUeDA3Y2tBNFlCMHFDRUVpS1VadHJiejFodmVJdFZ3UTlDejJEQmpcbm5yOVZNT0g3SS85RDlDVUpDdU5yaEtYTVBLdGtkNEk1Wk1tRkJkTzhMNGl1b2R6ZlNvdDc0ZFhaRFRXbm5kNzBcbnZ1TDNhQUVIVHNpb2pkNG9JYWl6QUs4ekpQR0dXd0E3MXRIVzBJbWtZUUtCZ1FEdzlzVzFFRmJHUnRnQ3dta1RcblhneHhvMWJiNjh1Zm1XT1dvNzEzeVc3YisvY29pdkFCcnpIc080NFdSU1ZIcGlvczlQYkU1Z2FNSnYwZ0EwcmpcbnRsOUNkckI3dUYzWnNqUlZQbVpGVXU2SzR2S0QzTEd0bTNjYnlqK2ZpNGVML0ZvdEM2R2k5Zk1WOG92ekR3MjlcbnJ5Rk5HcHRVMnAvMTFmeWhFMVpHTFpnUm9RS0JnUURleWpvNFFGVHJTNEh6TWtITHdXY2srK210SFJIeTcwU1Fcbm9hdGlZaFA5NHVaeXE5ZUtQUVlzMGhqZ2t4N3JTbFFlSEpqMENOYWNubzR1QS9EcG5XZ0lET3FJbVUzN1MvbXlcbk53MHIzeENDdEx2TlRGWWVuMUIyRzl3RFZlVVh0S1l4M0EwMVdOSG00TVVCdHRyTVE2T0FxMUt4ZHdYY2tvcXhcbjRiMldkODNuU1FLQmdRQ1VBL0hrVEJvUmg3anUwUDc4ajV2elBoTi8yZkxsb2JKaitVYk1TeWJXNklxbEU5dGtcbkhYcjhFb1V3TnQ4MGlPU0ZZeUFtU09vaXMxeHZpclk0OUhERmdlVGN5cDZUdC95ZmxFbjhNWG9vUkVvV0o3M1lcbjE1T3R0V21wbG1yMzJWYUhMd3JsOEZDVzNidUwzV1ppYXk1NGoyeDFEaXFPTnhrTTFMVDlQTXFab1FLQmdRRE5cbm0rNzlLUW4yR1RwMStvVFVpY29xVEw4TkFBNG5tUUE3UnFrSDVDSTFKbW10bk1BUUdWK1FqOWxic1F0UTlNa0tcbi9UTi96SVJjQ015STFTUktSZlhUc0Mvbkh5emo1ZXNzdVRmVHJFcnRoZVRvaERIYWt3ZEw2VXcwVzlwUTlXeUlcbkNXQzdRaHg5cWlURy96MlFWRUFhS0lMcHUwSFNuZitZU1JDU1JFRG4yUUtCZ0JMRTJCVHJjaFpJbnRRamJyTVFcbk55ckcyOUNlalZxRythbytpeGF5VjlvVTZsWmw0a2wwOTdlWUtOQlQzdktuYWxLWTlpUkRMSlc1ZzRRY1d6UUtcbkdLdjByeDRNL2FCNmJmdGJ4aFpZeGViWHF4TEZxcHhMSk1UV0lJTGpML1RlNzBNMUpqZlA4cTFQQXM0WGh2RWpcbkJaNXJlR1NOZXJrQ2wwa3kzdndRdkRRL1xuLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLVxuIiwKICAiY2xpZW50X2VtYWlsIjogImdhNC1hZG1pbkBzcGFydGFuLXRoZW9yZW0tNTA5MTAzLWEzLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwKICAiY2xpZW50X2lkIjogIjEwOTU1NzA1NjUxNDAzOTkwOTY1MCIsCiAgImF1dGhfdXJpIjogImh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbS9vL29hdXRoMi9hdXRoIiwKICAidG9rZW5fdXJpIjogImh0dHBzOi8vb2F1dGgyLmdvb2dsZWFwaXMuY29tL3Rva2VuIiwKICAiYXV0aF9wcm92aWRlcl94NTA5X2NlcnRfdXJsIjogImh0dHBzOi8vd3d3Lmdvb2dsZWFwaXMuY29tL29hdXRoMi92MS9jZXJ0cyIsCiAgImNsaWVudF94NTA5X2NlcnRfdXJsIjogImh0dHBzOi8vd3d3Lmdvb2dsZWFwaXMuY29tL3JvYm90L3YxL21ldGFkYXRhL3g1MDkvZ2E0LWFkbWluJTQwc3BhcnRhbi10aGVvcmVtLTUwOTEwMy1hMy5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsCiAgInVuaXZlcnNlX2RvbWFpbiI6ICJnb29nbGVhcGlzLmNvbSIKfQo=';
+
+function resolveServiceAccountCredentials(): {
+  client_email: string;
+  private_key: string;
+  project_id?: string;
+} | null {
+  const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY?.trim();
+  if (rawKey) {
+    try {
+      const decoded = rawKey.startsWith('{')
+        ? rawKey
+        : Buffer.from(rawKey, 'base64').toString('utf8');
+      const parsed = JSON.parse(decoded);
+      if (parsed.client_email && parsed.private_key) {
+        return parsed;
+      }
+    } catch (e) {
+      console.warn('[GA4 Auth]: Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY', e);
+    }
+  }
+
+  const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim();
+  if (credPath) {
+    try {
+      const resolvedPath = path.isAbsolute(credPath)
+        ? credPath
+        : path.join(process.cwd(), credPath);
+      if (fs.existsSync(resolvedPath)) {
+        const fileContent = fs.readFileSync(resolvedPath, 'utf8');
+        const parsed = JSON.parse(fileContent);
+        if (parsed.client_email && parsed.private_key) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('[GA4 Auth]: Failed to load credentials from GOOGLE_APPLICATION_CREDENTIALS file', e);
+    }
+  }
+
+  return null;
+}
 
 /**
  * Checks if Google Analytics 4 environment variables and credentials are configured.
@@ -145,9 +186,13 @@ export function isGoogleAnalyticsConfigured(): {
     propertyId = DEFAULT_GA_PROPERTY_ID;
   }
 
+  const creds = resolveServiceAccountCredentials();
+  const configured = Boolean(creds);
+
   return {
-    configured: true,
+    configured,
     propertyId: propertyId || DEFAULT_GA_PROPERTY_ID,
+    reason: configured ? undefined : 'Google Service Account credentials not configured in environment',
   };
 }
 
@@ -161,40 +206,9 @@ function getAnalyticsClient(): BetaAnalyticsDataClient {
     return clientInstance;
   }
 
-  // Parse inline, environment, or embedded credentials
-  let creds: { client_email: string; private_key: string; project_id?: string } | null = null;
-
-  const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY?.trim();
-  if (rawKey) {
-    try {
-      const decoded = rawKey.startsWith('{')
-        ? rawKey
-        : Buffer.from(rawKey, 'base64').toString('utf8');
-      const parsed = JSON.parse(decoded);
-      if (parsed.client_email && parsed.private_key) {
-        creds = parsed;
-      }
-    } catch (e) {
-      console.warn('[GA4 Auth]: Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY, falling back to verified embedded key', e);
-    }
-  }
-
-  // Fallback to verified embedded service account
-  if (!creds) {
-    try {
-      const decoded = Buffer.from(DEFAULT_SERVICE_ACCOUNT_B64, 'base64').toString('utf8');
-      creds = JSON.parse(decoded);
-    } catch (e) {
-      console.error('[GA4 Auth Error]: Failed to decode DEFAULT_SERVICE_ACCOUNT_B64', e);
-    }
-  }
+  const creds = resolveServiceAccountCredentials();
 
   if (creds && creds.client_email && creds.private_key) {
-    // Clean environment to prevent google-auth-library from checking missing file paths on serverless
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    }
-
     clientInstance = new BetaAnalyticsDataClient({
       credentials: {
         client_email: creds.client_email,

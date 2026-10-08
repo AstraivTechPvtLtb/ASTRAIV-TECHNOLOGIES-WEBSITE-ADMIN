@@ -1150,6 +1150,7 @@ export async function getJobApplications(filter?: {
   jobId?: string;
 }): Promise<{ data: AdminJobApplication[]; total: number; error?: string }> {
   try {
+    await requireAdminUser();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: Record<string, any> = {};
     if (filter?.status && filter.status !== 'all') {

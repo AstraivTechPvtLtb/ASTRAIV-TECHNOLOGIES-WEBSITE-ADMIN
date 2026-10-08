@@ -28,9 +28,13 @@ export async function GET(req: NextRequest) {
 
     // If local provider in dev mode, stream file directly with attachment header
     if (provider.providerName === 'local') {
-      const normalizedKey = path.normalize(key).replace(/^(\.\.(\/|\\|$))+/, '');
-      const baseDir = path.join(process.cwd(), '.data', 'resumes');
-      const filePath = path.join(baseDir, normalizedKey);
+      const baseDir = path.resolve(process.cwd(), '.data', 'resumes');
+      const filePath = path.resolve(baseDir, key);
+
+      // Strict path traversal containment
+      if (!filePath.startsWith(baseDir + path.sep)) {
+        return NextResponse.json({ error: 'Access denied: Path traversal detected' }, { status: 403 });
+      }
 
       if (!fs.existsSync(filePath)) {
         return NextResponse.json({ error: 'File not found on disk' }, { status: 404 });

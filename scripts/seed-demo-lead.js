@@ -3,7 +3,7 @@ const { Client } = require('pg');
 async function seed() {
   const client = new Client({
     connectionString:
-      'postgresql://postgres.cvdiedebmguahkmzkwtd:REDACTED_DATABASE_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true',
+      process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/astraiv_db',
     ssl: { rejectUnauthorized: false },
   });
   await client.connect();

@@ -7,11 +7,11 @@ const { Pool } = require('pg');
 
 async function sync() {
   const localPool = new Pool({
-    connectionString: 'postgresql://postgres:REDACTED_DEV_PWDlocalhost:5432/astraiv_tech?schema=public',
+    connectionString: 'postgresql://postgres:postgres@localhost:5432/astraiv_tech?schema=public',
   });
   const supaPool = new Pool({
     connectionString:
-      'postgresql://postgres.cvdiedebmguahkmzkwtd:REDACTED_DATABASE_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres',
+      process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/astraiv_db',
   });
 
   console.log('🔄 Fetching production services from Supabase...');

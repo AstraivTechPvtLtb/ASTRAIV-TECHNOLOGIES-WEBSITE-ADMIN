@@ -13,19 +13,17 @@ const globalForPrisma = globalThis as unknown as {
   connStr: string | undefined;
 };
 
-const SUPABASE_PROD_URL =
-  'postgresql://postgres.cvdiedebmguahkmzkwtd:REDACTED_DATABASE_PASSWORD@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true';
-
 function getCleanConnectionString(): string {
   let raw = process.env.DATABASE_URL?.trim();
-  const isProduction =
-    process.env.NODE_ENV === 'production' ||
-    process.env.VERCEL === '1' ||
-    Boolean(process.env.VERCEL_URL);
 
-  // In production / Vercel, or if DATABASE_URL is missing or points to localhost in production:
-  if (!raw || (isProduction && (raw.includes('localhost') || raw.includes('127.0.0.1')))) {
-    raw = SUPABASE_PROD_URL;
+  if (!raw) {
+    if (process.env.NODE_ENV === 'test') {
+      raw = 'postgresql://postgres:postgres@localhost:5432/astraiv_db';
+    } else {
+      throw new Error(
+        '[Database Error]: DATABASE_URL environment variable is missing. A valid PostgreSQL connection string is required.'
+      );
+    }
   }
 
   let conn = raw.trim().replace(/^["']|["']$/g, '').trim();
