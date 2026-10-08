@@ -659,29 +659,105 @@ model SocialLink {
   @@map("social_links")
 }
 
+// Canonical Role Categories (Departments)
+model JobCategory {
+  id          String       @id @default(uuid())
+  name        String
+  slug        String       @unique
+  description String?      @db.Text
+  orderIndex  Int          @default(0) @map("order_index")
+  active      Boolean      @default(true)
+  isArchived  Boolean      @default(false) @map("is_archived")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  openings    JobOpening[]
+
+  @@map("job_categories")
+}
+
 // Recruitment & Job Openings
 model JobOpening {
-  id              String   @id @default(uuid())
-  title           String
-  slug            String   @unique
-  department      String   @default("Engineering")
-  type            String   @default("Full-Time / Remote")
-  location        String   @default("Remote")
-  experience      String?
-  description     String   @db.Text
-  skills          String[] @default([])
-  salary          String?
-  applyUrl        String?  @default("/contact") @map("apply_url")
-  active          Boolean  @default(true)
-  status          String   @default("active")
-  featured        Boolean  @default(false)
-  orderIndex      Int      @default(0) @map("order_index")
-  metaTitle       String?  @map("meta_title")
-  metaDescription String?  @map("meta_description") @db.Text
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id                 String          @id @default(uuid())
+  title              String
+  slug               String          @unique
+  categoryId         String?         @map("category_id")
+  category           JobCategory?    @relation(fields: [categoryId], references: [id])
+  department         String          @default("Engineering")
+  type               String          @default("Full-Time / Remote")
+  location           String          @default("Remote")
+  employmentType     String          @default("full-time") @map("employment_type")
+  workMode           String          @default("remote") @map("work_mode")
+  geographicLocation String          @default("Remote (Worldwide)") @map("geographic_location")
+  experienceLevel    String          @default("experienced") @map("experience_level")
+  minExperienceYears Int?            @map("min_experience_years")
+  maxExperienceYears Int?            @map("max_experience_years")
+  experience         String?
+  description        String          @db.Text
+  skills             String[]        @default([])
+  salary             String?
+  showSalary         Boolean         @default(false) @map("show_salary")
+  responsibilities   String[]        @default([])
+  requirements       String[]        @default([])
+  niceToHave         String[]        @default([]) @map("nice_to_have")
+  benefits           String[]        @default([])
+  useSharedBenefits  Boolean         @default(true) @map("use_shared_benefits")
+  interviewStages    Json?           @default("[]") @map("interview_stages")
+  useSharedInterview Boolean         @default(true) @map("use_shared_interview")
+  referralBonus      String?         @map("referral_bonus")
+  showReferral       Boolean         @default(true) @map("show_referral")
+  applyUrl           String?         @default("/contact") @map("apply_url")
+  active             Boolean         @default(true)
+  status             String          @default("active")
+  featured           Boolean         @default(false)
+  orderIndex         Int             @default(0) @map("order_index")
+  metaTitle          String?         @map("meta_title")
+  metaDescription    String?         @map("meta_description") @db.Text
+  publishedAt        DateTime?       @map("published_at")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+
+  applications       JobApplication[]
 
   @@map("job_openings")
+}
+
+// Dedicated Candidate Job Applications Engine
+model JobApplication {
+  id                     String      @id @default(uuid())
+  applicationNumber      String?     @unique @map("application_number")
+  type                   String      @default("job_specific") // 'job_specific' | 'speculative'
+  jobOpeningId           String?     @map("job_opening_id")
+  jobOpening             JobOpening? @relation(fields: [jobOpeningId], references: [id], onDelete: SetNull)
+  roleTitle              String      @map("role_title")
+  department             String?
+  candidateName          String      @map("candidate_name")
+  email                  String
+  phone                  String?
+  countryCode            String?     @map("country_code")
+  location               String?
+  experienceLevel        String      @default("experienced") @map("experience_level")
+  experienceYears        Int?        @map("experience_years")
+  githubUrl              String?     @map("github_url")
+  portfolioUrl           String?     @map("portfolio_url")
+  linkedinUrl            String?     @map("linkedin_url")
+  coverNote              String?     @map("cover_note") @db.Text
+  resumeType             String      @default("upload") @map("resume_type")
+  resumeUrl              String?     @map("resume_url")
+  resumeStorageKey       String?     @map("resume_storage_key")
+  resumeStorageProvider  String?     @default("r2") @map("resume_storage_provider")
+  resumeOriginalName     String?     @map("resume_original_name")
+  resumeMimeType         String?     @map("resume_mime_type")
+  resumeSizeBytes        Int?        @map("resume_size_bytes")
+  resumeValidationStatus String      @default("verified") @map("resume_validation_status")
+  status                 String      @default("pending") // 'pending', 'reviewed', 'interview', 'hired', 'rejected'
+  adminNotes             String?     @map("admin_notes") @db.Text
+  ipAddress              String?     @map("ip_address")
+  userAgent              String?     @map("user_agent")
+  createdAt              DateTime    @default(now()) @map("created_at")
+  updatedAt              DateTime    @updatedAt @map("updated_at")
+
+  @@map("job_applications")
 }
 
 // Pricing & Engagement Models

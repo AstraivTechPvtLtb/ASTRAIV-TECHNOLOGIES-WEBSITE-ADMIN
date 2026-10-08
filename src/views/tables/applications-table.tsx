@@ -15,7 +15,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { updateApplicationStatus } from '@/controllers/recruitment.controller';
-import type { AdminJobApplication } from '@/controllers/recruitment.controller';
+import type { AdminJobApplication } from '@/models/types';
 import { Badge } from '@/views/ui/badge';
 import { Button } from '@/views/ui/button';
 
@@ -34,14 +34,17 @@ export function ApplicationsTable({ initialData }: ApplicationsTableProps) {
     const matchesSearch =
       app.applicantName.toLowerCase().includes(search.toLowerCase()) ||
       app.email.toLowerCase().includes(search.toLowerCase()) ||
-      app.role.toLowerCase().includes(search.toLowerCase()) ||
-      (app.notes || '').toLowerCase().includes(search.toLowerCase());
+      (app.jobTitle || app.role || '').toLowerCase().includes(search.toLowerCase()) ||
+      (app.adminNotes || app.notes || app.candidateNote || '').toLowerCase().includes(search.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const handleStatusChange = async (id: string, newStatus: AdminJobApplication['status']) => {
+  const handleStatusChange = async (
+    id: string,
+    newStatus: 'pending' | 'reviewed' | 'interview' | 'offered' | 'hired' | 'rejected' | 'archived'
+  ) => {
     setUpdatingId(id);
     try {
       const res = await updateApplicationStatus(id, newStatus);

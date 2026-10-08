@@ -333,40 +333,195 @@ export interface AdminSocialLinkInput {
   orderIndex?: number;
 }
 
+export interface JobCategory {
+  id: string;
+  name: string;
+  slug: string;
+  orderIndex: number;
+  active: boolean;
+  openingCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JobCategoryInput {
+  name: string;
+  slug?: string;
+  orderIndex?: number;
+  active?: boolean;
+}
+
 /**
  * Recruitment / Career Job Opening representation.
  */
 export interface AdminJobOpening {
   id: string;
+  categoryId?: string | null;
+  category?: JobCategory | null;
   title: string;
   slug: string;
   department: string;
-  type: string;
-  location: string;
+  employmentType: string;
+  workMode: string;
+  geographicLocation: string;
+  experienceLevel: 'Fresher' | 'Experienced' | 'Both' | string;
   experience?: string | null;
+  minExperienceYears?: number | null;
+  maxExperienceYears?: number | null;
+  type?: string | null;
+  location?: string | null;
   description: string;
   skills: string[];
   salary?: string | null;
+  showSalary: boolean;
   applyUrl?: string | null;
   active: boolean;
   orderIndex: number;
+  publishedAt?: string | null;
+  referralBonus?: string | null;
+  showReferralBonus: boolean;
+  useSharedDefaults: boolean;
+  responsibilities?: string[];
+  requirements?: string[];
+  niceToHave?: string[];
+  benefits?: string[];
+  interviewStages?: Array<{ num: string; title: string; desc: string }>;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface AdminJobOpeningInput {
+  categoryId?: string | null;
   title: string;
   slug?: string;
-  department: string;
-  type: string;
-  location?: string;
+  department?: string;
+  employmentType?: string;
+  workMode?: string;
+  geographicLocation?: string;
+  experienceLevel?: 'Fresher' | 'Experienced' | 'Both' | string;
   experience?: string | null;
+  minExperienceYears?: number | null;
+  maxExperienceYears?: number | null;
+  type?: string;
+  location?: string;
   description: string;
   skills: string[];
   salary?: string | null;
+  showSalary?: boolean;
   applyUrl?: string | null;
   active?: boolean;
   orderIndex?: number;
+  publishedAt?: string | null;
+  referralBonus?: string | null;
+  showReferralBonus?: boolean;
+  useSharedDefaults?: boolean;
+  responsibilities?: string[];
+  requirements?: string[];
+  niceToHave?: string[];
+  benefits?: string[];
+  interviewStages?: Array<{ num: string; title: string; desc: string }>;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+}
+
+export interface AdminJobApplication {
+  id: string;
+  applicationNumber: string;
+  type: 'job' | 'speculative';
+  jobId?: string | null;
+  jobTitle?: string | null;
+  applicantName: string;
+  email: string;
+  phone?: string | null;
+  location: string;
+  experienceLevel: string;
+  experienceYears?: string | null;
+  categoryInterests?: string[];
+  githubUrl?: string | null;
+  portfolioUrl?: string | null;
+  linkedinUrl?: string | null;
+  resumeType: 'upload' | 'link';
+  resumeStorageProvider?: string | null;
+  resumeStorageBucket?: string | null;
+  resumeStorageKey?: string | null;
+  resumeOriginalName?: string | null;
+  resumeMimeType?: string | null;
+  resumeSizeBytes?: number | null;
+  resumeUrl?: string | null;
+  role?: string;
+  candidateNote?: string | null;
+  notes?: string | null;
+  privacyConsent: boolean;
+  status: 'pending' | 'reviewed' | 'interview' | 'offered' | 'hired' | 'rejected' | 'archived' | string;
+  adminNotes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CultureCardItem {
+  id?: string;
+  title: string;
+  body: string;
+  icon: string;
+  order: number;
+  active: boolean;
+}
+
+export interface BenefitsCardItem {
+  id?: string;
+  title: string;
+  body: string;
+  icon: string;
+  order: number;
+  active: boolean;
+}
+
+export interface CareersImageSettings {
+  enabled: boolean;
+  imageUrl: string;
+  altText: string;
+  focalPoint?: string;
+  width?: number;
+  height?: number;
+  sizeBytes?: number;
+  sizeLabel?: string;
+}
+
+export interface CareersPageContentData {
+  heroHeading: string;
+  heroSubtitle: string;
+  cultureCards: CultureCardItem[];
+  careersImage: CareersImageSettings;
+  benefitsHeading: string;
+  benefitsSubtitle: string;
+  benefitsCards: BenefitsCardItem[];
+  opportunitiesHeading: string;
+  opportunitiesSubtitle: string;
+  searchPlaceholder: string;
+  emptyStateCopy: string;
+  speculativeCta: {
+    enabled: boolean;
+    kicker: string;
+    title: string;
+    body: string;
+    buttonText: string;
+    buttonUrl: string;
+  };
+  speculativePageCopy: {
+    heading: string;
+    subheading: string;
+    supportGuidance: string;
+    successMessage: string;
+  };
+}
+
+export interface SharedCareersDefaultsData {
+  interviewStages: Array<{ num: string; title: string; desc: string }>;
+  commonBenefits: string[];
+  defaultReferralBonus: string;
+  defaultPrivacyText: string;
 }
 
 export interface AdminPricingPlan {
