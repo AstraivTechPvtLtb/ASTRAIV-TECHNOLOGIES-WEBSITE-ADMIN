@@ -66,6 +66,16 @@ export async function savePageContent(data: {
     const admin = await getAdminUser();
     if (!admin) return { success: false, error: 'Unauthorized' };
 
+    if (data.pageKey === 'homepage') {
+      const sec = data.sections || {};
+      const h1 = (
+        (sec.heroHeadline1 || sec.heroHeadline || sec.hero_headline_1) as string
+      )?.trim();
+      if (!h1) {
+        return { success: false, error: 'Hero Headline 1 (Primary) is required.' };
+      }
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any).pageContent.upsert({
       where: { pageKey: data.pageKey },
