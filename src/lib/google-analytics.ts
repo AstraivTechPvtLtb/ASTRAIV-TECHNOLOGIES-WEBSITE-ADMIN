@@ -153,7 +153,7 @@ function resolveServiceAccountCredentials(): {
     try {
       const resolvedPath = path.isAbsolute(credPath)
         ? credPath
-        : path.join(process.cwd(), credPath);
+        : path.join(/*turbopackIgnore: true*/ process.cwd(), credPath);
       if (fs.existsSync(resolvedPath)) {
         const fileContent = fs.readFileSync(resolvedPath, 'utf8');
         const parsed = JSON.parse(fileContent);
