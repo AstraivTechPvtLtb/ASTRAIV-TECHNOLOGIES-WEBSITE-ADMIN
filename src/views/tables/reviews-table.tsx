@@ -157,7 +157,7 @@ export function ReviewsTable({ initialData, initialStatus = 'all' }: ReviewsTabl
   };
 
   const copyWebhookSecret = () => {
-    navigator.clipboard.writeText('REDACTED_WEBHOOK_SECRET');
+    navigator.clipboard.writeText('GOOGLE_FORM_WEBHOOK_SECRET');
     setCopiedSecret(true);
     setTimeout(() => setCopiedSecret(false), 3000);
   };
@@ -1368,8 +1368,8 @@ export function ReviewsTable({ initialData, initialStatus = 'all' }: ReviewsTabl
               <div>
                 <span className="text-[10px] text-slate-500 block uppercase font-bold">Webhook Secret Token</span>
                 <div className="flex items-center gap-2 mt-1">
-                  <code className="text-xs font-mono text-yellow-300 bg-slate-900 p-2 rounded-xl border border-slate-800 flex-1 select-all">
-                    REDACTED_WEBHOOK_SECRET
+                  <code className="text-xs font-mono text-emerald-400 bg-slate-900 p-2 rounded-xl border border-slate-800 flex-1 select-all">
+                    GOOGLE_FORM_WEBHOOK_SECRET
                   </code>
                   <Button
                     size="sm"
@@ -1403,7 +1403,7 @@ export function ReviewsTable({ initialData, initialStatus = 'all' }: ReviewsTabl
                   In Apps Script, click <strong>Project Settings (gear icon) &gt; Script Properties</strong>, add:
                   <ul className="list-disc pl-5 mt-1 space-y-0.5 text-slate-400">
                     <li><code className="text-slate-300">WEBHOOK_URL</code>: your production or tunnel URL</li>
-                    <li><code className="text-slate-300">WEBHOOK_SECRET</code>: <code className="text-yellow-300">REDACTED_WEBHOOK_SECRET</code></li>
+                    <li><code className="text-slate-300">WEBHOOK_SECRET</code>: <code className="text-emerald-400">Match production GOOGLE_FORM_WEBHOOK_SECRET</code></li>
                   </ul>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
