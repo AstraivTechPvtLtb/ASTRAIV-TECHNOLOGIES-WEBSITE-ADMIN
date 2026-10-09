@@ -83,28 +83,24 @@ export async function POST(req: NextRequest) {
       req.headers.get('x-webhook-secret') ||
       req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
 
-    const primarySecret = process.env.GOOGLE_FORM_WEBHOOK_SECRET?.trim();
-    const fallbackSecret = process.env.GOOGLE_SHEET_WEBHOOK_SECRET?.trim();
+    const expectedSecret = process.env.GOOGLE_FORM_WEBHOOK_SECRET?.trim();
 
-    if (!secret || (!primarySecret && !fallbackSecret)) {
+    if (!secret || !expectedSecret) {
       return NextResponse.json(
         { error: 'Unauthorized: Invalid or missing webhook secret token.' },
         { status: 401 }
       );
     }
 
-    const verifyMatch = (provided: string, expected?: string) => {
-      if (!expected) return false;
+    const isAuthorized = (() => {
       try {
-        const pBuf = Buffer.from(provided);
-        const eBuf = Buffer.from(expected);
+        const pBuf = Buffer.from(secret);
+        const eBuf = Buffer.from(expectedSecret);
         return pBuf.length === eBuf.length && crypto.timingSafeEqual(pBuf, eBuf);
       } catch {
         return false;
       }
-    };
-
-    const isAuthorized = verifyMatch(secret, primarySecret) || verifyMatch(secret, fallbackSecret);
+    })();
 
     if (!isAuthorized) {
       console.warn('[Webhook Auth Warning]: Unauthorized attempt to access Admin Google Form webhook route.');

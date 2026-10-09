@@ -45,8 +45,8 @@ var CONFIG = {
   // LOCAL DEV TUNNEL (Used when testing locally via untun, loca.lt, ngrok, pinggy)
   DEFAULT_LOCAL_TUNNEL_URL: "https://astraiv-reviews-sync.loca.lt/api/reviews/google-form",
 
-  // SECRET TOKEN (Must match GOOGLE_FORM_WEBHOOK_SECRET in .env)
-  WEBHOOK_SECRET: "REDACTED_WEBHOOK_SECRET"
+  // SECRET TOKEN (Must be set in Script Properties: Project Settings > Script Properties > WEBHOOK_SECRET)
+  WEBHOOK_SECRET: ""
 };
 
 /**
@@ -351,7 +351,11 @@ function onFormSubmit(e) {
     // ========================================================================
     var endpoints = getActiveEndpoints();
     var props = PropertiesService.getScriptProperties();
-    var secret = props.getProperty("WEBHOOK_SECRET") || CONFIG.WEBHOOK_SECRET;
+    var secret = props.getProperty("WEBHOOK_SECRET");
+    if (!secret) {
+      Logger.log("Fatal Error: WEBHOOK_SECRET is not configured in Script Properties.");
+      return;
+    }
 
     var options = {
       method: "post",
@@ -468,7 +472,11 @@ function menuTestConnections() {
   var ui = SpreadsheetApp.getUi();
   var endpoints = getActiveEndpoints();
   var props = PropertiesService.getScriptProperties();
-  var secret = props.getProperty("WEBHOOK_SECRET") || CONFIG.WEBHOOK_SECRET;
+  var secret = props.getProperty("WEBHOOK_SECRET");
+  if (!secret) {
+    ui.alert("Configuration Error", "WEBHOOK_SECRET is not configured in Script Properties.\n\nPlease navigate to Project Settings > Script Properties and set WEBHOOK_SECRET.", ui.ButtonSet.OK);
+    return;
+  }
 
   var testPayload = {
     source: "google_form",

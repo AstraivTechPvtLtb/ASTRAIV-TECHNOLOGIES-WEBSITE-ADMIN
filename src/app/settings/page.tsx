@@ -21,7 +21,7 @@ export default async function AdminSettingsPage() {
   const supabaseConfigured = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   );
-  const webhookSecretConfigured = Boolean(process.env.GOOGLE_SHEET_WEBHOOK_SECRET);
+  const webhookSecretConfigured = Boolean(process.env.GOOGLE_FORM_WEBHOOK_SECRET);
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
   const webhookUrl = `${appUrl}/api/webhooks/google-sheets`;
