@@ -169,6 +169,46 @@ function resolveServiceAccountCredentials(): {
   return null;
 }
 
+interface AuthFailureState {
+  hasFailed: boolean;
+  message: string;
+  failedAt: number;
+}
+
+let authFailureState: AuthFailureState | null = null;
+const AUTH_FAILURE_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes cooldown before re-attempting Google API
+let lastCredsFingerprint = '';
+
+export function isAuthError(err: unknown): boolean {
+  if (!err) return false;
+  const msg = (err as Error)?.message || String(err);
+  const code = (err as { code?: number })?.code;
+  return (
+    code === 16 ||
+    msg.includes('UNAUTHENTICATED') ||
+    msg.includes('invalid_grant') ||
+    msg.includes('Invalid JWT Signature') ||
+    msg.includes('invalid authentication credentials')
+  );
+}
+
+function handleTelemetryError(reportName: string, error: unknown) {
+  if (isAuthError(error)) {
+    if (!authFailureState || Date.now() - authFailureState.failedAt > AUTH_FAILURE_COOLDOWN_MS) {
+      console.warn(
+        `[GA4 Telemetry Notice]: Google Analytics service account key was rejected (UNAUTHENTICATED). Telemetry is gracefully operating in fallback mode. To enable live GA4 telemetry, update service-account.json or GOOGLE_SERVICE_ACCOUNT_KEY with an active key from Google Cloud Console.`
+      );
+      authFailureState = {
+        hasFailed: true,
+        message: 'Google Service Account credentials invalid or revoked (UNAUTHENTICATED)',
+        failedAt: Date.now(),
+      };
+    }
+  } else {
+    console.warn(`[GA4 ${reportName} Warning]:`, (error as Error)?.message || error);
+  }
+}
+
 /**
  * Checks if Google Analytics 4 environment variables and credentials are configured.
  */
@@ -184,6 +224,20 @@ export function isGoogleAnalyticsConfigured(): {
   // If someone passed the Measurement ID (e.g. G-XXXXX) or a non-numeric string, use the verified Property ID
   if (propertyId.startsWith('G-') || !/^\d+$/.test(propertyId)) {
     propertyId = DEFAULT_GA_PROPERTY_ID;
+  }
+
+  // If in auth failure cooldown, report unconfigured with clear reason
+  if (authFailureState?.hasFailed) {
+    if (Date.now() - authFailureState.failedAt < AUTH_FAILURE_COOLDOWN_MS) {
+      return {
+        configured: false,
+        propertyId: propertyId || DEFAULT_GA_PROPERTY_ID,
+        reason: authFailureState.message,
+      };
+    } else {
+      // Cooldown expired, allow retry on next query
+      authFailureState = null;
+    }
   }
 
   const creds = resolveServiceAccountCredentials();
@@ -202,11 +256,18 @@ export function isGoogleAnalyticsConfigured(): {
 let clientInstance: BetaAnalyticsDataClient | null = null;
 
 function getAnalyticsClient(): BetaAnalyticsDataClient {
+  const creds = resolveServiceAccountCredentials();
+  const currentFingerprint = creds ? `${creds.client_email}:${creds.private_key?.slice(-30)}` : '';
+
+  if (currentFingerprint && currentFingerprint !== lastCredsFingerprint) {
+    clientInstance = null;
+    authFailureState = null;
+    lastCredsFingerprint = currentFingerprint;
+  }
+
   if (clientInstance) {
     return clientInstance;
   }
-
-  const creds = resolveServiceAccountCredentials();
 
   if (creds && creds.client_email && creds.private_key) {
     clientInstance = new BetaAnalyticsDataClient({
@@ -341,7 +402,7 @@ export async function getAnalyticsOverview(
         isDemoData: false,
       };
     } catch (error) {
-      console.error('[GA4 Overview Error]: Failed to fetch overview metrics', error);
+      handleTelemetryError('Overview', error);
       return {
         totalUsers: 0,
         newUsers: 0,
@@ -417,7 +478,7 @@ export async function getAnalyticsUsersTimeline(
         };
       });
     } catch (error) {
-      console.error('[GA4 Timeline Error]: Failed to fetch users timeline', error);
+      handleTelemetryError('Timeline', error);
       return [];
     }
   });
@@ -486,7 +547,7 @@ export async function getAnalyticsPages(
 
       return { pages, totalViews };
     } catch (error) {
-      console.error('[GA4 Pages Error]: Failed to fetch top pages', error);
+      handleTelemetryError('Pages', error);
       return { pages: [], totalViews: 0 };
     }
   });
@@ -546,7 +607,7 @@ export async function getAnalyticsSources(
         percentage: totalSessions > 0 ? Math.round((s.sessions / totalSessions) * 1000) / 10 : 0,
       }));
     } catch (error) {
-      console.error('[GA4 Sources Error]: Failed to fetch traffic sources', error);
+      handleTelemetryError('Sources', error);
       return [];
     }
   });
@@ -602,7 +663,7 @@ export async function getAnalyticsDevices(
         percentage: totalUsers > 0 ? Math.round((d.users / totalUsers) * 1000) / 10 : 0,
       }));
     } catch (error) {
-      console.error('[GA4 Devices Error]: Failed to fetch device breakdown', error);
+      handleTelemetryError('Devices', error);
       return [];
     }
   });
@@ -659,7 +720,7 @@ export async function getAnalyticsCountries(
         percentage: totalUsers > 0 ? Math.round((c.users / totalUsers) * 1000) / 10 : 0,
       }));
     } catch (error) {
-      console.error('[GA4 Countries Error]: Failed to fetch country breakdown', error);
+      handleTelemetryError('Countries', error);
       return [];
     }
   });
@@ -731,7 +792,7 @@ export async function getAnalyticsTechnology(
         deviceCategories: formatItems(deviceRes.rows),
       };
     } catch (error) {
-      console.error('[GA4 Technology Error]: Failed to fetch technology breakdown', error);
+      handleTelemetryError('Technology', error);
       return { browsers: [], operatingSystems: [], deviceCategories: [] };
     }
   });
@@ -792,7 +853,7 @@ export async function getAnalyticsRealtime(forceDemo = false): Promise<Analytics
         isDemoData: false,
       };
     } catch (error) {
-      console.warn('[GA4 Realtime Warning]: Real-time report issue, returning 0 active users', error);
+      handleTelemetryError('Realtime', error);
       return {
         activeUsers: 0,
         topCountries: [],
