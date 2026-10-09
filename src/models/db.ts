@@ -14,7 +14,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function getCleanConnectionString(): string {
-  let raw = process.env.DATABASE_URL?.trim();
+  let raw = (process.env.DATABASE_URL || process.env.DIRECT_URL)?.trim();
 
   if (!raw) {
     if (process.env.NODE_ENV === 'test') {
