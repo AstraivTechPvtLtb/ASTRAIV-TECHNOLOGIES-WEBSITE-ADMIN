@@ -6,9 +6,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { AdminEnquiry, EnquiryStatus } from '@/models/types';
-import { updateEnquiryStatus, deleteEnquiry } from '@/controllers/enquiries.controller';
+import { updateEnquiryStatus, deleteEnquiry, getEnquiries } from '@/controllers/enquiries.controller';
+import { enquiryPoller } from '@/lib/enquiry-poller';
 import { Search, Trash2, Mail, Phone, Building, Eye, X, ExternalLink, FileText, BellRing, Sparkles } from 'lucide-react';
 import { Button } from '@/views/ui/button';
 import { Input } from '@/views/ui/input';
@@ -48,7 +48,7 @@ export function EnquiriesTable({ initialData }: EnquiriesTableProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedEnquiry, setSelectedEnquiry] = useState<AdminEnquiry | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [isSyncActive, setIsSyncActive] = useState(enquiryPoller.isSyncActive());
   const [newEnquiryIds, setNewEnquiryIds] = useState<Set<string>>(new Set());
   const [realtimeNotification, setRealtimeNotification] = useState<{
     id: string;
@@ -59,62 +59,52 @@ export function EnquiriesTable({ initialData }: EnquiriesTableProps) {
     enquiry: AdminEnquiry;
   } | null>(null);
 
-  // Real-Time Socket.IO Listener for instant inquiry notifications
+  // Authenticated enquiry polling listener for instant live notifications
   useEffect(() => {
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4001';
-    let socket: Socket | null = null;
+    const unsubStatus = enquiryPoller.subscribeStatus((active) => {
+      setIsSyncActive(active);
+    });
 
-    try {
-      socket = io(socketUrl, {
-        transports: ['websocket', 'polling'],
-        reconnectionAttempts: 25,
-        reconnectionDelay: 2000,
+    const unsubscribe = enquiryPoller.subscribe(async (event) => {
+      if (!event.newEnquiries || event.newEnquiries.length === 0) return;
+
+      // 1. Play auditory chime
+      playNotificationTone();
+
+      // 2. Track new arrivals for row badge
+      setNewEnquiryIds((prev) => {
+        const next = new Set(prev);
+        for (const item of event.newEnquiries) {
+          next.add(item.id);
+        }
+        return next;
       });
 
-      socket.on('connect', () => {
-        console.log('[Socket.IO Enquiries Table] Connected to socket hub:', socket?.id);
-        setIsSocketConnected(true);
-      });
-
-      socket.on('disconnect', () => {
-        console.log('[Socket.IO Enquiries Table] Disconnected from socket hub');
-        setIsSocketConnected(false);
-      });
-
-      socket.on('new_enquiry', (newEnquiry: AdminEnquiry) => {
-        if (!newEnquiry || !newEnquiry.id) return;
-        console.log('[Socket.IO Enquiries Table] Real-time enquiry received:', newEnquiry);
-
-        // 1. Play auditory chime
-        playNotificationTone();
-
-        // 2. Track as new arrival for row badge
-        setNewEnquiryIds((prev) => new Set(prev).add(newEnquiry.id));
-
-        // 3. Prepend to table, preventing duplicate keys
-        setData((prev) => {
-          if (prev.some((item) => item.id === newEnquiry.id)) return prev;
-          return [newEnquiry, ...prev];
-        });
-
-        // 4. Trigger alert notification banner
-        setRealtimeNotification({
-          id: newEnquiry.id,
-          name: newEnquiry.name,
-          email: newEnquiry.email,
-          service: newEnquiry.service,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          enquiry: newEnquiry,
-        });
-      });
-    } catch (err) {
-      console.warn('[Socket.IO Setup Error]:', err);
-    }
+      // 3. Fetch latest enquiries to refresh table and display banner
+      try {
+        const refreshed = await getEnquiries({ limit: 100 });
+        if (refreshed.data && refreshed.data.length > 0) {
+          setData(refreshed.data);
+          const latestItem = refreshed.data.find((d) => d.id === event.newEnquiries[0].id) || refreshed.data[0];
+          if (latestItem) {
+            setRealtimeNotification({
+              id: latestItem.id,
+              name: latestItem.name,
+              email: latestItem.email,
+              service: latestItem.service,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+              enquiry: latestItem,
+            });
+          }
+        }
+      } catch (refreshErr) {
+        console.warn('[Enquiries Table Refresh Notice]:', refreshErr);
+      }
+    });
 
     return () => {
-      if (socket) {
-        socket.disconnect();
-      }
+      unsubStatus();
+      unsubscribe();
     };
   }, []);
 
@@ -167,7 +157,7 @@ export function EnquiriesTable({ initialData }: EnquiriesTableProps) {
 
   return (
     <div className="space-y-6">
-      {/* Real-Time Socket.IO Alert Banner */}
+      {/* Real-Time Live Sync Alert Banner */}
       {realtimeNotification && (
         <div className="p-4 sm:p-5 rounded-2xl bg-linear-to-r from-blue-950 via-slate-900 to-blue-950 border-2 border-blue-500 shadow-2xl shadow-blue-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="flex items-start sm:items-center gap-3.5">
@@ -181,7 +171,7 @@ export function EnquiriesTable({ initialData }: EnquiriesTableProps) {
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/40 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  Via Socket.IO
+                  Live Sync Alert
                 </span>
                 <span className="text-[11px] text-slate-400 font-mono">
                   {realtimeNotification.timestamp}
@@ -231,11 +221,11 @@ export function EnquiriesTable({ initialData }: EnquiriesTableProps) {
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-          {/* Socket.IO Connection Status */}
+          {/* Live Sync Connection Status */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] font-bold">
-            <span className={cn('h-2 w-2 rounded-full', isSocketConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400')} />
-            <span className={isSocketConnected ? 'text-emerald-400' : 'text-amber-400'}>
-              {isSocketConnected ? 'Socket.IO Live' : 'Connecting...'}
+            <span className={cn('h-2 w-2 rounded-full', isSyncActive ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400')} />
+            <span className={isSyncActive ? 'text-emerald-400' : 'text-amber-400'}>
+              {isSyncActive ? 'Live Sync Active' : 'Connecting...'}
             </span>
           </div>
 

@@ -176,3 +176,120 @@ export async function deleteEnquiry(id: string): Promise<AdminActionResponse> {
     return { success: false, error: 'Failed to delete enquiry' };
   }
 }
+
+export interface EnquiryNotificationItem {
+  id: string;
+  service: string;
+  createdAt: string;
+}
+
+export interface PollEnquiriesResponse {
+  hasNew: boolean;
+  count: number;
+  latestTimestamp: string | null;
+  newEnquiries: EnquiryNotificationItem[];
+  error?: string;
+}
+
+/**
+ * Lightweight, admin-authenticated enquiry polling action.
+ * Returns only non-sensitive event identifiers, service labels, and timestamps.
+ * Raw PII (names, emails, phone numbers, messages) is never exposed.
+ */
+export async function pollNewEnquiries(
+  since?: string
+): Promise<PollEnquiriesResponse> {
+  try {
+    await requireAdminUser();
+
+    let sinceDate: Date;
+    if (since && !isNaN(new Date(since).getTime())) {
+      sinceDate = new Date(since);
+    } else {
+      sinceDate = new Date();
+    }
+
+    // 1. Primary PostgreSQL Engine via Prisma ORM
+    try {
+      const where: Prisma.ContactSubmissionWhereInput = {
+        createdAt: { gt: sinceDate },
+      };
+
+      const [count, records] = await Promise.all([
+        db.contactSubmission.count({ where }),
+        db.contactSubmission.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          select: {
+            id: true,
+            service: true,
+            createdAt: true,
+          },
+        }),
+      ]);
+
+      const newEnquiries: EnquiryNotificationItem[] = records.map((r) => ({
+        id: r.id,
+        service: r.service,
+        createdAt: r.createdAt.toISOString(),
+      }));
+
+      const latestTimestamp = records.length > 0 ? records[0].createdAt.toISOString() : null;
+
+      return {
+        hasNew: count > 0,
+        count,
+        latestTimestamp,
+        newEnquiries,
+      };
+    } catch (prismaErr) {
+      console.warn('[Poll Enquiries Prisma Notice - Falling back]:', (prismaErr as Error)?.message || prismaErr);
+    }
+
+    // 2. Supabase Cloud Fallback
+    if (isSupabaseConfigured()) {
+      const supabase = await createSupabaseClient();
+      const { data, count, error } = await supabase
+        .from('contact_submissions')
+        .select('id, service, created_at', { count: 'exact' })
+        .gt('created_at', sinceDate.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      const records = data || [];
+      const newEnquiries: EnquiryNotificationItem[] = records.map((r) => ({
+        id: r.id,
+        service: r.service || 'General Inquiry',
+        createdAt: r.created_at,
+      }));
+
+      const latestTimestamp = records.length > 0 ? records[0].created_at : null;
+
+      return {
+        hasNew: (count || 0) > 0,
+        count: count || 0,
+        latestTimestamp,
+        newEnquiries,
+      };
+    }
+
+    return {
+      hasNew: false,
+      count: 0,
+      latestTimestamp: null,
+      newEnquiries: [],
+    };
+  } catch (error) {
+    console.error('[Poll Enquiries Controller Error]:', (error as Error)?.message || error);
+    return {
+      hasNew: false,
+      count: 0,
+      latestTimestamp: null,
+      newEnquiries: [],
+      error: 'Failed to poll enquiries',
+    };
+  }
+}

@@ -6,11 +6,11 @@
  */
 
 import { useState, useEffect } from 'react';
-import { io } from 'socket.io-client';
 import Link from 'next/link';
 import { ShieldCheck, Database, Bell, BellRing, X, ArrowRight } from 'lucide-react';
 import { Badge } from '@/views/ui/badge';
 import { Button } from '@/views/ui/button';
+import { enquiryPoller } from '@/lib/enquiry-poller';
 
 interface AdminHeaderProps {
   title: string;
@@ -21,38 +21,24 @@ interface AdminHeaderProps {
 export function AdminHeader({ title, subtitle, badge }: AdminHeaderProps) {
   const [headerAlert, setHeaderAlert] = useState<{
     id: string;
-    name: string;
     service: string;
-    email: string;
   } | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4001';
-    try {
-      const socket = io(socketUrl, {
-        transports: ['websocket', 'polling'],
-        reconnectionAttempts: 15,
-        reconnectionDelay: 2000,
+    const unsubscribe = enquiryPoller.subscribe((event) => {
+      if (!event.newEnquiries || event.newEnquiries.length === 0) return;
+      setUnreadCount((c) => c + event.newEnquiries.length);
+      const latest = event.newEnquiries[0];
+      setHeaderAlert({
+        id: latest.id,
+        service: latest.service,
       });
+    });
 
-      socket.on('new_enquiry', (data: { id: string; name: string; service: string; email: string }) => {
-        if (!data || !data.id) return;
-        setUnreadCount((c) => c + 1);
-        setHeaderAlert({
-          id: data.id,
-          name: data.name,
-          service: data.service,
-          email: data.email,
-        });
-      });
-
-      return () => {
-        socket.disconnect();
-      };
-    } catch {
-      // Non-blocking
-    }
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   return (
@@ -115,7 +101,7 @@ export function AdminHeader({ title, subtitle, badge }: AdminHeaderProps) {
               <div className="text-xs">
                 <span className="font-bold text-white block">New Live Enquiry</span>
                 <p className="text-slate-300 mt-0.5">
-                  <strong className="text-white">{headerAlert.name}</strong> •{' '}
+                  <strong className="text-white">New Submission</strong> •{' '}
                   <span className="text-blue-400 font-semibold">{headerAlert.service}</span>
                 </p>
               </div>
