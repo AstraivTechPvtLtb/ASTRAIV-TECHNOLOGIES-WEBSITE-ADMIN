@@ -10,6 +10,8 @@
 import { pool } from '@/models/db';
 import { revalidatePath } from 'next/cache';
 import { requireAdminUser } from './auth.controller';
+import { hashPassword } from 'better-auth/crypto';
+import { randomInt } from 'crypto';
 import {
   AdminLead,
   LeadLifecycleStatus,
@@ -102,7 +104,7 @@ export async function getLeads({
       assigned_user_name: null,
       notes: r.notes,
       portal_approved: Boolean(r.portal_approved),
-      portal_password: r.portal_password,
+      portal_password: r.portal_password ? (r.portal_password.includes(':') && r.portal_password.length === 161 ? '[SCRYPT_HASHED]' : '[CONFIGURED]') : null,
       approved_at: r.approved_at ? new Date(r.approved_at).toISOString() : null,
       first_login_expires_at: r.first_login_expires_at ? new Date(r.first_login_expires_at).toISOString() : null,
       has_logged_in: Boolean(r.has_logged_in),
@@ -162,8 +164,9 @@ export async function approveLeadPortalAccess(
   try {
     await requireAdminUser();
 
-    // Generate readable, secure password if none provided
-    const password = customPassword?.trim() || `Pass${Math.floor(100000 + Math.random() * 900000)}`;
+    // Generate readable, cryptographically secure temporary password if none provided
+    const password = customPassword?.trim() || `Pass${randomInt(100000, 1000000)}`;
+    const scryptHash = await hashPassword(password);
 
     const res = await pool.query(
       `UPDATE crm_lead 
@@ -176,8 +179,8 @@ export async function approveLeadPortalAccess(
            status = CASE WHEN status = 'NEW' THEN 'QUALIFIED' ELSE status END,
            "updatedAt" = NOW()
        WHERE id = $2
-       RETURNING id, lead_number, name, email, portal_password, first_login_expires_at`,
-      [password, leadId]
+       RETURNING id, lead_number, name, email, first_login_expires_at`,
+      [scryptHash, leadId]
     );
 
     if (res.rows.length === 0) {
@@ -240,6 +243,62 @@ export async function revokeLeadPortalAccess(leadId: string): Promise<AdminActio
   } catch (error) {
     console.error('[Revoke Lead Portal Error]:', (error as Error)?.message || error);
     return { success: false, error: 'Failed to revoke portal access' };
+  }
+}
+
+/**
+ * Resets a client portal password: generates a new temporary password,
+ * securely hashes it with scrypt, resets first login state, and opens a 24-hour initial login window.
+ */
+export async function resetLeadPortalPassword(
+  leadId: string,
+  customPassword?: string
+): Promise<AdminActionResponse<{
+  leadNumber: string;
+  email: string;
+  temporaryPassword: string;
+  expiresAt: string;
+}>> {
+  try {
+    await requireAdminUser();
+
+    const temporaryPassword = customPassword?.trim() || `Pass${randomInt(100000, 1000000)}`;
+    const scryptHash = await hashPassword(temporaryPassword);
+
+    const res = await pool.query(
+      `UPDATE crm_lead 
+       SET portal_password = $1,
+           first_login_expires_at = NOW() + INTERVAL '24 hours',
+           has_logged_in = FALSE,
+           "updatedAt" = NOW()
+       WHERE id = $2
+       RETURNING id, lead_number, name, email, first_login_expires_at`,
+      [scryptHash, leadId]
+    );
+
+    if (res.rows.length === 0) {
+      return { success: false, error: 'Lead not found.' };
+    }
+
+    const lead = res.rows[0];
+    const expiresAt = new Date(lead.first_login_expires_at).toISOString();
+
+    revalidatePath('/leads');
+    revalidatePath('/dashboard');
+
+    return {
+      success: true,
+      message: `Password reset successfully for ${lead.lead_number}. Temporary password valid for 24 hours.`,
+      data: {
+        leadNumber: lead.lead_number,
+        email: lead.email,
+        temporaryPassword,
+        expiresAt,
+      },
+    };
+  } catch (error) {
+    console.error('[Reset Lead Portal Password Error]:', (error as Error)?.message || error);
+    return { success: false, error: 'Failed to reset client portal password' };
   }
 }
 

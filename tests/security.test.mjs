@@ -111,4 +111,33 @@ describe('Admin Security Remediation Verification Suite', () => {
       assert.equal(isInvalid, false, 'Non-matching buffer should fail validation');
     });
   });
+
+  describe('5. Client Portal Password Security & Remediation', () => {
+    it('verifies leads.controller.ts uses hashPassword and does NOT store plaintext passwords', () => {
+      const leadsCtrl = path.resolve(cwd, 'src/controllers/leads.controller.ts');
+      const content = fs.readFileSync(leadsCtrl, 'utf8');
+
+      assert.ok(content.includes("import { hashPassword } from 'better-auth/crypto'"), 'Must import hashPassword');
+      assert.ok(content.includes('await hashPassword(password)'), 'approveLeadPortalAccess must hash password with scrypt');
+      assert.ok(content.includes('await hashPassword(temporaryPassword)'), 'resetLeadPortalPassword must hash password with scrypt');
+      assert.ok(content.includes('resetLeadPortalPassword'), 'Must export resetLeadPortalPassword action');
+    });
+
+    it('verifies getLeads sanitizes portal_password from API responses', () => {
+      const leadsCtrl = path.resolve(cwd, 'src/controllers/leads.controller.ts');
+      const content = fs.readFileSync(leadsCtrl, 'utf8');
+
+      assert.ok(content.includes('[SCRYPT_HASHED]'), 'getLeads must mask or categorize portal_password');
+      assert.ok(!content.includes('portal_password: r.portal_password,'), 'Must not pass raw portal_password from db to API response');
+    });
+
+    it('verifies leads-table.tsx has eliminated plaintext password reveal functionality', () => {
+      const tablePath = path.resolve(cwd, 'src/views/tables/leads-table.tsx');
+      const content = fs.readFileSync(tablePath, 'utf8');
+
+      assert.ok(!content.includes("showPassword ? (selectedLead.portal_password || 'Not set')"), 'Must not expose plaintext password on reveal');
+      assert.ok(content.includes('Secure (scrypt hash)'), 'Must show secure scrypt hash status badge');
+      assert.ok(content.includes('handleResetPassword'), 'Must provide password reset workflow');
+    });
+  });
 });

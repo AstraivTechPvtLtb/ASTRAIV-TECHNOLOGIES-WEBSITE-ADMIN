@@ -9,6 +9,7 @@ import { db } from '@/models/db';
 import { AdminUserSession, AdminActionResponse, DEFAULT_ADMIN_EMAIL } from '@/models/types';
 import { cookies } from 'next/headers';
 import { verifyPassword, hashPassword } from 'better-auth/crypto';
+import { randomBytes } from 'crypto';
 import {
   generateAuthTokens,
   verifyAccessToken,
@@ -520,10 +521,7 @@ export async function verifyAdminForgotPasswordOtp(
       return { success: false, error: verification.error || 'Invalid or expired OTP code.' };
     }
 
-    const resetToken =
-      Math.random().toString(36).substring(2) +
-      Date.now().toString(36) +
-      Math.random().toString(36).substring(2);
+    const resetToken = randomBytes(32).toString('hex');
 
     resetAuthTokens.set(cleanEmail, {
       token: resetToken,

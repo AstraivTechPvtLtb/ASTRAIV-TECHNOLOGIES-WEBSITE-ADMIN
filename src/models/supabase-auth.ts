@@ -163,7 +163,27 @@ export async function verifySupabaseAuthOtp(
 
   // Brute-force rate limiting: check if email is currently locked out
   const now = Date.now();
-  const attemptInfo = otpAttemptTracker.get(cleanEmail);
+  let attemptInfo = otpAttemptTracker.get(cleanEmail);
+  const rateLimitKey = `ratelimit_otp_${cleanEmail}`;
+
+  // Query shared verification table to synchronize rate limiting across distributed Vercel serverless lambdas
+  try {
+    const dbRateLimit = await db.verification.findUnique({
+      where: { id: rateLimitKey },
+    });
+    if (dbRateLimit && dbRateLimit.value) {
+      const parsed = JSON.parse(dbRateLimit.value);
+      if (parsed && typeof parsed.attempts === 'number') {
+        attemptInfo = {
+          attempts: Math.max(attemptInfo?.attempts || 0, parsed.attempts),
+          lockedUntil: Math.max(attemptInfo?.lockedUntil || 0, parsed.lockedUntil || 0),
+        };
+      }
+    }
+  } catch {
+    // Non-blocking fallback to local in-memory
+  }
+
   if (attemptInfo && attemptInfo.lockedUntil > now) {
     const remainingMinutes = Math.ceil((attemptInfo.lockedUntil - now) / 60000);
     return {
@@ -201,6 +221,7 @@ export async function verifySupabaseAuthOtp(
       if (!error && data?.user) {
         localOtpStore.delete(cleanEmail);
         otpAttemptTracker.delete(cleanEmail);
+        db.verification.delete({ where: { id: rateLimitKey } }).catch(() => {});
         return { success: true };
       }
     } catch {
@@ -214,6 +235,7 @@ export async function verifySupabaseAuthOtp(
     if (cached.otp === cleanToken) {
       localOtpStore.delete(cleanEmail);
       otpAttemptTracker.delete(cleanEmail);
+      db.verification.delete({ where: { id: rateLimitKey } }).catch(() => {});
       return { success: true };
     }
   }
@@ -230,6 +252,7 @@ export async function verifySupabaseAuthOtp(
       }).catch(() => {});
       localOtpStore.delete(cleanEmail);
       otpAttemptTracker.delete(cleanEmail);
+      db.verification.delete({ where: { id: rateLimitKey } }).catch(() => {});
       return { success: true };
     }
   } catch {
@@ -238,21 +261,41 @@ export async function verifySupabaseAuthOtp(
 
   // Record failed attempt and apply lockout if threshold reached
   const newAttempts = (attemptInfo?.attempts || 0) + 1;
-  if (newAttempts >= 5) {
-    otpAttemptTracker.set(cleanEmail, {
-      attempts: newAttempts,
-      lockedUntil: now + 15 * 60 * 1000,
-    });
+  const isLocked = newAttempts >= 5;
+  const lockUntilTime = isLocked ? now + 15 * 60 * 1000 : 0;
+
+  otpAttemptTracker.set(cleanEmail, {
+    attempts: newAttempts,
+    lockedUntil: lockUntilTime,
+  });
+
+  // Synchronize rate-limit state across distributed serverless lambdas via db.verification
+  try {
+    await db.verification.upsert({
+      where: { id: rateLimitKey },
+      update: {
+        value: JSON.stringify({ attempts: newAttempts, lockedUntil: lockUntilTime }),
+        expiresAt: new Date(now + 15 * 60 * 1000),
+        updatedAt: new Date(),
+      },
+      create: {
+        id: rateLimitKey,
+        identifier: cleanEmail,
+        value: JSON.stringify({ attempts: newAttempts, lockedUntil: lockUntilTime }),
+        expiresAt: new Date(now + 15 * 60 * 1000),
+        createdAt: new Date(),
+      },
+    }).catch(() => {});
+  } catch {
+    // Non-blocking
+  }
+
+  if (isLocked) {
     return {
       success: false,
       error: 'Too many failed verification attempts. Account locked for 15 minutes. Please try again later.',
     };
   }
-
-  otpAttemptTracker.set(cleanEmail, {
-    attempts: newAttempts,
-    lockedUntil: 0,
-  });
 
   const remainingAttempts = 5 - newAttempts;
   return {

@@ -16,6 +16,7 @@ import {
   approveLeadPortalAccess,
   revokeLeadPortalAccess,
   resetLeadLoginWindow,
+  resetLeadPortalPassword,
 } from '@/controllers/leads.controller';
 import {
   Search,
@@ -72,6 +73,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
   const [showPassword, setShowPassword] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [portalActionMsg, setPortalActionMsg] = useState<string | null>(null);
+  const [tempGeneratedPassword, setTempGeneratedPassword] = useState<string | null>(null);
 
   // Derive unique source pages from current data if not provided
   const sourcePages =
@@ -100,7 +102,8 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
   const handleOpenLead = (lead: AdminLead) => {
     setSelectedLead(lead);
     setNotesEdit(lead.notes || '');
-    setCustomPasswordInput(lead.portal_password || '');
+    setCustomPasswordInput('');
+    setTempGeneratedPassword(null);
     setPortalActionMsg(null);
   };
 
@@ -133,6 +136,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
     try {
       const res = await approveLeadPortalAccess(leadId, customPasswordInput);
       if (res.success && res.data) {
+        setTempGeneratedPassword(res.data.password);
         setPortalActionMsg(`Approved! Credentials dispatched to client: ${res.data.leadNumber} (${res.data.email})`);
         setData((prev) =>
           prev.map((item) =>
@@ -140,7 +144,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
               ? {
                   ...item,
                   portal_approved: true,
-                  portal_password: res.data!.password,
+                  portal_password: '[SCRYPT_HASHED]',
                   first_login_expires_at: res.data!.expiresAt,
                   has_logged_in: false,
                 }
@@ -153,7 +157,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
               ? {
                   ...prev,
                   portal_approved: true,
-                  portal_password: res.data!.password,
+                  portal_password: '[SCRYPT_HASHED]',
                   first_login_expires_at: res.data!.expiresAt,
                   has_logged_in: false,
                 }
@@ -162,6 +166,45 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
         }
       } else {
         setPortalActionMsg(res.error || 'Failed to approve portal access.');
+      }
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleResetPassword = async (leadId: string) => {
+    if (!confirm('Are you sure you want to generate a new temporary password for this client? Their previous password will be invalidated and a fresh 24-hour login window will begin.')) return;
+    setIsUpdating(true);
+    setPortalActionMsg(null);
+    try {
+      const res = await resetLeadPortalPassword(leadId);
+      if (res.success && res.data) {
+        setTempGeneratedPassword(res.data.temporaryPassword);
+        setPortalActionMsg(`Temporary password generated for ${res.data.leadNumber}. Valid for 24 hours.`);
+        setData((prev) =>
+          prev.map((item) =>
+            item.id === leadId
+              ? {
+                  ...item,
+                  first_login_expires_at: res.data!.expiresAt,
+                  has_logged_in: false,
+                }
+              : item
+          )
+        );
+        if (selectedLead && selectedLead.id === leadId) {
+          setSelectedLead((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  first_login_expires_at: res.data!.expiresAt,
+                  has_logged_in: false,
+                }
+              : null
+          );
+        }
+      } else {
+        setPortalActionMsg(res.error || 'Failed to reset password.');
       }
     } finally {
       setIsUpdating(false);
@@ -629,34 +672,54 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                       </div>
                     </div>
 
-                    {/* Portal Password */}
+                    {/* Portal Password Security Status */}
                     <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[10px] font-bold text-slate-400 uppercase">
-                          Portal Password
+                          Password Security
                         </span>
                         <button
                           type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="text-[10px] text-blue-400 hover:underline"
+                          onClick={() => handleResetPassword(selectedLead.id)}
+                          disabled={isUpdating}
+                          className="text-[10px] text-blue-400 hover:underline flex items-center gap-1"
                         >
-                          {showPassword ? 'Hide' : 'Reveal'}
+                          <RotateCcw className="h-2.5 w-2.5" />
+                          Reset Password
                         </button>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-slate-200">
-                          {showPassword ? (selectedLead.portal_password || 'Not set') : '••••••••••••'}
+                        <span className="font-mono text-xs text-slate-200 flex items-center gap-1.5">
+                          <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                          <span>Secure (scrypt hash)</span>
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => handleCopy(selectedLead.portal_password || '', 'pwd')}
-                          className="text-slate-400 hover:text-white"
-                        >
-                          {copiedKey === 'pwd' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                        </button>
+                        <span className="text-[10px] text-slate-500 font-mono">one-way</span>
                       </div>
                     </div>
                   </div>
+
+                  {/* Temporary Password Display Banner (Shown Once Upon Approval or Reset) */}
+                  {tempGeneratedPassword && (
+                    <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex items-center justify-between gap-2 text-xs">
+                      <div>
+                        <span className="text-[10px] font-bold text-emerald-400 uppercase block">
+                          New Temporary Password (Dispatched Once)
+                        </span>
+                        <span className="font-mono font-bold text-emerald-200 text-sm">
+                          {tempGeneratedPassword}
+                        </span>
+                      </div>
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        onClick={() => handleCopy(tempGeneratedPassword, 'tempPwd')}
+                        className="border-emerald-600 text-emerald-300 hover:text-white"
+                      >
+                        {copiedKey === 'tempPwd' ? <Check className="h-3.5 w-3.5 text-emerald-400 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
+                        Copy Password
+                      </Button>
+                    </div>
+                  )}
 
                   {/* 24-Hour Expiration Telemetry */}
                   <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
