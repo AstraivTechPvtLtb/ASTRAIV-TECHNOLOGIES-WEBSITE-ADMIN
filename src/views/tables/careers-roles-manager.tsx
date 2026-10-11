@@ -5,7 +5,8 @@
  * @description [VIEW] Comprehensive 5-Tab management dashboard for Astraiv Careers & Roles.
  */
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef } from 'react';
+import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   AdminJobOpening,
@@ -28,6 +29,8 @@ import {
   toggleJobOpeningStatus,
   updateApplicationStatus,
 } from '@/controllers/recruitment.controller';
+import { registerMediaAsset, sanitizeSvgContent } from '@/controllers/media.controller';
+import { MEDIA_SLOT_SPECS, MediaAssetItem } from '@/lib/media-specs';
 import {
   Briefcase,
   Layers,
@@ -69,6 +72,9 @@ import {
   Lock,
   Rocket,
   Building2,
+  Image as ImageIcon,
+  FolderOpen,
+  UserCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/views/ui/button';
@@ -109,6 +115,7 @@ interface CareersRolesManagerProps {
   initialCategories: JobCategory[];
   initialOpenings: AdminJobOpening[];
   initialApplications: AdminJobApplication[];
+  mediaAssets?: MediaAssetItem[];
 }
 
 export function CareersRolesManager({
@@ -117,11 +124,20 @@ export function CareersRolesManager({
   initialCategories,
   initialOpenings,
   initialApplications,
+  mediaAssets = [],
 }: CareersRolesManagerProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'page-content';
+  const rawTab = searchParams.get('tab') || 'page-content';
+  const activeTab = rawTab === 'defaults' ? 'page-content' : rawTab;
   const [, startTransition] = useTransition();
+
+  const slotSpec = MEDIA_SLOT_SPECS.careers_hero || MEDIA_SLOT_SPECS.engagement_hero;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const speculativeFileInputRef = useRef<HTMLInputElement>(null);
+  const jobDetailFileInputRef = useRef<HTMLInputElement>(null);
+  const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
+  const [mediaPickerTarget, setMediaPickerTarget] = useState<'careers_hero' | 'speculative_banner' | 'job_detail_banner'>('careers_hero');
 
   const handleTabChange = (tab: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -165,36 +181,597 @@ export function CareersRolesManager({
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      showFeedback('error', 'Image size exceeds the recommended 2MB limit.');
+    if (file.size > slotSpec.maxSizeBytes) {
+      showFeedback('error', `File size exceeds the recommended limit of ${slotSpec.maxSizeLabel}. Please compress your image.`);
       return;
+    }
+
+    const isSvg = file.type.includes('svg');
+
+    if (isSvg) {
+      try {
+        const text = await file.text();
+        await sanitizeSvgContent(text);
+      } catch {
+        showFeedback('error', 'SVG validation failed. Please upload a valid, safe SVG file.');
+        return;
+      }
     }
 
     const reader = new FileReader();
     reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        setPageContent((prev) => ({
-          ...prev,
-          careersImage: {
-            ...prev.careersImage,
-            enabled: true,
-            imageUrl: reader.result as string,
+      const dataUrl = reader.result as string;
+      const img = new window.Image();
+      img.onload = async () => {
+        const sizeKb = Math.round(file.size / 1024);
+        const sizeLabel = sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(2)} MB` : `${sizeKb} KB`;
+
+        const updatedCareersImage = {
+          ...pageContent.careersImage,
+          enabled: true,
+          imageUrl: dataUrl,
+          width: img.width || 1792,
+          height: img.height || 1008,
+          sizeBytes: file.size,
+          sizeLabel: sizeLabel,
+          altText:
+            pageContent.careersImage?.altText ||
+            'Astraiv Technologies engineering team collaborating on software architecture and system design in modern tech studio',
+        };
+
+        const updatedPageContent = {
+          ...pageContent,
+          careersImage: updatedCareersImage,
+        };
+
+        setPageContent(updatedPageContent);
+        setIsSaving(true);
+
+        // Register in media library for traceability
+        try {
+          await registerMediaAsset({
+            url: dataUrl,
+            filename: file.name,
+            mimeType: file.type,
+            sizeBytes: file.size,
             width: img.width,
             height: img.height,
-            sizeBytes: file.size,
-            sizeLabel: `${(file.size / 1024).toFixed(0)} KB`,
-          },
-        }));
-        showFeedback('success', `Image loaded (${img.width}x${img.height}, ${(file.size / 1024).toFixed(0)} KB)`);
+            aspectRatio: '16:9',
+            altText: updatedCareersImage.altText,
+            slot: 'careers_hero',
+          });
+        } catch (regErr) {
+          console.warn('[MediaAsset Registration Notice]:', regErr);
+        }
+
+        // Auto-save settings to database
+        try {
+          const res = await updateCareersPageContent(updatedPageContent, sharedDefaults);
+          if (res.success) {
+            showFeedback('success', 'Uploaded new careers hero image and published to client website!');
+          } else {
+            showFeedback('error', res.error || 'Failed to save uploaded image.');
+          }
+        } catch (err) {
+          console.warn('[Auto-save Upload Error]:', err);
+          showFeedback('error', 'An error occurred while saving.');
+        } finally {
+          setIsSaving(false);
+        }
       };
-      img.src = reader.result as string;
+      img.src = dataUrl;
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleSelectMediaAsset = async (asset: MediaAssetItem) => {
+    const sizeKb = Math.round(asset.sizeBytes / 1024);
+    const sizeLabel = sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(2)} MB` : `${sizeKb} KB`;
+
+    if (mediaPickerTarget === 'job_detail_banner') {
+      const updatedJobDetailImage = {
+        ...(sharedDefaults.jobDetailImage || {}),
+        enabled: true,
+        imageUrl: asset.url,
+        width: asset.width || 1792,
+        height: asset.height || 1008,
+        sizeBytes: asset.sizeBytes,
+        sizeLabel: sizeLabel,
+        altText:
+          asset.altText ||
+          sharedDefaults.jobDetailImage?.altText ||
+          'Astraiv Technologies senior software architects and experienced full-stack engineers collaborating on cloud-native systems architecture',
+        badgeText: sharedDefaults.jobDetailImage?.badgeText || 'Elite Senior Architecture Swarm',
+        badgeSubtext: sharedDefaults.jobDetailImage?.badgeSubtext || 'High Autonomy & Systems Impact',
+      };
+      const updatedSharedDefaults = {
+        ...sharedDefaults,
+        jobDetailImage: updatedJobDetailImage,
+      };
+      setSharedDefaults(updatedSharedDefaults);
+      setIsMediaPickerOpen(false);
+      setIsSaving(true);
+
+      try {
+        const res = await updateCareersPageContent(pageContent, updatedSharedDefaults);
+        if (res.success) {
+          showFeedback('success', 'Selected experienced team banner from Media Library and published!');
+        } else {
+          showFeedback('error', res.error || 'Failed to update job detail banner from Media Library.');
+        }
+      } catch (err) {
+        showFeedback('error', (err as Error)?.message || 'Failed to update image from Media Library.');
+      } finally {
+        setIsSaving(false);
+      }
+      return;
+    }
+
+    let updatedPageContent: CareersPageContentData;
+
+    if (mediaPickerTarget === 'speculative_banner') {
+      const updatedSpeculativeImage = {
+        ...(pageContent.speculativeImage || {}),
+        enabled: true,
+        imageUrl: asset.url,
+        width: asset.width || 1792,
+        height: asset.height || 1008,
+        sizeBytes: asset.sizeBytes,
+        sizeLabel: sizeLabel,
+        altText: asset.altText || pageContent.speculativeImage?.altText || 'Astraiv Technologies engineering architects and emerging engineers collaborating',
+      };
+      updatedPageContent = {
+        ...pageContent,
+        speculativeImage: updatedSpeculativeImage,
+      };
+    } else {
+      const updatedCareersImage = {
+        ...pageContent.careersImage,
+        enabled: true,
+        imageUrl: asset.url,
+        width: asset.width || 1792,
+        height: asset.height || 1008,
+        sizeBytes: asset.sizeBytes,
+        sizeLabel: sizeLabel,
+        altText: asset.altText || pageContent.careersImage?.altText || 'Astraiv Technologies engineering architects collaborating on cloud architecture',
+      };
+      updatedPageContent = {
+        ...pageContent,
+        careersImage: updatedCareersImage,
+      };
+    }
+
+    setPageContent(updatedPageContent);
+    setIsMediaPickerOpen(false);
+    setIsSaving(true);
+
+    try {
+      const res = await updateCareersPageContent(updatedPageContent, sharedDefaults);
+      if (res.success) {
+        showFeedback('success', 'Selected image from Media Library and published to client website!');
+      } else {
+        showFeedback('error', res.error || 'Failed to update image from Media Library.');
+      }
+    } catch (err) {
+      showFeedback('error', (err as Error)?.message || 'Failed to update image from Media Library.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSpeculativeFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > slotSpec.maxSizeBytes) {
+      showFeedback('error', `File size exceeds the limit of ${slotSpec.maxSizeLabel}. Please compress your image.`);
+      return;
+    }
+
+    const isSvg = file.type.includes('svg');
+    if (isSvg) {
+      try {
+        const text = await file.text();
+        await sanitizeSvgContent(text);
+      } catch {
+        showFeedback('error', 'SVG validation failed. Please upload a valid, safe SVG file.');
+        return;
+      }
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const img = new window.Image();
+      img.onload = async () => {
+        const sizeKb = Math.round(file.size / 1024);
+        const sizeLabel = sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(2)} MB` : `${sizeKb} KB`;
+
+        const updatedSpeculativeImage = {
+          ...(pageContent.speculativeImage || {}),
+          enabled: true,
+          imageUrl: dataUrl,
+          width: img.width || 1792,
+          height: img.height || 1008,
+          sizeBytes: file.size,
+          sizeLabel: sizeLabel,
+          altText:
+            pageContent.speculativeImage?.altText ||
+            'Astraiv Technologies engineering architects and emerging engineers collaborating on software architecture',
+          badgeText: pageContent.speculativeImage?.badgeText || 'Open Engineering Swarm',
+          badgeSubtext: pageContent.speculativeImage?.badgeSubtext || 'Fresher & Experienced',
+        };
+
+        const updatedPageContent = {
+          ...pageContent,
+          speculativeImage: updatedSpeculativeImage,
+        };
+
+        setPageContent(updatedPageContent);
+        setIsSaving(true);
+
+        try {
+          await registerMediaAsset({
+            url: dataUrl,
+            filename: file.name,
+            mimeType: file.type,
+            sizeBytes: file.size,
+            width: img.width,
+            height: img.height,
+            aspectRatio: '16:9',
+            altText: updatedSpeculativeImage.altText,
+            slot: 'careers_hero',
+          });
+        } catch (regErr) {
+          console.warn('[MediaAsset Registration Notice]:', regErr);
+        }
+
+        try {
+          const res = await updateCareersPageContent(updatedPageContent, sharedDefaults);
+          if (res.success) {
+            showFeedback('success', 'Uploaded new speculative team image and published to client website!');
+          } else {
+            showFeedback('error', res.error || 'Failed to save uploaded speculative image.');
+          }
+        } catch {
+          showFeedback('error', 'An error occurred while saving.');
+        } finally {
+          setIsSaving(false);
+        }
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleToggleShowSpeculativeImage = async (checked: boolean) => {
+    const updatedSpeculativeImage = {
+      ...(pageContent.speculativeImage || {
+        imageUrl: '/images/speculative-team-banner.jpg',
+        altText: 'Astraiv Technologies engineering architects and emerging engineers collaborating on software architecture',
+      }),
+      enabled: checked,
+    };
+
+    const updatedPageContent = {
+      ...pageContent,
+      speculativeImage: updatedSpeculativeImage,
+    };
+
+    setPageContent(updatedPageContent);
+    setIsSaving(true);
+
+    try {
+      const res = await updateCareersPageContent(updatedPageContent, sharedDefaults);
+      if (res.success) {
+        showFeedback(
+          'success',
+          checked
+            ? 'Speculative application image is now visible on the client website!'
+            : 'Speculative application image is now hidden from the client website.'
+        );
+      } else {
+        setPageContent(pageContent);
+        showFeedback('error', res.error || 'Failed to update speculative image visibility.');
+      }
+    } catch (err) {
+      setPageContent(pageContent);
+      showFeedback('error', (err as Error)?.message || 'An error occurred while toggling visibility.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRemoveSpeculativeImage = async () => {
+    if (!confirm('Are you sure you want to remove the speculative page image? This will hide the image from the client website.')) {
+      return;
+    }
+
+    const updatedSpeculativeImage = {
+      ...(pageContent.speculativeImage || {}),
+      enabled: false,
+      imageUrl: '',
+      altText: pageContent.speculativeImage?.altText || 'Astraiv Technologies Emerging Engineers and Senior Architects collaborating',
+      width: undefined,
+      height: undefined,
+      sizeBytes: undefined,
+      sizeLabel: undefined,
+    };
+
+    const updatedPageContent = {
+      ...pageContent,
+      speculativeImage: updatedSpeculativeImage,
+    };
+
+    setPageContent(updatedPageContent);
+    setIsSaving(true);
+
+    try {
+      const res = await updateCareersPageContent(updatedPageContent, sharedDefaults);
+      if (res.success) {
+        showFeedback('success', 'Speculative page image removed successfully from the client website.');
+      } else {
+        showFeedback('error', res.error || 'Failed to remove speculative image.');
+      }
+    } catch (err) {
+      showFeedback('error', (err as Error)?.message || 'Failed to remove speculative image.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    if (!confirm('Are you sure you want to remove the careers page image? This will hide and remove the image container from the client website.')) {
+      return;
+    }
+
+    const updatedCareersImage = {
+      ...pageContent.careersImage,
+      enabled: false,
+      imageUrl: '',
+      width: undefined,
+      height: undefined,
+      sizeBytes: undefined,
+      sizeLabel: undefined,
+    };
+
+    const updatedPageContent = {
+      ...pageContent,
+      careersImage: updatedCareersImage,
+    };
+
+    setPageContent(updatedPageContent);
+    setIsSaving(true);
+
+    try {
+      const res = await updateCareersPageContent(updatedPageContent, sharedDefaults);
+      if (res.success) {
+        showFeedback('success', 'Careers page image removed successfully from the client website.');
+      } else {
+        showFeedback('error', res.error || 'Failed to remove image.');
+      }
+    } catch (err) {
+      showFeedback('error', (err as Error)?.message || 'Failed to remove image.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleToggleShowImage = async (checked: boolean) => {
+    const updatedCareersImage = {
+      ...pageContent.careersImage,
+      enabled: checked,
+    };
+
+    const updatedPageContent = {
+      ...pageContent,
+      careersImage: updatedCareersImage,
+    };
+
+    setPageContent(updatedPageContent);
+    setIsSaving(true);
+
+    try {
+      const res = await updateCareersPageContent(updatedPageContent, sharedDefaults);
+      if (res.success) {
+        showFeedback(
+          'success',
+          checked
+            ? 'Careers page image is now visible on the client website!'
+            : 'Careers page image is now hidden from the client website.'
+        );
+      } else {
+        // Rollback
+        setPageContent(pageContent);
+        showFeedback('error', res.error || 'Failed to update image visibility.');
+      }
+    } catch (err) {
+      setPageContent(pageContent);
+      showFeedback('error', (err as Error)?.message || 'An error occurred while toggling visibility.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveImageSettings = async () => {
+    setIsSaving(true);
+    try {
+      const res = await updateCareersPageContent(pageContent, sharedDefaults);
+      if (res.success) {
+        showFeedback('success', 'Careers page image settings saved and published successfully!');
+      } else {
+        showFeedback('error', res.error || 'Failed to save page image settings.');
+      }
+    } catch (err) {
+      showFeedback('error', (err as Error)?.message || 'An error occurred while saving.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleJobDetailFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > slotSpec.maxSizeBytes) {
+      showFeedback('error', `File size exceeds the limit of ${slotSpec.maxSizeLabel}. Please compress your image.`);
+      return;
+    }
+
+    const isSvg = file.type.includes('svg');
+    if (isSvg) {
+      try {
+        const text = await file.text();
+        await sanitizeSvgContent(text);
+      } catch {
+        showFeedback('error', 'SVG validation failed. Please upload a valid, safe SVG file.');
+        return;
+      }
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const img = new window.Image();
+      img.onload = async () => {
+        const sizeKb = Math.round(file.size / 1024);
+        const sizeLabel = sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(2)} MB` : `${sizeKb} KB`;
+
+        const updatedJobDetailImage = {
+          ...(sharedDefaults.jobDetailImage || {}),
+          enabled: true,
+          imageUrl: dataUrl,
+          width: img.width || 1792,
+          height: img.height || 1008,
+          sizeBytes: file.size,
+          sizeLabel: sizeLabel,
+          altText:
+            sharedDefaults.jobDetailImage?.altText ||
+            'Astraiv Technologies senior software architects and experienced full-stack engineers collaborating on cloud-native systems architecture',
+          badgeText: sharedDefaults.jobDetailImage?.badgeText || 'Elite Senior Architecture Swarm',
+          badgeSubtext: sharedDefaults.jobDetailImage?.badgeSubtext || 'High Autonomy & Systems Impact',
+        };
+
+        const updatedSharedDefaults = {
+          ...sharedDefaults,
+          jobDetailImage: updatedJobDetailImage,
+        };
+
+        setSharedDefaults(updatedSharedDefaults);
+        setIsSaving(true);
+
+        try {
+          await registerMediaAsset({
+            url: dataUrl,
+            filename: file.name,
+            mimeType: file.type,
+            sizeBytes: file.size,
+            width: img.width,
+            height: img.height,
+            aspectRatio: '16:9',
+            altText: updatedJobDetailImage.altText,
+            slot: 'careers_hero',
+          });
+        } catch (regErr) {
+          console.warn('[MediaAsset Registration Notice]:', regErr);
+        }
+
+        try {
+          const res = await updateCareersPageContent(pageContent, updatedSharedDefaults);
+          if (res.success) {
+            showFeedback('success', 'Uploaded new experienced engineers banner and published to all job detail pages!');
+          } else {
+            showFeedback('error', res.error || 'Failed to save uploaded banner.');
+          }
+        } catch {
+          showFeedback('error', 'An error occurred while saving.');
+        } finally {
+          setIsSaving(false);
+        }
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleToggleShowJobDetailImage = async (checked: boolean) => {
+    const updatedJobDetailImage = {
+      ...(sharedDefaults.jobDetailImage || {
+        imageUrl: '/images/experienced-engineers-banner.jpg',
+        altText: 'Astraiv Technologies senior software architects collaborating',
+      }),
+      enabled: checked,
+    };
+
+    const updatedSharedDefaults = {
+      ...sharedDefaults,
+      jobDetailImage: updatedJobDetailImage,
+    };
+
+    setSharedDefaults(updatedSharedDefaults);
+    setIsSaving(true);
+
+    try {
+      const res = await updateCareersPageContent(pageContent, updatedSharedDefaults);
+      if (res.success) {
+        showFeedback(
+          'success',
+          checked
+            ? 'Experienced team banner is now visible on all job detail pages!'
+            : 'Experienced team banner is now hidden from all job detail pages.'
+        );
+      } else {
+        setSharedDefaults(sharedDefaults);
+        showFeedback('error', res.error || 'Failed to update image visibility.');
+      }
+    } catch (err) {
+      setSharedDefaults(sharedDefaults);
+      showFeedback('error', (err as Error)?.message || 'An error occurred while toggling visibility.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRemoveJobDetailImage = async () => {
+    if (!confirm('Are you sure you want to remove the experienced team banner? This will hide the banner from all job detail pages.')) {
+      return;
+    }
+
+    const updatedJobDetailImage = {
+      ...(sharedDefaults.jobDetailImage || {}),
+      enabled: false,
+      imageUrl: '',
+      altText: sharedDefaults.jobDetailImage?.altText || 'Astraiv Technologies senior software architects collaborating',
+      width: undefined,
+      height: undefined,
+      sizeBytes: undefined,
+      sizeLabel: undefined,
+    };
+
+    const updatedSharedDefaults = {
+      ...sharedDefaults,
+      jobDetailImage: updatedJobDetailImage,
+    };
+
+    setSharedDefaults(updatedSharedDefaults);
+    setIsSaving(true);
+
+    try {
+      const res = await updateCareersPageContent(pageContent, updatedSharedDefaults);
+      if (res.success) {
+        showFeedback('success', 'Experienced team banner removed from all job detail pages.');
+      } else {
+        showFeedback('error', res.error || 'Failed to remove image.');
+      }
+    } catch (err) {
+      showFeedback('error', (err as Error)?.message || 'Failed to remove image.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // =========================================================================
@@ -629,7 +1206,7 @@ export function CareersRolesManager({
         </div>
       )}
 
-      {/* 5-Tab Navigation Bar */}
+      {/* 4-Tab Navigation Bar */}
       <div className="flex items-center justify-between p-2 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-lg overflow-x-auto">
         <div className="flex items-center gap-1.5 min-w-max">
           <button
@@ -698,20 +1275,6 @@ export function CareersRolesManager({
               </span>
             )}
           </button>
-
-          <button
-            type="button"
-            onClick={() => handleTabChange('defaults')}
-            className={cn(
-              'px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer',
-              activeTab === 'defaults'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
-            )}
-          >
-            <Sliders className="h-3.5 w-3.5" />
-            <span>5. Shared Defaults</span>
-          </button>
         </div>
 
         <a
@@ -738,8 +1301,15 @@ export function CareersRolesManager({
                   <Layers className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Careers Landing Hero Section</h3>
-                  <p className="text-xs text-slate-400">Main headline, subtitle, and badge on /careers</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-white">Master Careers & Speculative Hero Section</h3>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                      Syncs /careers & /contact?type=speculative
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Primary headline and subtitle shared across both the Careers Portal and Speculative Recruitment views.
+                  </p>
                 </div>
               </div>
             </div>
@@ -869,98 +1439,209 @@ export function CareersRolesManager({
             </div>
           </div>
 
-          {/* Careers Image Slot (Optional, between culture and benefits) */}
-          <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                  <UploadCloud className="h-4 w-4" />
+          {/* Careers & Roles Page Image Card */}
+          <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-blue-600/10 border border-blue-500/20 text-blue-400">
+                    <ImageIcon className="h-4 w-4" />
+                  </span>
+                  <h3 className="text-base font-bold text-white tracking-tight">
+                    Careers & Roles Page Image
+                  </h3>
+                  <span
+                    className={cn(
+                      'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border',
+                      pageContent.careersImage?.enabled && pageContent.careersImage?.imageUrl
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                        : 'bg-slate-800 text-slate-400 border-slate-700'
+                    )}
+                  >
+                    {pageContent.careersImage?.enabled && pageContent.careersImage?.imageUrl
+                      ? 'Visible on Website'
+                      : 'Hidden'}
+                  </span>
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">Careers Landing Feature Image Slot</h3>
-                  <p className="text-xs text-slate-400">
-                    Optional 16:9 hero image (1600x900 recommended, max 2MB). No gap left when disabled.
-                  </p>
-                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  Admin-managed hero illustration rendered between the culture pillars and benefits section on the client website.
+                </p>
               </div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={pageContent.careersImage.enabled}
-                  onChange={(e) =>
-                    setPageContent({
-                      ...pageContent,
-                      careersImage: { ...pageContent.careersImage, enabled: e.target.checked },
-                    })
-                  }
-                  className="w-4 h-4 rounded bg-slate-950 border-slate-700 text-blue-600"
-                />
-                <span className="text-xs font-bold text-slate-200">Enable Feature Image</span>
-              </label>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  size="sm"
+                  onClick={handleSaveImageSettings}
+                  disabled={isSaving}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-md shadow-blue-600/20 cursor-pointer h-9 px-4"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-1" /> Saving...
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="h-4 w-4" /> Save Page Image Settings
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
 
-            {pageContent.careersImage.enabled && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                <div className="space-y-4">
-                  <div className="border-2 border-dashed border-slate-800 rounded-xl p-6 text-center hover:border-blue-500 transition-colors relative">
-                    <input
-                      type="file"
-                      accept="image/webp,image/jpeg,image/png"
-                      onChange={handleImageUpload}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    />
-                    <UploadCloud className="h-8 w-8 text-blue-400 mx-auto mb-2" />
-                    <p className="text-xs font-bold text-slate-200">
-                      Click or drag to upload WebP, JPEG, or PNG
-                    </p>
-                    <p className="text-[11px] text-slate-500 mt-1">
-                      Recommended: 1600x900 (16:9), under 2 MB limit
-                    </p>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Alt Text (Accessibility & SEO)</label>
-                    <Input
-                      type="text"
-                      value={pageContent.careersImage.altText}
-                      onChange={(e) =>
-                        setPageContent({
-                          ...pageContent,
-                          careersImage: { ...pageContent.careersImage, altText: e.target.value },
-                        })
-                      }
-                      placeholder="e.g. Astraiv engineering architects collaborating on cloud architecture"
-                      className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
-                    />
-                  </div>
-
-                  {pageContent.careersImage.sizeBytes ? (
-                    <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-400 flex items-center justify-between font-mono">
-                      <span>Dimensions: {pageContent.careersImage.width}x{pageContent.careersImage.height}px</span>
-                      <span>Size: {pageContent.careersImage.sizeLabel}</span>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Image Preview Box */}
+              <div className="lg:col-span-6 space-y-3">
+                <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70 aspect-16/9 flex items-center justify-center group shadow-inner">
+                  {pageContent.careersImage?.imageUrl ? (
+                    <>
+                      <Image
+                        src={pageContent.careersImage.imageUrl}
+                        alt={pageContent.careersImage.altText || 'Careers & Roles Hero Image'}
+                        fill
+                        className={cn(
+                          'object-cover transition-opacity duration-300',
+                          !pageContent.careersImage.enabled && 'opacity-40 grayscale'
+                        )}
+                        unoptimized
+                      />
+                      {!pageContent.careersImage.enabled && (
+                        <div className="absolute inset-0 bg-slate-950/60 flex items-center justify-center">
+                          <span className="px-3 py-1.5 rounded-full bg-slate-900/90 border border-slate-700 text-slate-300 text-xs font-bold flex items-center gap-1.5 shadow-lg">
+                            <EyeOff className="h-3.5 w-3.5 text-amber-400" /> Image is Currently Hidden
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-slate-500">
+                      <ImageIcon className="h-10 w-10 text-slate-600 stroke-1" />
+                      <p className="text-xs font-semibold">No Image Selected</p>
+                      <p className="text-[11px] text-slate-600 max-w-xs">
+                        Upload an image or choose an existing asset from the Media Library.
+                      </p>
                     </div>
-                  ) : null}
+                  )}
                 </div>
 
-                {pageContent.careersImage.imageUrl ? (
-                  <div className="space-y-2">
-                    <span className="text-xs font-bold text-slate-400">Image Preview:</span>
-                    <div className="aspect-video w-full rounded-xl overflow-hidden border border-slate-800 bg-slate-950 relative">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={pageContent.careersImage.imageUrl}
-                        alt={pageContent.careersImage.altText}
-                        className="w-full h-full object-cover"
-                      />
+                {/* Actual Asset Metrics Bar */}
+                {pageContent.careersImage?.imageUrl && (
+                  <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                    <div className="flex items-center gap-3">
+                      <span>
+                        Dimensions:{' '}
+                        <strong className="text-slate-200 font-mono">
+                          {pageContent.careersImage.width || 1792} × {pageContent.careersImage.height || 1008} px
+                        </strong>
+                      </span>
+                      <span>
+                        Size:{' '}
+                        <strong className="text-slate-200 font-mono">
+                          {pageContent.careersImage.sizeLabel || '820 KB'}
+                        </strong>
+                      </span>
                     </div>
-                  </div>
-                ) : (
-                  <div className="aspect-video w-full rounded-xl border border-slate-800 bg-slate-950 flex items-center justify-center text-slate-600 text-xs">
-                    No image uploaded yet
+                    <span className="font-mono text-blue-400">Aspect 16:9</span>
                   </div>
                 )}
               </div>
-            )}
+
+              {/* Image Settings & Actions */}
+              <div className="lg:col-span-6 space-y-4">
+                {/* Recommended Specs Box */}
+                <div className="p-3.5 rounded-xl bg-slate-950/50 border border-slate-800 space-y-1 text-xs">
+                  <span className="font-bold text-slate-300 block">Recommended Specifications:</span>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    <strong>Dimensions:</strong> 1920 × 1080 px (16:9 widescreen) • <strong>Formats:</strong> WEBP, PNG, JPG, SVG • <strong>Max Upload:</strong> 2.5 MB
+                  </p>
+                </div>
+
+                {/* Upload & Select Action Buttons */}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/webp,image/png,image/jpeg,image/svg+xml"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 font-bold rounded-xl text-xs flex items-center gap-1.5 h-9 cursor-pointer"
+                  >
+                    <UploadCloud className="h-4 w-4" /> Upload Image
+                  </Button>
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsMediaPickerOpen(true)}
+                    className="border-slate-700 bg-slate-800/80 hover:bg-slate-750 text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 h-9 cursor-pointer"
+                  >
+                    <FolderOpen className="h-4 w-4 text-slate-400" /> Choose from Media Library
+                  </Button>
+
+                  {pageContent.careersImage?.imageUrl && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleRemoveImage}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10 text-xs font-semibold rounded-xl flex items-center gap-1.5 h-9 cursor-pointer ml-auto"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> Remove Image
+                    </Button>
+                  )}
+                </div>
+
+                {/* Alt Text Input */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300 flex items-center justify-between">
+                    <span>Image Alt Text (SEO & Accessibility)</span>
+                    <span className="text-[10px] text-slate-500">Screen reader text</span>
+                  </label>
+                  <Input
+                    type="text"
+                    value={pageContent.careersImage?.altText || ''}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        careersImage: {
+                          ...prev.careersImage,
+                          altText: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="e.g. Astraiv Technologies engineering architects and full-stack developers collaborating on modern cloud architecture"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+
+                {/* Show / Hide Toggle Switch */}
+                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-200 block">
+                      Show Image on Public Website
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      When toggled OFF, the image and container are completely removed without blank space.
+                    </span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(pageContent.careersImage?.enabled)}
+                      onChange={(e) => handleToggleShowImage(e.target.checked)}
+                      disabled={isSaving}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-800 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Benefits Heading & 4 Perks */}
@@ -1087,10 +1768,10 @@ export function CareersRolesManager({
             </div>
           </div>
 
-          {/* Speculative CTA Banner & Application Page Copy */}
+          {/* Speculative Application Banner & Dedicated Copy */}
           <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-4">
             <h3 className="text-sm font-bold text-white pb-3 border-b border-slate-800">
-              Speculative Application Banner & Dedicated Copy
+              Speculative Application Banner (Careers Page Footer)
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
@@ -1138,6 +1819,1135 @@ export function CareersRolesManager({
             </div>
           </div>
 
+          {/* Speculative Application Page & Image Settings (Contact View) */}
+          <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-blue-600/10 border border-blue-500/20 text-blue-400">
+                    <UserCheck className="h-4 w-4" />
+                  </span>
+                  <h3 className="text-base font-bold text-white tracking-tight">
+                    Speculative Recruitment Page & Application Form Settings (/contact?type=speculative)
+                  </h3>
+                  <span
+                    className={cn(
+                      'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border',
+                      pageContent.speculativeImage?.enabled && pageContent.speculativeImage?.imageUrl
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                        : 'bg-slate-800 text-slate-400 border-slate-700'
+                    )}
+                  >
+                    {pageContent.speculativeImage?.enabled && pageContent.speculativeImage?.imageUrl
+                      ? 'Visible on Contact Page'
+                      : 'Image Hidden'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  Controls the left-column recruitment channels, action button, NDA notices, culture banner overlay, and right-column application form copy.
+                </p>
+              </div>
+            </div>
+
+            {/* Note about shared Headline & Subtitle */}
+            <div className="p-3.5 rounded-xl bg-blue-950/40 border border-blue-800/50 flex items-start gap-3 text-xs text-blue-200">
+              <Sparkles className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
+              <div>
+                <strong className="text-white block">Master Hero Headline & Subtitle Synchronization:</strong>
+                <p className="text-[11px] text-blue-300 leading-relaxed mt-0.5">
+                  The primary Left Column Headline and Subtitle are dynamically inherited from the <strong>Master Careers & Speculative Hero Section</strong> at the top of this tab. Updating the Headline or Subtitle above updates both <code>/careers</code> and <code>/contact?type=speculative</code> automatically.
+                </p>
+              </div>
+            </div>
+
+            {/* SECTION 1: Action Button & Left-Column SLA Notice */}
+            <div className="space-y-4 pt-2">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-slate-800/80">
+                <span>1. Left Column Action Button & NDA Notice</span>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Quick Action Button Text</label>
+                  <Input
+                    type="text"
+                    value={pageContent.speculativePageCopy?.buttonText || 'View All Active Job Openings'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          buttonText: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="View All Active Job Openings"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Quick Action Button URL</label>
+                  <Input
+                    type="text"
+                    value={pageContent.speculativePageCopy?.buttonUrl || '/careers'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          buttonUrl: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="/careers"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-bold text-slate-300">Left Column Candidate NDA SLA Notice</label>
+                  <Input
+                    type="text"
+                    value={pageContent.speculativePageCopy?.supportGuidance || 'Strict candidate privacy. Your submission is reviewed directly by our founding engineers under strict confidentiality.'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          supportGuidance: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="Strict candidate privacy. Your submission is reviewed directly by our founding engineers under strict confidentiality."
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 2: Direct Recruitment Communication Channels */}
+            <div className="space-y-4 pt-3 border-t border-slate-800">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-slate-800/80">
+                <span>2. Direct Recruitment Communication Channels (Left Column Cards)</span>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Email Channel Label</label>
+                  <Input
+                    type="text"
+                    value={pageContent.speculativePageCopy?.contactEmailLabel || 'Recruitment'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          contactEmailLabel: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="Recruitment"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Email Address</label>
+                  <Input
+                    type="email"
+                    value={pageContent.speculativePageCopy?.contactEmail || 'careers@astraivtechnologies.com'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          contactEmail: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="careers@astraivtechnologies.com"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Phone Channel Label</label>
+                  <Input
+                    type="text"
+                    value={pageContent.speculativePageCopy?.contactPhoneLabel || 'Contact Us'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          contactPhoneLabel: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="Contact Us"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Phone Number (International format supported)</label>
+                  <Input
+                    type="text"
+                    value={pageContent.speculativePageCopy?.contactPhone || '+91 8167409664'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          contactPhone: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="+91 8167409664"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Location Channel Label</label>
+                  <Input
+                    type="text"
+                    value={pageContent.speculativePageCopy?.contactLocationLabel || 'Global Engineering Center'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          contactLocationLabel: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="Global Engineering Center"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Location Description</label>
+                  <Input
+                    type="text"
+                    value={pageContent.speculativePageCopy?.contactLocation || 'Ashoknagar, Kolkata · 100% Remote Autonomy'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          contactLocation: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="Ashoknagar, Kolkata · 100% Remote Autonomy"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 3: Right-Column Speculative Application Form Copy */}
+            <div className="space-y-4 pt-3 border-t border-slate-800">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-slate-800/80">
+                <span>3. Speculative Application Form Copy (Right Column)</span>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Form Header Title</label>
+                  <Input
+                    type="text"
+                    value={pageContent.speculativePageCopy?.formHeading || 'Speculative Application'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          formHeading: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="Speculative Application"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Form Header Badge Text</label>
+                  <Input
+                    type="text"
+                    value={pageContent.speculativePageCopy?.formBadge || 'Open Application · Fresher & Experienced'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          formBadge: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="Open Application · Fresher & Experienced"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-bold text-slate-300">Form Pitch Prompt / Subheading</label>
+                  <textarea
+                    rows={2}
+                    value={pageContent.speculativePageCopy?.formSubheading || 'Tell us about your technical depth, open-source projects, or architectural interests.'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          formSubheading: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="Tell us about your technical depth, open-source projects, or architectural interests."
+                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-blue-500 resize-none leading-relaxed"
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-bold text-slate-300">Candidate NDA Checkbox Label</label>
+                  <Input
+                    type="text"
+                    value={pageContent.speculativePageCopy?.ndaCheckboxLabel || 'By submitting, your profile is stored privately and reviewed strictly by our engineering founders under NDA.'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          ndaCheckboxLabel: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="By submitting, your profile is stored privately and reviewed strictly by our engineering founders under NDA."
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Submit Button Text</label>
+                  <Input
+                    type="text"
+                    value={pageContent.speculativePageCopy?.submitButtonText || 'Submit Speculative Application'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          submitButtonText: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="Submit Speculative Application"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Form Bottom SLA Note</label>
+                  <Input
+                    type="text"
+                    value={pageContent.speculativePageCopy?.slaNote || 'Private recruitment engine • Direct founder review SLA 48h'}
+                    onChange={(e) =>
+                      setPageContent((prev) => ({
+                        ...prev,
+                        speculativePageCopy: {
+                          ...(prev.speculativePageCopy || {}),
+                          slaNote: e.target.value,
+                        },
+                      }))
+                    }
+                    placeholder="Private recruitment engine • Direct founder review SLA 48h"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 4: Speculative Image Upload & Management Box */}
+            <div className="pt-3 border-t border-slate-800 space-y-4">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-slate-800/80">
+                <span>4. Speculative Team Banner Image & Badge Overlay</span>
+              </h4>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Image Preview */}
+                <div className="lg:col-span-6 space-y-3">
+                  <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70 aspect-16/9 flex items-center justify-center group shadow-inner">
+                    {pageContent.speculativeImage?.imageUrl ? (
+                      <>
+                        <Image
+                          src={pageContent.speculativeImage.imageUrl}
+                          alt={pageContent.speculativeImage.altText || 'Speculative Recruitment Banner'}
+                          fill
+                          className={cn(
+                            'object-cover transition-opacity duration-300',
+                            !pageContent.speculativeImage.enabled && 'opacity-40 grayscale'
+                          )}
+                          unoptimized
+                        />
+                        {!pageContent.speculativeImage.enabled && (
+                          <div className="absolute inset-0 bg-slate-950/60 flex items-center justify-center">
+                            <span className="px-3 py-1.5 rounded-full bg-slate-900/90 border border-slate-700 text-slate-300 text-xs font-bold flex items-center gap-1.5 shadow-lg">
+                              <EyeOff className="h-3.5 w-3.5 text-amber-400" /> Image is Currently Hidden
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-slate-500">
+                        <ImageIcon className="h-10 w-10 text-slate-600 stroke-1" />
+                        <p className="text-xs font-semibold">No Image Selected</p>
+                        <p className="text-[11px] text-slate-600 max-w-xs">
+                          Upload an engineering team image or choose an existing asset from the Media Library.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {pageContent.speculativeImage?.imageUrl && (
+                    <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                      <div className="flex items-center gap-3">
+                        <span>
+                          Dimensions:{' '}
+                          <strong className="text-slate-200 font-mono">
+                            {pageContent.speculativeImage.width || 1792} × {pageContent.speculativeImage.height || 1008} px
+                          </strong>
+                        </span>
+                        <span>
+                          Size:{' '}
+                          <strong className="text-slate-200 font-mono">
+                            {pageContent.speculativeImage.sizeLabel || '450 KB'}
+                          </strong>
+                        </span>
+                      </div>
+                      <span className="font-mono text-blue-400">Aspect 16:9</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Controls */}
+                <div className="lg:col-span-6 space-y-4">
+                  <div className="p-3.5 rounded-xl bg-slate-950/50 border border-slate-800 space-y-1 text-xs">
+                    <span className="font-bold text-slate-300 block">Placement & Role:</span>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Rendered directly between the <strong>&quot;View All Active Job Openings&quot;</strong> button and direct communication channels on the speculative application page.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <input
+                      ref={speculativeFileInputRef}
+                      type="file"
+                      accept="image/webp,image/png,image/jpeg,image/svg+xml"
+                      onChange={handleSpeculativeFileUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => speculativeFileInputRef.current?.click()}
+                      className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 font-bold rounded-xl text-xs flex items-center gap-1.5 h-9 cursor-pointer"
+                    >
+                      <UploadCloud className="h-4 w-4" /> Upload Image
+                    </Button>
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setMediaPickerTarget('speculative_banner');
+                        setIsMediaPickerOpen(true);
+                      }}
+                      className="border-slate-700 bg-slate-800/80 hover:bg-slate-750 text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 h-9 cursor-pointer"
+                    >
+                      <FolderOpen className="h-4 w-4 text-slate-400" /> Choose from Media Library
+                    </Button>
+
+                    {pageContent.speculativeImage?.imageUrl && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleRemoveSpeculativeImage}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 text-xs font-semibold rounded-xl flex items-center gap-1.5 h-9 cursor-pointer ml-auto"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Remove Image
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">
+                      Image Alt Text (SEO & Screen Readers)
+                    </label>
+                    <Input
+                      type="text"
+                      value={pageContent.speculativeImage?.altText || ''}
+                      onChange={(e) =>
+                        setPageContent((prev) => ({
+                          ...prev,
+                          speculativeImage: {
+                            ...(prev.speculativeImage || { enabled: true, imageUrl: '', altText: '' }),
+                            altText: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder="e.g. Astraiv Technologies engineering architects and emerging engineers collaborating"
+                      className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                    />
+                  </div>
+
+                  {/* Image Badge Overlay Customization */}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-300">
+                        Image Badge Title (Left Pulse)
+                      </label>
+                      <Input
+                        type="text"
+                        value={pageContent.speculativeImage?.badgeText || 'Open Engineering Swarm'}
+                        onChange={(e) =>
+                          setPageContent((prev) => ({
+                            ...prev,
+                            speculativeImage: {
+                              ...(prev.speculativeImage || { enabled: true, imageUrl: '', altText: '' }),
+                              badgeText: e.target.value,
+                            },
+                          }))
+                        }
+                        placeholder="Open Engineering Swarm"
+                        className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-300">
+                        Image Badge Subtext (Right)
+                      </label>
+                      <Input
+                        type="text"
+                        value={pageContent.speculativeImage?.badgeSubtext || 'Fresher & Experienced'}
+                        onChange={(e) =>
+                          setPageContent((prev) => ({
+                            ...prev,
+                            speculativeImage: {
+                              ...(prev.speculativeImage || { enabled: true, imageUrl: '', altText: '' }),
+                              badgeSubtext: e.target.value,
+                            },
+                          }))
+                        }
+                        placeholder="Fresher & Experienced"
+                        className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-slate-200 block">
+                        Show Image on Contact Page
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        When toggled OFF, the image is hidden seamlessly without blank space.
+                      </span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(pageContent.speculativeImage?.enabled !== false && pageContent.speculativeImage?.imageUrl)}
+                        onChange={(e) => handleToggleShowSpeculativeImage(e.target.checked)}
+                        disabled={isSaving}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-800 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ================================================================= */}
+          {/* SECTION: JOB DETAIL PAGE SHARED TEMPLATES & STANDARDS (/careers/[slug]) */}
+          {/* ================================================================= */}
+          <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  <FileText className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-white tracking-tight">
+                      Job Detail Shared Templates & Standards (/careers/[slug])
+                    </h3>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                      Inherited by All Roles
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Centralized copy, hiring roadmap, culture standards, and referral rewards shared by default across all job listing pages.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 1. Mission & Role Impact Template */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  1. The Mission & Role Impact Section
+                </h4>
+                <span className="text-[11px] font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/40">
+                  Supports &#123;roleTitle&#125; variable
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Section Heading</label>
+                  <Input
+                    type="text"
+                    value={sharedDefaults.missionHeading || 'The Mission & Role Impact'}
+                    onChange={(e) => setSharedDefaults({ ...sharedDefaults, missionHeading: e.target.value })}
+                    placeholder="The Mission & Role Impact"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">
+                    Mission Template Body (Dynamic Placeholder)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={sharedDefaults.missionTemplate || ''}
+                    onChange={(e) => setSharedDefaults({ ...sharedDefaults, missionTemplate: e.target.value })}
+                    placeholder="At Astraiv Technologies, we reject bloated corporate committees... As our {roleTitle}, you will possess end-to-end ownership..."
+                    className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-blue-500 resize-none leading-relaxed font-sans"
+                  />
+                </div>
+                {/* Live Preview Box */}
+                <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/80 text-xs space-y-1">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Live Rendering Preview for &quot;Senior Full-Stack Architect&quot;:
+                  </span>
+                  <p className="text-slate-300 text-[11.5px] leading-relaxed italic">
+                    {(sharedDefaults.missionTemplate || 'At Astraiv Technologies, we reject bloated corporate committees and endless synchronous alignment meetings. As our {roleTitle}, you will possess end-to-end ownership of critical technical foundations, working asynchronously with senior peers to deploy battle-tested digital infrastructure.').replace(/\{roleTitle\}/g, 'Senior Full-Stack Architect')}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Common Engineering Benefits */}
+            <div className="space-y-3 pt-4 border-t border-slate-800">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  2. Standard Engineering Benefits & Culture (One per line)
+                </h4>
+                <span className="text-[11px] text-slate-400">
+                  Applied to all roles unless custom benefits are specified
+                </span>
+              </div>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Section Heading</label>
+                  <Input
+                    type="text"
+                    value={sharedDefaults.benefitsHeading || 'What We Offer & Engineering Culture'}
+                    onChange={(e) => setSharedDefaults({ ...sharedDefaults, benefitsHeading: e.target.value })}
+                    placeholder="What We Offer & Engineering Culture"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Common Benefits List</label>
+                  <textarea
+                    rows={5}
+                    value={sharedDefaults.commonBenefits.join('\n')}
+                    onChange={(e) =>
+                      setSharedDefaults({
+                        ...sharedDefaults,
+                        commonBenefits: e.target.value.split('\n').filter(Boolean),
+                      })
+                    }
+                    placeholder="100% remote work autonomy&#10;Top-of-market compensation&#10;$3,500 workstation stipend"
+                    className="w-full p-3 text-xs rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-sans resize-none leading-relaxed"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Transparent 4-Stage Interview Process */}
+            <div className="space-y-4 pt-4 border-t border-slate-800">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  3. Transparent 4-Stage Interview Process Defaults
+                </h4>
+                <span className="text-[11px] text-slate-400">Roadmap for candidate expectations</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Roadmap Section Heading</label>
+                  <Input
+                    type="text"
+                    value={sharedDefaults.interviewRoadmapHeading || 'Transparent 4-Stage Interview Process'}
+                    onChange={(e) => setSharedDefaults({ ...sharedDefaults, interviewRoadmapHeading: e.target.value })}
+                    placeholder="Transparent 4-Stage Interview Process"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Roadmap Subtitle</label>
+                  <Input
+                    type="text"
+                    value={sharedDefaults.interviewRoadmapSubtitle || 'Fast, respectful, and zero algorithmic trick questions. We respect your engineering time.'}
+                    onChange={(e) => setSharedDefaults({ ...sharedDefaults, interviewRoadmapSubtitle: e.target.value })}
+                    placeholder="Fast, respectful, and zero algorithmic trick questions..."
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                {sharedDefaults.interviewStages.map((stage, idx) => (
+                  <div key={idx} className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-cyan-400 text-xs shrink-0">Stage {stage.num}</span>
+                      <input
+                        type="text"
+                        value={stage.title}
+                        onChange={(e) => {
+                          const copy = [...sharedDefaults.interviewStages];
+                          copy[idx].title = e.target.value;
+                          setSharedDefaults({ ...sharedDefaults, interviewStages: copy });
+                        }}
+                        className="w-full px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-900 border border-slate-800 text-slate-100"
+                        placeholder="Stage Title"
+                      />
+                    </div>
+                    <textarea
+                      rows={3}
+                      value={stage.desc}
+                      onChange={(e) => {
+                        const copy = [...sharedDefaults.interviewStages];
+                        copy[idx].desc = e.target.value;
+                        setSharedDefaults({ ...sharedDefaults, interviewStages: copy });
+                      }}
+                      className="w-full p-2.5 text-xs rounded-lg bg-slate-900 border border-slate-800 text-slate-300 resize-none leading-relaxed"
+                      placeholder="Stage Description"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 4. The Astraiv Standard (Sidebar) */}
+            <div className="space-y-3 pt-4 border-t border-slate-800">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                4. The Astraiv Standard (Job Sidebar Pillar)
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Standard Card Heading</label>
+                  <Input
+                    type="text"
+                    value={sharedDefaults.astraivStandardHeading || 'The Astraiv Standard'}
+                    onChange={(e) => setSharedDefaults({ ...sharedDefaults, astraivStandardHeading: e.target.value })}
+                    placeholder="The Astraiv Standard"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Standard Card Subtitle</label>
+                  <Input
+                    type="text"
+                    value={sharedDefaults.astraivStandardSubtitle || 'Why Engineers Love Building Here'}
+                    onChange={(e) => setSharedDefaults({ ...sharedDefaults, astraivStandardSubtitle: e.target.value })}
+                    placeholder="Why Engineers Love Building Here"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-bold text-slate-300">Sidebar Bullet Points (One per line)</label>
+                  <textarea
+                    rows={3}
+                    value={(sharedDefaults.astraivStandardPoints || []).join('\n')}
+                    onChange={(e) =>
+                      setSharedDefaults({
+                        ...sharedDefaults,
+                        astraivStandardPoints: e.target.value.split('\n').filter(Boolean),
+                      })
+                    }
+                    placeholder="No pointless meetings...&#10;Work from anywhere in the world...&#10;Rapid sprint cadences..."
+                    className="w-full p-3 text-xs rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-sans resize-none leading-relaxed"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 5. Employee Referral Program Banner */}
+            <div className="space-y-3 pt-4 border-t border-slate-800">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  5. Employee Referral Program Banner
+                </h4>
+                <span className="text-[11px] font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/40">
+                  Supports &#123;referralBonus&#125; variable
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Banner Heading</label>
+                  <Input
+                    type="text"
+                    value={sharedDefaults.referralHeading || 'Know an exceptional architect?'}
+                    onChange={(e) => setSharedDefaults({ ...sharedDefaults, referralHeading: e.target.value })}
+                    placeholder="Know an exceptional architect?"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Default Referral Reward Amount</label>
+                  <Input
+                    type="text"
+                    value={sharedDefaults.defaultReferralBonus}
+                    onChange={(e) => setSharedDefaults({ ...sharedDefaults, defaultReferralBonus: e.target.value })}
+                    placeholder="$3,000 USD (or local equivalent)"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs font-mono"
+                  />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-bold text-slate-300">Banner Body Template</label>
+                  <Input
+                    type="text"
+                    value={sharedDefaults.referralBody || 'We offer a {referralBonus} referral bonus for successfully placed engineers and architects.'}
+                    onChange={(e) => setSharedDefaults({ ...sharedDefaults, referralBody: e.target.value })}
+                    placeholder="We offer a {referralBonus} referral bonus for successfully placed engineers and architects."
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 6. Application Form Security & SLA Defaults */}
+            <div className="space-y-3 pt-4 border-t border-slate-800">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                6. Job Application Form Security & Privacy Defaults
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="text-xs font-bold text-slate-300">Form Header Subtitle (Zero recruiter filters pitch)</label>
+                  <Input
+                    type="text"
+                    value={sharedDefaults.applicationSubheading || 'Reviewed directly by senior engineering architects within 48 business hours. Zero recruiter filters.'}
+                    onChange={(e) => setSharedDefaults({ ...sharedDefaults, applicationSubheading: e.target.value })}
+                    placeholder="Reviewed directly by senior engineering architects within 48 business hours. Zero recruiter filters."
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Candidate NDA / Privacy Agreement Text</label>
+                  <Input
+                    type="text"
+                    value={sharedDefaults.defaultPrivacyText}
+                    onChange={(e) => setSharedDefaults({ ...sharedDefaults, defaultPrivacyText: e.target.value })}
+                    placeholder="By submitting, your data is processed strictly under our NDA protocols and privacy policy. No unsolicited third-party disclosure."
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Bottom SLA & Encryption Security Badge</label>
+                  <Input
+                    type="text"
+                    value={sharedDefaults.applicationSlaNote || 'Direct encryption & private storage isolation enabled • 48h SLA'}
+                    onChange={(e) => setSharedDefaults({ ...sharedDefaults, applicationSlaNote: e.target.value })}
+                    placeholder="Direct encryption & private storage isolation enabled • 48h SLA"
+                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 7. Experienced Engineering & Swarm Culture Image Banner */}
+            <div className="space-y-4 pt-4 border-t border-slate-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    7. Experienced Engineering & Swarm Culture Image Banner
+                  </h4>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Shared static photo across all job postings to bridge whitespace between requirements and culture pillars.
+                  </p>
+                </div>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  Shared Asset
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Image Preview Container */}
+                <div className="lg:col-span-6 space-y-2">
+                  <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center group shadow-inner">
+                    {sharedDefaults.jobDetailImage?.imageUrl ? (
+                      <>
+                        <img
+                          src={sharedDefaults.jobDetailImage.imageUrl}
+                          alt={sharedDefaults.jobDetailImage.altText || 'Experienced Engineering Architecture Banner'}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        {sharedDefaults.jobDetailImage.enabled === false && (
+                          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center">
+                            <span className="px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold">
+                              Hidden on Client Website
+                            </span>
+                          </div>
+                        )}
+                        {/* Live Overlay Badge Preview */}
+                        {sharedDefaults.jobDetailImage.enabled !== false && (
+                          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/80 backdrop-blur-md border border-white/10 text-[11px] font-medium text-slate-200 shadow-xl">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                              <span className="font-bold text-white tracking-tight">
+                                {sharedDefaults.jobDetailImage.badgeText || 'Elite Senior Architecture Swarm'}
+                              </span>
+                              <span className="text-slate-400 hidden sm:inline">•</span>
+                              <span className="text-slate-300 text-[10px] font-mono hidden sm:inline">
+                                {sharedDefaults.jobDetailImage.badgeSubtext || 'High Autonomy & Systems Impact'}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-slate-500">
+                        <ImageIcon className="h-10 w-10 text-slate-600 stroke-1" />
+                        <p className="text-xs font-semibold">No Image Selected</p>
+                        <p className="text-[11px] text-slate-600 max-w-xs">
+                          Upload an engineering banner or choose an existing asset from the Media Library.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {sharedDefaults.jobDetailImage?.imageUrl && (
+                    <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                      <div className="flex items-center gap-3">
+                        <span>
+                          Dimensions:{' '}
+                          <strong className="text-slate-200 font-mono">
+                            {sharedDefaults.jobDetailImage.width || 1792} × {sharedDefaults.jobDetailImage.height || 1008} px
+                          </strong>
+                        </span>
+                        <span>
+                          Size:{' '}
+                          <strong className="text-slate-200 font-mono">
+                            {sharedDefaults.jobDetailImage.sizeLabel || '420 KB'}
+                          </strong>
+                        </span>
+                      </div>
+                      <span className="font-mono text-cyan-400">Aspect 16:9</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Controls */}
+                <div className="lg:col-span-6 space-y-4">
+                  <div className="p-3.5 rounded-xl bg-slate-950/50 border border-slate-800 space-y-1 text-xs">
+                    <span className="font-bold text-slate-300 block">Placement & Role:</span>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Rendered in the <strong>right sidebar</strong> of all job listings to fill whitespace and showcase Astraiv experienced engineering culture.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <input
+                      ref={jobDetailFileInputRef}
+                      type="file"
+                      accept="image/webp,image/png,image/jpeg,image/svg+xml"
+                      onChange={handleJobDetailFileUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => jobDetailFileInputRef.current?.click()}
+                      className="bg-cyan-600/10 hover:bg-cyan-600/20 text-cyan-400 border border-cyan-500/20 font-bold rounded-xl text-xs flex items-center gap-1.5 h-9 cursor-pointer"
+                    >
+                      <UploadCloud className="h-4 w-4" /> Upload Image
+                    </Button>
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setMediaPickerTarget('job_detail_banner');
+                        setIsMediaPickerOpen(true);
+                      }}
+                      className="border-slate-700 bg-slate-800/80 hover:bg-slate-750 text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 h-9 cursor-pointer"
+                    >
+                      <FolderOpen className="h-4 w-4 text-slate-400" /> Choose from Media Library
+                    </Button>
+
+                    {sharedDefaults.jobDetailImage?.imageUrl && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleRemoveJobDetailImage}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 text-xs font-semibold rounded-xl flex items-center gap-1.5 h-9 cursor-pointer ml-auto"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Remove Image
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-300">
+                      Image Alt Text (SEO & Screen Readers)
+                    </label>
+                    <Input
+                      type="text"
+                      value={sharedDefaults.jobDetailImage?.altText || ''}
+                      onChange={(e) =>
+                        setSharedDefaults((prev) => ({
+                          ...prev,
+                          jobDetailImage: {
+                            ...(prev.jobDetailImage || { enabled: true, imageUrl: '', altText: '' }),
+                            altText: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder="e.g. Astraiv Technologies senior software architects collaborating on cloud-native systems architecture"
+                      className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                    />
+                  </div>
+
+                  {/* Card Title & Description Customization */}
+                  <div className="space-y-3 pt-1">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-300">
+                        Image Card Title (Heading Below Image)
+                      </label>
+                      <Input
+                        type="text"
+                        value={sharedDefaults.jobDetailImage?.title || 'Experienced Architecture Swarm'}
+                        onChange={(e) =>
+                          setSharedDefaults((prev) => ({
+                            ...prev,
+                            jobDetailImage: {
+                              ...(prev.jobDetailImage || { enabled: true, imageUrl: '', altText: '' }),
+                              title: e.target.value,
+                            },
+                          }))
+                        }
+                        placeholder="Experienced Architecture Swarm"
+                        className="bg-slate-950 border-slate-800 text-slate-100 text-xs font-bold"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-300">
+                        Image Card Description (Subtitle Below Image)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={
+                          sharedDefaults.jobDetailImage?.description ||
+                          'Direct collaboration with principal architects on distributed, high-throughput cloud systems with zero corporate bureaucracy.'
+                        }
+                        onChange={(e) =>
+                          setSharedDefaults((prev) => ({
+                            ...prev,
+                            jobDetailImage: {
+                              ...(prev.jobDetailImage || { enabled: true, imageUrl: '', altText: '' }),
+                              description: e.target.value,
+                            },
+                          }))
+                        }
+                        placeholder="Direct collaboration with principal architects on distributed, high-throughput cloud systems with zero corporate bureaucracy."
+                        className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs resize-none leading-relaxed font-sans"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Image Badge Overlay Customization */}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-300">
+                        Image Badge Title (Left Pulse)
+                      </label>
+                      <Input
+                        type="text"
+                        value={sharedDefaults.jobDetailImage?.badgeText || 'Elite Senior Architecture Swarm'}
+                        onChange={(e) =>
+                          setSharedDefaults((prev) => ({
+                            ...prev,
+                            jobDetailImage: {
+                              ...(prev.jobDetailImage || { enabled: true, imageUrl: '', altText: '' }),
+                              badgeText: e.target.value,
+                            },
+                          }))
+                        }
+                        placeholder="Elite Senior Architecture Swarm"
+                        className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-300">
+                        Image Badge Subtext (Right)
+                      </label>
+                      <Input
+                        type="text"
+                        value={sharedDefaults.jobDetailImage?.badgeSubtext || 'High Autonomy & Systems Impact'}
+                        onChange={(e) =>
+                          setSharedDefaults((prev) => ({
+                            ...prev,
+                            jobDetailImage: {
+                              ...(prev.jobDetailImage || { enabled: true, imageUrl: '', altText: '' }),
+                              badgeSubtext: e.target.value,
+                            },
+                          }))
+                        }
+                        placeholder="High Autonomy & Systems Impact"
+                        className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-slate-200 block">
+                        Show Image on Job Detail Pages
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        When toggled OFF, the banner is hidden across all job listings without blank space.
+                      </span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(sharedDefaults.jobDetailImage?.enabled !== false && sharedDefaults.jobDetailImage?.imageUrl)}
+                        onChange={(e) => handleToggleShowJobDetailImage(e.target.checked)}
+                        disabled={isSaving}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-800 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Save Action Button */}
           <div className="flex justify-end pt-2">
             <Button
@@ -1151,7 +2961,7 @@ export function CareersRolesManager({
                 </>
               ) : (
                 <>
-                  <Check className="h-4 w-4 mr-2" /> Save & Publish Page Content
+                  <Check className="h-4 w-4 mr-2" /> Save & Publish All Page Content & Shared Standards
                 </>
               )}
             </Button>
@@ -2154,99 +3964,80 @@ export function CareersRolesManager({
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* TAB 5: SHARED DEFAULTS */}
-      {/* ========================================================================= */}
-      {activeTab === 'defaults' && (
-        <div className="space-y-6">
-          <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-6">
-            <div>
-              <h3 className="text-sm font-bold text-white">Transparent 4-Stage Interview Process Defaults</h3>
-              <p className="text-xs text-slate-400">
-                Inherited by all job detail pages when &quot;Use Shared Defaults&quot; is enabled.
-              </p>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {sharedDefaults.interviewStages.map((stage, idx) => (
-                <div key={idx} className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-blue-400 text-xs">Stage {stage.num}</span>
-                    <input
-                      type="text"
-                      value={stage.title}
-                      onChange={(e) => {
-                        const copy = [...sharedDefaults.interviewStages];
-                        copy[idx].title = e.target.value;
-                        setSharedDefaults({ ...sharedDefaults, interviewStages: copy });
-                      }}
-                      className="w-full px-2.5 py-1 text-xs font-bold rounded bg-slate-900 border border-slate-800 text-slate-100"
-                    />
-                  </div>
-                  <textarea
-                    rows={3}
-                    value={stage.desc}
-                    onChange={(e) => {
-                      const copy = [...sharedDefaults.interviewStages];
-                      copy[idx].desc = e.target.value;
-                      setSharedDefaults({ ...sharedDefaults, interviewStages: copy });
-                    }}
-                    className="w-full p-2.5 text-xs rounded bg-slate-900 border border-slate-800 text-slate-300 resize-none leading-relaxed"
-                  />
+
+      {/* Media Library Selector Modal */}
+      {isMediaPickerOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden my-8">
+            <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-950/60">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                  <FolderOpen className="h-4.5 w-4.5" />
                 </div>
-              ))}
-            </div>
-
-            <div className="pt-4 border-t border-slate-800 space-y-3">
-              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                Common Benefits List (One per line)
-              </h4>
-              <textarea
-                rows={5}
-                value={sharedDefaults.commonBenefits.join('\n')}
-                onChange={(e) =>
-                  setSharedDefaults({
-                    ...sharedDefaults,
-                    commonBenefits: e.target.value.split('\n').filter(Boolean),
-                  })
-                }
-                className="w-full p-3 text-xs rounded-xl bg-slate-950 border border-slate-800 text-slate-100 font-mono resize-none leading-relaxed"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-800">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300">Default Referral Reward</label>
-                <Input
-                  type="text"
-                  value={sharedDefaults.defaultReferralBonus}
-                  onChange={(e) =>
-                    setSharedDefaults({ ...sharedDefaults, defaultReferralBonus: e.target.value })
-                  }
-                  className="bg-slate-950 border-slate-800 text-slate-100 text-xs font-mono"
-                />
+                <div>
+                  <h3 className="text-base font-bold text-white">Choose Asset from Media Library</h3>
+                  <p className="text-xs text-slate-400">Select an existing verified media asset for the careers hero image.</p>
+                </div>
               </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300">Default Privacy Copy</label>
-                <Input
-                  type="text"
-                  value={sharedDefaults.defaultPrivacyText}
-                  onChange={(e) =>
-                    setSharedDefaults({ ...sharedDefaults, defaultPrivacyText: e.target.value })
-                  }
-                  className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-4">
-              <Button
-                onClick={handleSaveSharedDefaults}
-                disabled={isSaving}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-10 px-6 rounded-xl shadow-lg shadow-blue-600/20"
+              <button
+                type="button"
+                onClick={() => setIsMediaPickerOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
               >
-                {isSaving ? 'Saving...' : 'Save Shared Defaults'}
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="p-6 max-h-[60vh] overflow-y-auto">
+              {mediaAssets.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 space-y-2">
+                  <ImageIcon className="h-10 w-10 mx-auto text-slate-600 stroke-1" />
+                  <p className="text-xs font-semibold">No assets found in Media Library</p>
+                  <p className="text-[11px] text-slate-600">Please upload a new image directly from the main area.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {mediaAssets.map((asset) => (
+                    <div
+                      key={asset.id}
+                      onClick={() => handleSelectMediaAsset(asset)}
+                      className={cn(
+                        'group p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-blue-500/60 hover:bg-slate-900 transition-all cursor-pointer flex flex-col justify-between gap-2',
+                        pageContent.careersImage?.imageUrl === asset.url && 'ring-2 ring-blue-500 border-blue-500'
+                      )}
+                    >
+                      <div className="relative aspect-16/9 rounded-lg overflow-hidden bg-slate-900 border border-slate-800/80">
+                        <Image
+                          src={asset.url}
+                          alt={asset.altText || asset.filename}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform"
+                          unoptimized
+                        />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-slate-200 block truncate">
+                          {asset.filename}
+                        </span>
+                        <span className="text-[10px] text-slate-400 block font-mono">
+                          {asset.width && asset.height ? `${asset.width}×${asset.height}px` : 'Vector'} • {Math.round(asset.sizeBytes / 1024)} KB
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end p-4 border-t border-slate-800 bg-slate-950/40">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setIsMediaPickerOpen(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                Cancel
               </Button>
             </div>
           </div>

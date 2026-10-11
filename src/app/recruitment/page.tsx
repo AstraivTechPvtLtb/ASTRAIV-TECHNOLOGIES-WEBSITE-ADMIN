@@ -6,6 +6,7 @@ import {
   getJobOpenings,
   getJobApplications,
 } from '@/controllers/recruitment.controller';
+import { getMediaAssets } from '@/controllers/media.controller';
 import { AdminHeader } from '@/views/layouts/admin-header';
 import { CareersRolesManager } from '@/views/tables/careers-roles-manager';
 
@@ -17,11 +18,12 @@ export default async function AdminRecruitmentPage() {
     redirect('/login');
   }
 
-  const [pageContentRes, categoriesRes, openingsRes, applicationsRes] = await Promise.all([
+  const [pageContentRes, categoriesRes, openingsRes, applicationsRes, mediaAssetsRes] = await Promise.all([
     getCareersPageContent(),
     getJobCategories(),
     getJobOpenings(),
     getJobApplications(),
+    getMediaAssets(),
   ]);
 
   return (
@@ -39,6 +41,7 @@ export default async function AdminRecruitmentPage() {
           initialCategories={categoriesRes.data}
           initialOpenings={openingsRes.data}
           initialApplications={applicationsRes.data}
+          mediaAssets={mediaAssetsRes.data || []}
         />
       </main>
     </div>

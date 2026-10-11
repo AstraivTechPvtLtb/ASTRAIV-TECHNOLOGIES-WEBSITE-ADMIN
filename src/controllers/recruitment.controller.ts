@@ -14,11 +14,14 @@ import {
   JobCategory,
   JobCategoryInput,
   CareersPageContentData,
+  CareersImageSettings,
+  SpeculativePageCopyData,
   SharedCareersDefaultsData,
   AdminActionResponse,
 } from '@/models/types';
 import { Prisma } from '@prisma/client';
 import { requireAdminUser } from './auth.controller';
+import { triggerClientRevalidation } from '@/lib/revalidate-client';
 
 function safeRevalidate(path: string) {
   try {
@@ -60,14 +63,14 @@ const DEFAULT_CAREERS_PAGE_CONTENT: CareersPageContentData = {
     },
   ],
   careersImage: {
-    enabled: false,
-    imageUrl: '',
-    altText: 'Astraiv Technologies engineering architects collaborating on high-scale cloud infrastructure',
+    enabled: true,
+    imageUrl: '/images/careers-hero.jpg',
+    altText: 'Astraiv Technologies engineering team collaborating on software architecture and system design in modern tech studio',
     focalPoint: 'center',
-    width: 1600,
-    height: 900,
-    sizeBytes: 0,
-    sizeLabel: '',
+    width: 1792,
+    height: 1008,
+    sizeBytes: 865737,
+    sizeLabel: '845 KB',
   },
   benefitsHeading: 'Build the Future with [Elite Engineers]',
   benefitsSubtitle:
@@ -114,19 +117,66 @@ const DEFAULT_CAREERS_PAGE_CONTENT: CareersPageContentData = {
     title: "Don't See Your Exact Specialty Listed?",
     body: 'If you are a world-class systems engineer, compiler enthusiast, or AI infrastructure architect, we always make room for exceptional talent.',
     buttonText: 'Send Speculative Application',
-    buttonUrl: '/contact?role=Speculative%20Senior%20Architect',
+    buttonUrl: '/contact?type=speculative',
+  },
+  speculativeImage: {
+    enabled: true,
+    imageUrl: '/images/speculative-team-banner.jpg',
+    altText: 'Astraiv Technologies engineering architects and emerging engineers collaborating on AI systems and cloud architecture',
+    badgeText: 'Open Engineering Swarm',
+    badgeSubtext: 'Fresher & Experienced',
+    width: 1792,
+    height: 1008,
+    sizeBytes: 450000,
+    sizeLabel: '450 KB',
   },
   speculativePageCopy: {
-    heading: 'Speculative Engineering Application',
-    subheading: 'Tell us how you build, what architectures you love, and where you excel.',
+    heading: 'Work With Architects,\nNot Bureaucrats.',
+    subheading:
+      "Don't see your exact engineering specialty listed in our active openings? If you are a high-caliber systems engineer, compiler enthusiast, or autonomous AI architect, we always make room for exceptional talent.",
     supportGuidance:
-      'We review unsolicited applications directly by our technical founders. Freshers with strong projects and senior architects are welcome.',
+      'Strict candidate privacy. Your submission is reviewed directly by our founding engineers under strict confidentiality.',
     successMessage:
       'Your speculative application has been received. Our engineering leadership will review your profile within 48 business hours.',
+    buttonText: 'View All Active Job Openings',
+    buttonUrl: '/careers',
+    contactEmailLabel: 'Recruitment',
+    contactEmail: 'careers@astraivtechnologies.com',
+    contactPhoneLabel: 'Contact Us',
+    contactPhone: '+91 8167409664',
+    contactLocationLabel: 'Global Engineering Center',
+    contactLocation: 'Ashoknagar, Kolkata · 100% Remote Autonomy',
+    formHeading: 'Speculative Application',
+    formBadge: 'Open Application · Fresher & Experienced',
+    formSubheading: 'Tell us about your technical depth, open-source projects, or architectural interests.',
+    ndaCheckboxLabel: 'By submitting, your profile is stored privately and reviewed strictly by our engineering founders under NDA.',
+    submitButtonText: 'Submit Speculative Application',
+    slaNote: 'Private recruitment engine • Direct founder review SLA 48h',
   },
 };
 
 const DEFAULT_SHARED_CAREERS_DEFAULTS: SharedCareersDefaultsData = {
+  jobDetailImage: {
+    enabled: true,
+    imageUrl: '/images/experienced-engineers-banner.jpg',
+    altText:
+      'Astraiv Technologies senior software architects and experienced full-stack engineers collaborating on cloud-native systems architecture',
+    title: 'Experienced Architecture Swarm',
+    description:
+      'Direct collaboration with principal architects on distributed, high-throughput cloud systems with zero corporate bureaucracy.',
+    badgeText: 'Elite Senior Architecture Swarm',
+    badgeSubtext: 'High Autonomy & Systems Impact',
+    width: 1792,
+    height: 1008,
+    sizeBytes: 650000,
+    sizeLabel: '635 KB',
+  },
+  missionHeading: 'The Mission & Role Impact',
+  missionTemplate:
+    'At Astraiv Technologies, we reject bloated corporate committees and endless synchronous alignment meetings. As our {roleTitle}, you will possess end-to-end ownership of critical technical foundations, working asynchronously with senior peers to deploy battle-tested digital infrastructure.',
+  interviewRoadmapHeading: 'Transparent 4-Stage Interview Process',
+  interviewRoadmapSubtitle:
+    'Fast, respectful, and zero algorithmic trick questions. We respect your engineering time.',
   interviewStages: [
     {
       num: '01',
@@ -149,6 +199,7 @@ const DEFAULT_SHARED_CAREERS_DEFAULTS: SharedCareersDefaultsData = {
       desc: 'Transparent compensation offer, equity allocation, home workstation budget setup, and seamless async onboarding.',
     },
   ],
+  benefitsHeading: 'What We Offer & Engineering Culture',
   commonBenefits: [
     '100% remote work autonomy with flexible hours and no micromanagement.',
     'Top-of-market base compensation plus meaningful equity participation.',
@@ -156,9 +207,20 @@ const DEFAULT_SHARED_CAREERS_DEFAULTS: SharedCareersDefaultsData = {
     'Annual $2,000 continuous learning & technical conference budget.',
     'Comprehensive health coverage & generous paid time off.',
   ],
-  defaultReferralBonus: '$2,500',
+  astraivStandardHeading: 'The Astraiv Standard',
+  astraivStandardSubtitle: 'Why Engineers Love Building Here',
+  astraivStandardPoints: [
+    'No pointless meetings. We communicate via written RFCs and async specs.',
+    'Work from anywhere in the world on modern, strictly typed tech stacks.',
+    'Rapid sprint cadences with zero red tape and direct founder access.',
+  ],
+  referralHeading: 'Know an exceptional architect?',
+  referralBody: 'We offer a {referralBonus} referral bonus for successfully placed engineers and architects.',
+  defaultReferralBonus: '$3,000 USD (or local equivalent)',
+  applicationSubheading: 'Reviewed directly by senior engineering architects within 48 business hours. Zero recruiter filters.',
   defaultPrivacyText:
     'By submitting, your data is processed strictly under our NDA protocols and privacy policy. No unsolicited third-party disclosure.',
+  applicationSlaNote: 'Direct encryption & private storage isolation enabled • 48h SLA',
 };
 
 // ==========================================
@@ -231,14 +293,14 @@ export async function getCareersPageContent(): Promise<{
       // 4. Careers Image
       const imgObj = sections.careersImage || {};
       const careersImage = {
-        enabled: imgObj.enabled !== undefined ? Boolean(imgObj.enabled) : imgObj.visible !== undefined ? Boolean(imgObj.visible) : false,
-        imageUrl: typeof imgObj.imageUrl === 'string' ? imgObj.imageUrl : typeof imgObj.url === 'string' ? imgObj.url : '',
+        enabled: imgObj.enabled !== undefined ? Boolean(imgObj.enabled) : imgObj.visible !== undefined ? Boolean(imgObj.visible) : DEFAULT_CAREERS_PAGE_CONTENT.careersImage.enabled,
+        imageUrl: typeof imgObj.imageUrl === 'string' && imgObj.imageUrl ? imgObj.imageUrl : typeof imgObj.url === 'string' && imgObj.url ? imgObj.url : DEFAULT_CAREERS_PAGE_CONTENT.careersImage.imageUrl,
         altText: typeof imgObj.altText === 'string' ? imgObj.altText : typeof imgObj.alt === 'string' ? imgObj.alt : DEFAULT_CAREERS_PAGE_CONTENT.careersImage.altText,
         focalPoint: typeof imgObj.focalPoint === 'string' ? imgObj.focalPoint : 'center',
-        width: typeof imgObj.width === 'number' ? imgObj.width : 1600,
-        height: typeof imgObj.height === 'number' ? imgObj.height : 900,
-        sizeBytes: typeof imgObj.sizeBytes === 'number' ? imgObj.sizeBytes : 0,
-        sizeLabel: typeof imgObj.sizeLabel === 'string' ? imgObj.sizeLabel : '',
+        width: typeof imgObj.width === 'number' ? imgObj.width : DEFAULT_CAREERS_PAGE_CONTENT.careersImage.width,
+        height: typeof imgObj.height === 'number' ? imgObj.height : DEFAULT_CAREERS_PAGE_CONTENT.careersImage.height,
+        sizeBytes: typeof imgObj.sizeBytes === 'number' ? imgObj.sizeBytes : DEFAULT_CAREERS_PAGE_CONTENT.careersImage.sizeBytes,
+        sizeLabel: typeof imgObj.sizeLabel === 'string' ? imgObj.sizeLabel : DEFAULT_CAREERS_PAGE_CONTENT.careersImage.sizeLabel,
       };
 
       // 5. Benefits Cards
@@ -291,13 +353,41 @@ export async function getCareersPageContent(): Promise<{
         buttonUrl: typeof specCtaObj.buttonUrl === 'string' ? specCtaObj.buttonUrl : DEFAULT_CAREERS_PAGE_CONTENT.speculativeCta.buttonUrl,
       };
 
-      // 8. Speculative Page Copy
+      // 8. Speculative Image & Page Copy
+      const rawSpecImage = sections.speculativeImage || {};
+      const speculativeImage: CareersImageSettings = {
+        enabled: rawSpecImage.enabled !== undefined ? Boolean(rawSpecImage.enabled) : true,
+        imageUrl: typeof rawSpecImage.imageUrl === 'string' && rawSpecImage.imageUrl ? rawSpecImage.imageUrl : DEFAULT_CAREERS_PAGE_CONTENT.speculativeImage?.imageUrl || '/images/speculative-team-banner.jpg',
+        altText: typeof rawSpecImage.altText === 'string' ? rawSpecImage.altText : (DEFAULT_CAREERS_PAGE_CONTENT.speculativeImage?.altText || ''),
+        badgeText: typeof rawSpecImage.badgeText === 'string' ? rawSpecImage.badgeText : DEFAULT_CAREERS_PAGE_CONTENT.speculativeImage?.badgeText,
+        badgeSubtext: typeof rawSpecImage.badgeSubtext === 'string' ? rawSpecImage.badgeSubtext : DEFAULT_CAREERS_PAGE_CONTENT.speculativeImage?.badgeSubtext,
+        focalPoint: typeof rawSpecImage.focalPoint === 'string' ? rawSpecImage.focalPoint : undefined,
+        width: typeof rawSpecImage.width === 'number' ? rawSpecImage.width : 1792,
+        height: typeof rawSpecImage.height === 'number' ? rawSpecImage.height : 1008,
+        sizeBytes: typeof rawSpecImage.sizeBytes === 'number' ? rawSpecImage.sizeBytes : 450000,
+        sizeLabel: typeof rawSpecImage.sizeLabel === 'string' ? rawSpecImage.sizeLabel : '450 KB',
+      };
+
       const specPageObj = sections.speculativePageCopy || sections.speculativePage || {};
-      const speculativePageCopy = {
+      const speculativePageCopy: SpeculativePageCopyData = {
         heading: typeof specPageObj.heading === 'string' ? specPageObj.heading : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.heading,
         subheading: typeof specPageObj.subheading === 'string' ? specPageObj.subheading : typeof specPageObj.subtitle === 'string' ? specPageObj.subtitle : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.subheading,
         supportGuidance: typeof specPageObj.supportGuidance === 'string' ? specPageObj.supportGuidance : typeof specPageObj.noticeText === 'string' ? specPageObj.noticeText : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.supportGuidance,
         successMessage: typeof specPageObj.successMessage === 'string' ? specPageObj.successMessage : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.successMessage,
+        buttonText: typeof specPageObj.buttonText === 'string' ? specPageObj.buttonText : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.buttonText,
+        buttonUrl: typeof specPageObj.buttonUrl === 'string' ? specPageObj.buttonUrl : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.buttonUrl,
+        contactEmailLabel: typeof specPageObj.contactEmailLabel === 'string' ? specPageObj.contactEmailLabel : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.contactEmailLabel,
+        contactEmail: typeof specPageObj.contactEmail === 'string' ? specPageObj.contactEmail : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.contactEmail,
+        contactPhoneLabel: typeof specPageObj.contactPhoneLabel === 'string' ? specPageObj.contactPhoneLabel : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.contactPhoneLabel,
+        contactPhone: typeof specPageObj.contactPhone === 'string' ? specPageObj.contactPhone : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.contactPhone,
+        contactLocationLabel: typeof specPageObj.contactLocationLabel === 'string' ? specPageObj.contactLocationLabel : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.contactLocationLabel,
+        contactLocation: typeof specPageObj.contactLocation === 'string' ? specPageObj.contactLocation : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.contactLocation,
+        formHeading: typeof specPageObj.formHeading === 'string' ? specPageObj.formHeading : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.formHeading,
+        formBadge: typeof specPageObj.formBadge === 'string' ? specPageObj.formBadge : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.formBadge,
+        formSubheading: typeof specPageObj.formSubheading === 'string' ? specPageObj.formSubheading : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.formSubheading,
+        ndaCheckboxLabel: typeof specPageObj.ndaCheckboxLabel === 'string' ? specPageObj.ndaCheckboxLabel : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.ndaCheckboxLabel,
+        submitButtonText: typeof specPageObj.submitButtonText === 'string' ? specPageObj.submitButtonText : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.submitButtonText,
+        slaNote: typeof specPageObj.slaNote === 'string' ? specPageObj.slaNote : DEFAULT_CAREERS_PAGE_CONTENT.speculativePageCopy.slaNote,
       };
 
       const content: CareersPageContentData = {
@@ -305,6 +395,7 @@ export async function getCareersPageContent(): Promise<{
         heroSubtitle,
         cultureCards,
         careersImage,
+        speculativeImage,
         benefitsHeading,
         benefitsSubtitle,
         benefitsCards,
@@ -317,25 +408,97 @@ export async function getCareersPageContent(): Promise<{
       };
 
       const defObj = sections.sharedDefaults || {};
+      const rawJobDetailImage = defObj.jobDetailImage || sections.jobDetailImage || {};
+      const jobDetailImage: CareersImageSettings = {
+        enabled: rawJobDetailImage.enabled !== undefined ? Boolean(rawJobDetailImage.enabled) : true,
+        imageUrl:
+          typeof rawJobDetailImage.imageUrl === 'string' && rawJobDetailImage.imageUrl
+            ? rawJobDetailImage.imageUrl
+            : DEFAULT_SHARED_CAREERS_DEFAULTS.jobDetailImage?.imageUrl || '/images/experienced-engineers-banner.jpg',
+        altText:
+          typeof rawJobDetailImage.altText === 'string'
+            ? rawJobDetailImage.altText
+            : DEFAULT_SHARED_CAREERS_DEFAULTS.jobDetailImage?.altText ||
+              'Astraiv Technologies senior software architects and experienced full-stack engineers collaborating on cloud-native systems architecture',
+        title:
+          typeof rawJobDetailImage.title === 'string'
+            ? rawJobDetailImage.title
+            : DEFAULT_SHARED_CAREERS_DEFAULTS.jobDetailImage?.title,
+        description:
+          typeof rawJobDetailImage.description === 'string'
+            ? rawJobDetailImage.description
+            : DEFAULT_SHARED_CAREERS_DEFAULTS.jobDetailImage?.description,
+        badgeText:
+          typeof rawJobDetailImage.badgeText === 'string'
+            ? rawJobDetailImage.badgeText
+            : DEFAULT_SHARED_CAREERS_DEFAULTS.jobDetailImage?.badgeText,
+        badgeSubtext:
+          typeof rawJobDetailImage.badgeSubtext === 'string'
+            ? rawJobDetailImage.badgeSubtext
+            : DEFAULT_SHARED_CAREERS_DEFAULTS.jobDetailImage?.badgeSubtext,
+        focalPoint: typeof rawJobDetailImage.focalPoint === 'string' ? rawJobDetailImage.focalPoint : undefined,
+        width: typeof rawJobDetailImage.width === 'number' ? rawJobDetailImage.width : 1792,
+        height: typeof rawJobDetailImage.height === 'number' ? rawJobDetailImage.height : 1008,
+        sizeBytes: typeof rawJobDetailImage.sizeBytes === 'number' ? rawJobDetailImage.sizeBytes : 650000,
+        sizeLabel: typeof rawJobDetailImage.sizeLabel === 'string' ? rawJobDetailImage.sizeLabel : '635 KB',
+      };
+
       const sharedDefaults: SharedCareersDefaultsData = {
+        jobDetailImage,
+        missionHeading: typeof defObj.missionHeading === 'string' && defObj.missionHeading.trim()
+          ? defObj.missionHeading
+          : DEFAULT_SHARED_CAREERS_DEFAULTS.missionHeading,
+        missionTemplate: typeof defObj.missionTemplate === 'string' && defObj.missionTemplate.trim()
+          ? defObj.missionTemplate
+          : DEFAULT_SHARED_CAREERS_DEFAULTS.missionTemplate,
+        interviewRoadmapHeading: typeof defObj.interviewRoadmapHeading === 'string' && defObj.interviewRoadmapHeading.trim()
+          ? defObj.interviewRoadmapHeading
+          : DEFAULT_SHARED_CAREERS_DEFAULTS.interviewRoadmapHeading,
+        interviewRoadmapSubtitle: typeof defObj.interviewRoadmapSubtitle === 'string' && defObj.interviewRoadmapSubtitle.trim()
+          ? defObj.interviewRoadmapSubtitle
+          : DEFAULT_SHARED_CAREERS_DEFAULTS.interviewRoadmapSubtitle,
         interviewStages: Array.isArray(defObj.interviewStages) && defObj.interviewStages.length > 0
           ? defObj.interviewStages
           : DEFAULT_SHARED_CAREERS_DEFAULTS.interviewStages,
+        benefitsHeading: typeof defObj.benefitsHeading === 'string' && defObj.benefitsHeading.trim()
+          ? defObj.benefitsHeading
+          : DEFAULT_SHARED_CAREERS_DEFAULTS.benefitsHeading,
         commonBenefits: Array.isArray(defObj.commonBenefits) && defObj.commonBenefits.length > 0
           ? defObj.commonBenefits
           : Array.isArray(defObj.defaultBenefits) && defObj.defaultBenefits.length > 0
           ? defObj.defaultBenefits
           : DEFAULT_SHARED_CAREERS_DEFAULTS.commonBenefits,
-        defaultReferralBonus: typeof defObj.defaultReferralBonus === 'string'
+        astraivStandardHeading: typeof defObj.astraivStandardHeading === 'string' && defObj.astraivStandardHeading.trim()
+          ? defObj.astraivStandardHeading
+          : DEFAULT_SHARED_CAREERS_DEFAULTS.astraivStandardHeading,
+        astraivStandardSubtitle: typeof defObj.astraivStandardSubtitle === 'string' && defObj.astraivStandardSubtitle.trim()
+          ? defObj.astraivStandardSubtitle
+          : DEFAULT_SHARED_CAREERS_DEFAULTS.astraivStandardSubtitle,
+        astraivStandardPoints: Array.isArray(defObj.astraivStandardPoints) && defObj.astraivStandardPoints.length > 0
+          ? defObj.astraivStandardPoints
+          : DEFAULT_SHARED_CAREERS_DEFAULTS.astraivStandardPoints,
+        referralHeading: typeof defObj.referralHeading === 'string' && defObj.referralHeading.trim()
+          ? defObj.referralHeading
+          : DEFAULT_SHARED_CAREERS_DEFAULTS.referralHeading,
+        referralBody: typeof defObj.referralBody === 'string' && defObj.referralBody.trim()
+          ? defObj.referralBody
+          : DEFAULT_SHARED_CAREERS_DEFAULTS.referralBody,
+        defaultReferralBonus: typeof defObj.defaultReferralBonus === 'string' && defObj.defaultReferralBonus.trim()
           ? defObj.defaultReferralBonus
-          : typeof defObj.referralBonusAmount === 'string'
+          : typeof defObj.referralBonusAmount === 'string' && defObj.referralBonusAmount.trim()
           ? defObj.referralBonusAmount
           : DEFAULT_SHARED_CAREERS_DEFAULTS.defaultReferralBonus,
-        defaultPrivacyText: typeof defObj.defaultPrivacyText === 'string'
+        applicationSubheading: typeof defObj.applicationSubheading === 'string' && defObj.applicationSubheading.trim()
+          ? defObj.applicationSubheading
+          : DEFAULT_SHARED_CAREERS_DEFAULTS.applicationSubheading,
+        defaultPrivacyText: typeof defObj.defaultPrivacyText === 'string' && defObj.defaultPrivacyText.trim()
           ? defObj.defaultPrivacyText
-          : typeof defObj.defaultPrivacyCopy === 'string'
+          : typeof defObj.defaultPrivacyCopy === 'string' && defObj.defaultPrivacyCopy.trim()
           ? defObj.defaultPrivacyCopy
           : DEFAULT_SHARED_CAREERS_DEFAULTS.defaultPrivacyText,
+        applicationSlaNote: typeof defObj.applicationSlaNote === 'string' && defObj.applicationSlaNote.trim()
+          ? defObj.applicationSlaNote
+          : DEFAULT_SHARED_CAREERS_DEFAULTS.applicationSlaNote,
       };
 
       return { data: content, sharedDefaults };
@@ -397,7 +560,16 @@ export async function updateCareersPageContent(
 
     safeRevalidate('/recruitment');
     safeRevalidate('/careers');
+    safeRevalidate('/en/careers');
+    safeRevalidate('/es/careers');
+    safeRevalidate('/hi/careers');
+    safeRevalidate('/ar/careers');
     safeRevalidate('/contact');
+
+    await triggerClientRevalidation(
+      ['/careers', '/en/careers', '/es/careers', '/hi/careers', '/ar/careers', '/contact'],
+      ['careers', 'page-content']
+    );
 
     return { success: true, message: 'Careers page content published successfully' };
   } catch (err) {

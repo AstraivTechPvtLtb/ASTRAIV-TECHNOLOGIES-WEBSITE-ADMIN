@@ -52,6 +52,17 @@ export const MEDIA_SLOT_SPECS: Record<string, MediaSlotSpec> = {
     allowedFormats: ['image/webp', 'image/png', 'image/jpeg', 'image/svg+xml'],
     description: 'High-resolution engineering collaboration and project roadmap image rendered between the hero introduction and the engagement models catalog on the client website.'
   },
+  careers_hero: {
+    slotKey: 'careers_hero',
+    name: 'Careers & Roles Page Image',
+    recommendedWidth: 1920,
+    recommendedHeight: 1080,
+    aspectRatio: '16:9',
+    maxSizeBytes: 2.5 * 1024 * 1024,
+    maxSizeLabel: '2.5 MB',
+    allowedFormats: ['image/webp', 'image/png', 'image/jpeg', 'image/svg+xml'],
+    description: 'High-resolution engineering culture and collaborative workspace image rendered on the client careers page.'
+  },
   service_icon: {
     slotKey: 'service_icon',
     name: 'Service Offering Icon',
