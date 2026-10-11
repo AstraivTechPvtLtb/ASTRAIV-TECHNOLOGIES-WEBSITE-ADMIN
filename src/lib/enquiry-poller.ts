@@ -172,6 +172,8 @@ class EnquiryNotificationPoller {
     this.abortController = new AbortController();
     const signal = this.abortController.signal;
 
+    let nextPollDelay = this.currentDelayMs;
+
     try {
       const url = `/api/admin/enquiries/poll?since=${encodeURIComponent(this.cursor)}`;
       const res = await fetch(url, {
@@ -197,12 +199,24 @@ class EnquiryNotificationPoller {
       const data = await res.json();
       this.setSyncState(true);
       this.currentDelayMs = this.baseDelayMs; // Reset backoff on success
+      nextPollDelay = this.currentDelayMs;
 
-      if (data.latestTimestamp && new Date(data.latestTimestamp).getTime() > new Date(this.cursor).getTime()) {
+      if (data.latestTimestamp && new Date(data.latestTimestamp).getTime() >= new Date(this.cursor).getTime()) {
         this.cursor = data.latestTimestamp;
       }
 
+      // If more enquiries remain in the database than the batch delivered, schedule immediate follow-up poll
+      if (data.hasNew && typeof data.count === 'number' && data.count > (data.newEnquiries?.length || 0)) {
+        nextPollDelay = 150;
+      }
+
       if (data.hasNew && Array.isArray(data.newEnquiries) && data.newEnquiries.length > 0) {
+        // Prevent memory leak over long sessions by bounding seenIds set size
+        if (this.seenIds.size > 2000) {
+          const idsArray = Array.from(this.seenIds);
+          this.seenIds = new Set(idsArray.slice(-1000));
+        }
+
         // Deduplicate against seen IDs
         const unseenEnquiries: EnquiryNotificationPayload[] = [];
         for (const enq of data.newEnquiries) {
@@ -239,7 +253,7 @@ class EnquiryNotificationPoller {
     } finally {
       this.isPolling = false;
       this.abortController = null;
-      this.scheduleNext(this.currentDelayMs);
+      this.scheduleNext(nextPollDelay);
     }
   }
 }

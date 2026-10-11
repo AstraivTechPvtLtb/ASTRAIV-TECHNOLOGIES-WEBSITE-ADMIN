@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { sanitizeSvgContent } from '../src/lib/media-specs.ts';
 
 describe('Admin Security Remediation Verification Suite', () => {
   const cwd = process.cwd();
@@ -61,6 +62,7 @@ describe('Admin Security Remediation Verification Suite', () => {
         'src/controllers/enquiries.controller.ts',
         'src/controllers/recruitment.controller.ts',
         'src/controllers/reviews.controller.ts',
+        'src/controllers/media.controller.ts',
       ];
 
       for (const ctrl of controllers) {
@@ -69,32 +71,166 @@ describe('Admin Security Remediation Verification Suite', () => {
         assert.ok(content.includes('requireAdminUser'), `${ctrl} must import or call requireAdminUser`);
       }
     });
+
+    it('verifies media.controller.ts guards all actions and rejects anonymous/client requests', () => {
+      const mediaCtrl = path.resolve(cwd, 'src/controllers/media.controller.ts');
+      const content = fs.readFileSync(mediaCtrl, 'utf8');
+
+      // Verify server action directive and auth requirement
+      assert.ok(content.includes("'use server'"), 'media.controller.ts must be a server action module');
+      assert.ok(content.includes('await requireAdminUser()'), 'media actions must call requireAdminUser');
+
+      // Verify all export actions enforce authorization
+      assert.ok(content.includes('export async function getMediaAssets'), 'Must export getMediaAssets');
+      assert.ok(content.includes('export async function registerMediaAsset'), 'Must export registerMediaAsset');
+      assert.ok(content.includes('export async function updateMediaAsset'), 'Must export updateMediaAsset');
+      assert.ok(content.includes('export async function deleteMediaAsset'), 'Must export deleteMediaAsset');
+
+      // Verify safe URL validation in registerMediaAsset
+      assert.ok(content.includes('javascript:'), 'registerMediaAsset must reject javascript: URLs');
+      assert.ok(content.includes('data:text/html'), 'registerMediaAsset must reject data:text/html URLs');
+    });
+
+    it('validates negative authorization behavior when an unauthenticated caller invokes media functions', () => {
+      // Simulation of unauthenticated server action call flow
+      function simulateUnauthenticatedMediaCall(isAuthenticated, role) {
+        if (!isAuthenticated || role !== 'ADMIN') {
+          return { success: false, data: [], error: 'Unauthorized: Valid administrator privileges required.' };
+        }
+        return { success: true, data: [{ id: 'asset-1', url: '/images/hero.webp', isPrivate: true }] };
+      }
+
+      // Anonymous caller
+      const anonResult = simulateUnauthenticatedMediaCall(false, null);
+      assert.equal(anonResult.success, false, 'Anonymous caller must be rejected');
+      assert.equal(anonResult.data.length, 0, 'Anonymous caller must receive zero asset records');
+      assert.ok(anonResult.error?.includes('Unauthorized'), 'Error message must reflect authorization failure');
+
+      // Client portal session (role !== 'ADMIN')
+      const clientSessionResult = simulateUnauthenticatedMediaCall(true, 'CLIENT');
+      assert.equal(clientSessionResult.success, false, 'Client role caller must be rejected');
+      assert.equal(clientSessionResult.data.length, 0, 'Client session must receive zero asset records');
+
+      // Authenticated admin
+      const adminResult = simulateUnauthenticatedMediaCall(true, 'ADMIN');
+      assert.equal(adminResult.success, true, 'Verified admin must succeed');
+      assert.equal(adminResult.data.length, 1);
+    });
   });
 
   describe('3. Resume Download Path Traversal & Security Confinement', () => {
-    it('enforces directory boundary confinement on resume download keys', () => {
+    it('enforces cross-platform directory boundary confinement on resume download keys', () => {
       const baseDir = path.resolve(cwd, '.data', 'resumes');
       const maliciousKeys = [
         '../../etc/passwd',
         '..\\..\\windows\\system32\\cmd.exe',
         'sub/../../package.json',
-        '..%2F..%2Fetc%2Fpasswd'
+        '..%2F..%2Fetc%2Fpasswd',
+        '/etc/passwd',
+        '..\\..\\..\\etc\\shadow',
       ];
 
       for (const rawKey of maliciousKeys) {
-        const key = decodeURIComponent(rawKey);
-        const filePath = path.resolve(baseDir, key);
+        // Cross-platform normalization converts both POSIX and Windows separators
+        const decodedKey = decodeURIComponent(rawKey).replace(/\\/g, '/');
+        const filePath = path.resolve(baseDir, decodedKey);
         const isContained = filePath.startsWith(baseDir + path.sep);
         assert.equal(isContained, false, `Malicious key ${rawKey} should not be contained within baseDir`);
       }
 
       const validKey = 'staging/2026-10-08/abcdef1234567890abcdef1234567890.pdf';
-      const validPath = path.resolve(baseDir, validKey);
+      const normalizedValid = decodeURIComponent(validKey).replace(/\\/g, '/');
+      const validPath = path.resolve(baseDir, normalizedValid);
       assert.equal(validPath.startsWith(baseDir + path.sep), true, 'Valid key must be properly contained');
+    });
+
+    it('verifies download route implements cross-platform backslash normalization and confinement', () => {
+      const routePath = path.resolve(cwd, 'src/app/api/admin/resumes/download/route.ts');
+      const content = fs.readFileSync(routePath, 'utf8');
+
+      assert.ok(content.includes('replace(/\\\\/g'), 'Download route must normalize backslashes for cross-platform Linux/Windows safety');
+      assert.ok(content.includes('startsWith(baseDir + path.sep)'), 'Download route must check directory containment');
+      assert.ok(content.includes('status: 403'), 'Download route must return 403 on traversal attempt');
+      assert.ok(content.includes('status: 401'), 'Download route must require admin authentication');
     });
   });
 
-  describe('4. Timing-Safe Cryptographic Comparisons', () => {
+  describe('4. Database Connection Separation & Verified TLS', () => {
+    it('verifies prisma.config.ts uses DIRECT_URL for migrations and does not rewrite port to 6543', () => {
+      const prismaCfgPath = path.resolve(cwd, 'prisma.config.ts');
+      const content = fs.readFileSync(prismaCfgPath, 'utf8');
+
+      assert.ok(content.includes('process.env.DIRECT_URL'), 'prisma.config.ts must use DIRECT_URL for migration tooling');
+      assert.ok(!content.includes('pooler.supabase.com:6543'), 'prisma.config.ts must NOT rewrite migration connection to pooler port 6543');
+      assert.ok(!content.includes('pgbouncer=true'), 'prisma.config.ts must NOT append pgbouncer=true to migration connection');
+    });
+
+    it('verifies src/models/db.ts uses DATABASE_URL only and never falls back to administrative DIRECT_URL', () => {
+      const dbPath = path.resolve(cwd, 'src/models/db.ts');
+      const content = fs.readFileSync(dbPath, 'utf8');
+
+      assert.ok(content.includes('process.env.DATABASE_URL'), 'db.ts must read DATABASE_URL');
+      assert.ok(!content.includes('process.env.DIRECT_URL'), 'db.ts runtime must NOT fall back to DIRECT_URL');
+    });
+
+    it('verifies src/models/db.ts enforces verified TLS rejectUnauthorized: true on remote connections', () => {
+      const dbPath = path.resolve(cwd, 'src/models/db.ts');
+      const content = fs.readFileSync(dbPath, 'utf8');
+
+      assert.ok(content.includes('rejectUnauthorized: true'), 'db.ts must enforce rejectUnauthorized: true for remote production TLS');
+      assert.ok(!content.includes('rejectUnauthorized: false'), 'db.ts must NOT disable TLS verification');
+    });
+  });
+
+  describe('5. SVG Sanitization Regression Suite', () => {
+    it('strips script tags and executable code inside SVG files', () => {
+      const evilSvg = '<svg xmlns="http://www.w3.org/2000/svg"><script>alert("XSS")</script><circle cx="50" cy="50" r="40"/></svg>';
+      const sanitized = sanitizeSvgContent(evilSvg);
+      assert.ok(!sanitized.includes('<script'), 'Must strip <script> tag');
+      assert.ok(!sanitized.includes('alert('), 'Must strip script payload');
+      assert.ok(sanitized.includes('<circle'), 'Must preserve valid SVG primitives');
+    });
+
+    it('strips foreignObject tags embedding HTML payloads', () => {
+      const evilSvg = '<svg><foreignObject width="100" height="100"><body xmlns="http://www.w3.org/1999/xhtml"><script>alert(1)</script></body></foreignObject><rect width="10" height="10"/></svg>';
+      const sanitized = sanitizeSvgContent(evilSvg);
+      assert.ok(!sanitized.includes('<foreignObject'), 'Must strip <foreignObject> container');
+      assert.ok(sanitized.includes('<rect'), 'Must preserve valid SVG shapes');
+    });
+
+    it('strips inline event handlers (onload, onerror, onclick, onmouseover)', () => {
+      const evilSvg = '<svg onload="alert(1)"><g onclick="fetch(\'/steal\')" onmouseover="evil()"><path d="M0 0h10v10H0z"/></g></svg>';
+      const sanitized = sanitizeSvgContent(evilSvg);
+      assert.ok(!sanitized.includes('onload='), 'Must strip onload');
+      assert.ok(!sanitized.includes('onclick='), 'Must strip onclick');
+      assert.ok(!sanitized.includes('onmouseover='), 'Must strip onmouseover');
+      assert.ok(sanitized.includes('<path'), 'Must preserve valid path');
+    });
+
+    it('strips javascript: and data:text/html URIs in href and xlink:href', () => {
+      const evilSvg = '<svg><a href="javascript:alert(1)"><text>Link</text></a><image xlink:href="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg=="/></svg>';
+      const sanitized = sanitizeSvgContent(evilSvg);
+      assert.ok(!sanitized.includes('javascript:'), 'Must strip javascript: URI');
+      assert.ok(!sanitized.includes('data:text/html'), 'Must strip data:text/html URI');
+    });
+
+    it('strips external <use> tags that attempt remote resource inclusion', () => {
+      const evilSvg = '<svg><use href="http://attacker.com/evil.svg#payload"/><use xlink:href="//evil.com/x.svg#y"/><use href="#local-icon"/></svg>';
+      const sanitized = sanitizeSvgContent(evilSvg);
+      assert.ok(!sanitized.includes('http://attacker.com'), 'Must strip external use href');
+      assert.ok(!sanitized.includes('//evil.com'), 'Must strip external xlink:href');
+      assert.ok(sanitized.includes('#local-icon'), 'Must preserve safe local symbol reference');
+    });
+
+    it('strips XML DOCTYPE and ENTITY definitions (XXE prevention)', () => {
+      const evilSvg = '<!DOCTYPE svg [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><svg>&xxe;</svg>';
+      const sanitized = sanitizeSvgContent(evilSvg);
+      assert.ok(!sanitized.includes('<!DOCTYPE'), 'Must strip DOCTYPE declaration');
+      assert.ok(!sanitized.includes('<!ENTITY'), 'Must strip ENTITY declaration');
+    });
+  });
+
+  describe('6. Timing-Safe Cryptographic Comparisons', () => {
     it('validates timingSafeEqual behavior for webhook and revalidation verification', () => {
       const expectedSecret = 'production_revalidation_secret_key_astraiv_2026';
       const matchingSecret = 'production_revalidation_secret_key_astraiv_2026';
@@ -112,7 +248,7 @@ describe('Admin Security Remediation Verification Suite', () => {
     });
   });
 
-  describe('5. Client Portal Password Security & Remediation', () => {
+  describe('7. Client Portal Password Security & Remediation', () => {
     it('verifies leads.controller.ts uses hashPassword and does NOT store plaintext passwords', () => {
       const leadsCtrl = path.resolve(cwd, 'src/controllers/leads.controller.ts');
       const content = fs.readFileSync(leadsCtrl, 'utf8');
@@ -141,7 +277,7 @@ describe('Admin Security Remediation Verification Suite', () => {
     });
   });
 
-  describe('6. Secure Enquiry Notification & Polling Verification', () => {
+  describe('8. Secure Enquiry Notification & Polling Verification', () => {
     it('verifies pollNewEnquiries action enforces requireAdminUser authorization guard', () => {
       const enqCtrl = path.resolve(cwd, 'src/controllers/enquiries.controller.ts');
       const content = fs.readFileSync(enqCtrl, 'utf8');

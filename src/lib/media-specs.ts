@@ -147,11 +147,28 @@ export const MEDIA_SLOT_SPECS: Record<string, MediaSlotSpec> = {
  */
 export function sanitizeSvgContent(rawSvg: string): string {
   return rawSvg
+    // Strip XML declarations and DTD / Entity definitions (XXE prevention)
+    .replace(/<!DOCTYPE\b[^>]*>/gi, '')
+    .replace(/<!ENTITY\b[^>]*>/gi, '')
+    // Strip scripts
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    // Strip HTML foreignObject embedding
+    .replace(/<foreignObject\b[^<]*(?:(?!<\/foreignObject>)<[^<]*)*<\/foreignObject>/gi, '')
+    // Strip inline event handlers (onload, onerror, onclick, onmouseover, etc.)
     .replace(/\bon\w+\s*=\s*(?:'[^']*'|"[^"]*"|[^\s>]+)/gi, '')
-    .replace(/href\s*=\s*['"]javascript:[^'"]*['"]/gi, '')
-    .replace(/xlink:href\s*=\s*['"]javascript:[^'"]*['"]/gi, '')
+    // Strip javascript: and vbscript: URIs in href and xlink:href
+    .replace(/(href|xlink:href)\s*=\s*['"]\s*(?:javascript:|vbscript:|data:text\/html)[^'"]*['"]/gi, '')
+    // Strip dangerous tags: iframe, object, embed, applet, meta, link, base
     .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
     .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
-    .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '');
+    .replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+    .replace(/<applet\b[^<]*(?:(?!<\/applet>)<[^<]*)*<\/applet>/gi, '')
+    .replace(/<meta\b[^>]*\/?>/gi, '')
+    .replace(/<link\b[^>]*\/?>/gi, '')
+    .replace(/<base\b[^>]*\/?>/gi, '')
+    // Strip external <use> tags that reference remote URLs or data URIs
+    .replace(/<use\b[^>]*\b(?:href|xlink:href)\s*=\s*['"]\s*(?!#)[^'"]+['"][^>]*\/?>/gi, '')
+    // Strip dangerous animation tags targeting href or javascript
+    .replace(/<animate\b[^>]*\b(?:attributeName\s*=\s*['"]?(?:href|xlink:href)['"]?|\bto\s*=\s*['"]?javascript:)[^>]*\/?>/gi, '')
+    .replace(/<set\b[^>]*\b(?:attributeName\s*=\s*['"]?(?:href|xlink:href)['"]?|\bto\s*=\s*['"]?javascript:)[^>]*\/?>/gi, '');
 }

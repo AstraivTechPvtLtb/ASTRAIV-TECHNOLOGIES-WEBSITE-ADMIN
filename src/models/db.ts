@@ -6,6 +6,7 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
+import fs from 'fs';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -14,7 +15,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function getCleanConnectionString(): string {
-  let raw = (process.env.DATABASE_URL || process.env.DIRECT_URL)?.trim();
+  let raw = process.env.DATABASE_URL?.trim();
 
   if (!raw) {
     if (process.env.NODE_ENV === 'test') {
@@ -57,7 +58,12 @@ const pool =
   globalForPrisma.pool ??
   new pg.Pool({
     connectionString,
-    ssl: isLocalhost ? false : { rejectUnauthorized: false },
+    ssl: isLocalhost
+      ? false
+      : {
+          rejectUnauthorized: true,
+          ...(process.env.PGSSLROOTCERT ? { ca: fs.readFileSync(process.env.PGSSLROOTCERT).toString() } : {}),
+        },
     max: 10,
     connectionTimeoutMillis: 10000,
     idleTimeoutMillis: 30000,

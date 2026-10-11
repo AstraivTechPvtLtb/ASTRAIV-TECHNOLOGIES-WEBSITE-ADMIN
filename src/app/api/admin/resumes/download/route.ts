@@ -29,9 +29,10 @@ export async function GET(req: NextRequest) {
     // If local provider in dev mode, stream file directly with attachment header
     if (provider.providerName === 'local') {
       const baseDir = path.resolve(process.cwd(), '.data', 'resumes');
-      const filePath = path.resolve(baseDir, key);
+      const normalizedKey = decodeURIComponent(key).replace(/\\/g, '/');
+      const filePath = path.resolve(baseDir, normalizedKey);
 
-      // Strict path traversal containment
+      // Strict cross-platform path traversal containment
       if (!filePath.startsWith(baseDir + path.sep)) {
         return NextResponse.json({ error: 'Access denied: Path traversal detected' }, { status: 403 });
       }

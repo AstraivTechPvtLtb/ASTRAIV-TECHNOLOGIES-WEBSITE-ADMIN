@@ -211,16 +211,18 @@ export async function pollNewEnquiries(
 
     // 1. Primary PostgreSQL Engine via Prisma ORM
     try {
+      // 5-second overlap window to handle delayed DB visibility and transaction commits
+      const overlapDate = new Date(sinceDate.getTime() - 5000);
       const where: Prisma.ContactSubmissionWhereInput = {
-        createdAt: { gt: sinceDate },
+        createdAt: { gte: overlapDate },
       };
 
       const [count, records] = await Promise.all([
         db.contactSubmission.count({ where }),
         db.contactSubmission.findMany({
           where,
-          orderBy: { createdAt: 'desc' },
-          take: 10,
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+          take: 50,
           select: {
             id: true,
             service: true,
@@ -235,7 +237,7 @@ export async function pollNewEnquiries(
         createdAt: r.createdAt.toISOString(),
       }));
 
-      const latestTimestamp = records.length > 0 ? records[0].createdAt.toISOString() : null;
+      const latestTimestamp = records.length > 0 ? records[records.length - 1].createdAt.toISOString() : null;
 
       return {
         hasNew: count > 0,
@@ -250,12 +252,13 @@ export async function pollNewEnquiries(
     // 2. Supabase Cloud Fallback
     if (isSupabaseConfigured()) {
       const supabase = await createSupabaseClient();
+      const overlapDate = new Date(sinceDate.getTime() - 5000);
       const { data, count, error } = await supabase
         .from('contact_submissions')
         .select('id, service, created_at', { count: 'exact' })
-        .gt('created_at', sinceDate.toISOString())
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .gte('created_at', overlapDate.toISOString())
+        .order('created_at', { ascending: true })
+        .limit(50);
 
       if (error) throw error;
 
@@ -266,7 +269,7 @@ export async function pollNewEnquiries(
         createdAt: r.created_at,
       }));
 
-      const latestTimestamp = records.length > 0 ? records[0].created_at : null;
+      const latestTimestamp = records.length > 0 ? records[records.length - 1].created_at : null;
 
       return {
         hasNew: (count || 0) > 0,

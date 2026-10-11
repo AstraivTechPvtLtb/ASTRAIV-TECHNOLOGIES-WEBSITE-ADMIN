@@ -6,7 +6,7 @@
  */
 
 import { db } from '@/models/db';
-import { getAdminUser } from './auth.controller';
+import { requireAdminUser } from './auth.controller';
 import { logAuditAction } from './audit.controller';
 import type { MediaSlotSpec, MediaAssetItem } from '@/lib/media-specs';
 import { sanitizeSvgContent as pureSanitizeSvg } from '@/lib/media-specs';
@@ -20,9 +20,11 @@ export async function sanitizeSvgContent(rawSvg: string): Promise<string> {
 
 /**
  * Retrieves all registered media assets from the library.
+ * Requires verified administrator authorization.
  */
 export async function getMediaAssets(slotFilter?: string): Promise<{ success: boolean; data: MediaAssetItem[]; error?: string }> {
   try {
+    await requireAdminUser();
     const where = slotFilter ? { slot: slotFilter } : {};
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rows = await (db as any).mediaAsset.findMany({
@@ -42,6 +44,7 @@ export async function getMediaAssets(slotFilter?: string): Promise<{ success: bo
 
 /**
  * Registers an uploaded media asset with its verified metadata.
+ * Requires verified administrator authorization.
  */
 export async function registerMediaAsset(data: {
   url: string;
@@ -58,13 +61,24 @@ export async function registerMediaAsset(data: {
   isPrivate?: boolean;
 }): Promise<{ success: boolean; asset?: MediaAssetItem; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
+
+    // Validate asset URL scheme: must be http, https, or relative path starting with /
+    const trimmedUrl = data.url.trim();
+    const lowerUrl = trimmedUrl.toLowerCase();
+    const isSafeUrl =
+      (/^(https?:\/\/|\/)/i.test(trimmedUrl) || /^data:image\/(png|jpeg|webp|svg\+xml);base64,/i.test(trimmedUrl)) &&
+      !lowerUrl.includes('javascript:') &&
+      !lowerUrl.includes('vbscript:') &&
+      !lowerUrl.includes('data:text/html');
+    if (!isSafeUrl) {
+      return { success: false, error: 'Invalid or unsafe media asset URL.' };
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const created = await (db as any).mediaAsset.create({
       data: {
-        url: data.url.trim(),
+        url: trimmedUrl,
         filename: data.filename.trim(),
         mimeType: data.mimeType.trim(),
         sizeBytes: data.sizeBytes,
@@ -90,6 +104,7 @@ export async function registerMediaAsset(data: {
 
 /**
  * Updates an existing media asset's metadata (alt text, caption, focal point).
+ * Requires verified administrator authorization.
  */
 export async function updateMediaAsset(id: string, data: {
   altText?: string;
@@ -97,8 +112,7 @@ export async function updateMediaAsset(id: string, data: {
   focalPoint?: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any).mediaAsset.update({
@@ -120,11 +134,11 @@ export async function updateMediaAsset(id: string, data: {
 
 /**
  * Safe deletion of an unreferenced media asset.
+ * Requires verified administrator authorization.
  */
 export async function deleteMediaAsset(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const asset = await (db as any).mediaAsset.findUnique({ where: { id } });
