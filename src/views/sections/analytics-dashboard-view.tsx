@@ -81,8 +81,8 @@ export function AnalyticsDashboardView() {
   const [realtime, setRealtime] = useState<AnalyticsRealtime | null>(null);
 
   // Status States
-  const [_isConfigured, setIsConfigured] = useState<boolean>(true);
-  const [_configReason, setConfigReason] = useState<string | null>(null);
+  const [isConfigured, setIsConfigured] = useState<boolean>(true);
+  const [configReason, setConfigReason] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -347,6 +347,26 @@ export function AnalyticsDashboardView() {
           >
             Apply Range
           </Button>
+        </div>
+      )}
+
+      {/* Fallback / Offline Telemetry Notice */}
+      {(!isConfigured || overview?.isDemoData) && (
+        <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-800/50 flex items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-amber-400 shrink-0" />
+            <div>
+              <h5 className="text-xs font-bold text-amber-200">
+                Fallback Telemetry Active (Unauthenticated / Offline Mode)
+              </h5>
+              <p className="text-xs text-amber-400/80 mt-0.5">
+                {configReason || 'Google Analytics 4 service account credentials are unauthenticated or missing. Displaying simulated baseline metrics.'}
+              </p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+            Fallback Mode
+          </span>
         </div>
       )}
 
