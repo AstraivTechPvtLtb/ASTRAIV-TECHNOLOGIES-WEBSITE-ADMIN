@@ -363,6 +363,7 @@ export async function assignLead(
  */
 export async function updateLeadNotes(id: string, notes: string): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     await pool.query(
       `UPDATE crm_lead SET notes = $1, "updatedAt" = NOW() WHERE id = $2`,
       [notes, id]

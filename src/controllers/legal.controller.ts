@@ -14,7 +14,7 @@
 
 import { db } from '@/models/db';
 import { revalidatePath } from 'next/cache';
-import { getAdminUser } from './auth.controller';
+import { getAdminUser, requireAdminUser } from './auth.controller';
 import { logAuditAction } from './audit.controller';
 
 export interface LegalSection {
@@ -59,6 +59,7 @@ export interface LegalDocumentData {
  */
 export async function getLegalDocument(slug: string): Promise<{ success: boolean; data?: LegalDocumentData; error?: string }> {
   try {
+    await requireAdminUser();
     const doc = await db.legalDocument.findUnique({
       where: { slug },
       include: {
@@ -114,10 +115,7 @@ export async function saveLegalDraft(params: {
   sections: LegalSection[];
 }): Promise<{ success: boolean; revisionId?: string; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) {
-      return { success: false, error: 'Unauthorized: Admin authentication required.' };
-    }
+    const admin = await requireAdminUser();
 
     const doc = await db.legalDocument.findUnique({
       where: { slug: params.documentSlug },
@@ -200,10 +198,7 @@ export async function saveLegalDraft(params: {
  */
 export async function publishLegalRevision(revisionId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) {
-      return { success: false, error: 'Unauthorized: Admin authentication required.' };
-    }
+    const admin = await requireAdminUser();
 
     const revision = await db.legalRevision.findUnique({
       where: { id: revisionId },
@@ -277,10 +272,7 @@ export async function publishLegalRevision(revisionId: string): Promise<{ succes
  */
 export async function restoreLegalRevision(historicalRevisionId: string): Promise<{ success: boolean; newRevisionId?: string; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) {
-      return { success: false, error: 'Unauthorized: Admin authentication required.' };
-    }
+    const admin = await requireAdminUser();
 
     const historical = await db.legalRevision.findUnique({
       where: { id: historicalRevisionId },

@@ -7,7 +7,7 @@
 
 import { db } from '@/models/db';
 import { revalidatePath } from 'next/cache';
-import { getAdminUser } from './auth.controller';
+import { requireAdminUser } from './auth.controller';
 import { logAuditAction } from './audit.controller';
 
 export interface AdminFaq {
@@ -24,6 +24,7 @@ export interface AdminFaq {
 
 export async function getFaqs(): Promise<{ success: boolean; data: AdminFaq[]; error?: string }> {
   try {
+    await requireAdminUser();
     const rows = await db.faqItem.findMany({
       orderBy: { orderIndex: 'asc' }
     });
@@ -57,8 +58,7 @@ export async function createFaq(data: {
   orderIndex?: number;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.faqItem.create({
       data: {
@@ -82,8 +82,7 @@ export async function createFaq(data: {
 
 export async function updateFaq(id: string, data: Partial<AdminFaq>): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.faqItem.update({
       where: { id },
@@ -109,8 +108,7 @@ export async function updateFaq(id: string, data: Partial<AdminFaq>): Promise<{ 
 
 export async function deleteFaq(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.faqItem.delete({ where: { id } });
     await logAuditAction({ action: 'DELETE_FAQ', entityType: 'faq', entityId: id });

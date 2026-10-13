@@ -10,6 +10,7 @@ import {
   registerMediaAsset,
   deleteMediaAsset,
   updateMediaAsset,
+  sanitizeSvgContent,
 } from '@/controllers/media.controller';
 import { MEDIA_SLOT_SPECS, MediaSlotSpec, MediaAssetItem } from '@/lib/media-specs';
 import {
@@ -115,12 +116,17 @@ export function MediaLibraryView({ initialAssets }: MediaLibraryViewProps) {
     setUploadFeedback(null);
 
     try {
-      // In production, upload to Supabase / Cloudflare R2 object storage.
-      // For demonstration, we construct a verified persistent asset URL with metadata.
-      const simulatedUrl = `/images/uploads/${Date.now()}-${stagedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      let assetUrl = `/images/uploads/${Date.now()}-${stagedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+
+      if (stagedFile.type.includes('svg')) {
+        const text = await stagedFile.text();
+        const sanitized = await sanitizeSvgContent(text);
+        const encoded = window.btoa(unescape(encodeURIComponent(sanitized)));
+        assetUrl = `data:image/svg+xml;base64,${encoded}`;
+      }
 
       const res = await registerMediaAsset({
-        url: simulatedUrl,
+        url: assetUrl,
         filename: stagedFile.name,
         mimeType: stagedFile.type,
         sizeBytes: stagedFile.size,

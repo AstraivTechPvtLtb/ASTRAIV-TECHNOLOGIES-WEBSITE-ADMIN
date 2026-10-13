@@ -524,6 +524,7 @@ export async function updateReview(
  */
 export async function deleteReview(id: string): Promise<AdminActionResponse> {
   try {
+    await requireAdminUser();
     let deleted = false;
 
     // 1. Primary PostgreSQL execution via Prisma ORM
@@ -589,6 +590,7 @@ export async function ingestFormSubmission(
   input: FormSubmissionInput
 ): Promise<AdminActionResponse & { review?: AdminReview }> {
   try {
+    await requireAdminUser();
     if (!input.clientName?.trim()) {
       return { success: false, error: 'Client name is required.' };
     }

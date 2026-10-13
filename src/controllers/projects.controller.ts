@@ -29,6 +29,7 @@ export async function getProjects({
   limit = 50,
 }: GetProjectsParams = {}): Promise<{ data: AdminProject[]; total: number; error?: string }> {
   try {
+    await requireAdminUser();
     const offset = (page - 1) * limit;
 
     // 1. Primary: Direct PostgreSQL via Prisma ORM

@@ -160,8 +160,19 @@ export function AnalyticsDashboardView() {
       if (overviewData?.data) {
         setOverview(overviewData.data);
       }
-      setIsConfigured(overviewData?.configured ?? true);
-      setConfigReason(overviewData?.configReason || null);
+      const isFallback = Boolean(
+        overviewData?.isFallback ||
+        overviewData?.telemetryUnavailable ||
+        overviewData?.data?.isDemoData ||
+        overviewData?.data?.isFallback ||
+        overviewData?.data?.telemetryUnavailable ||
+        overviewData?.configured === false
+      );
+      setIsConfigured(!isFallback);
+      setConfigReason(
+        overviewData?.configReason ||
+        (isFallback ? 'Google Analytics 4 service account credentials are unauthenticated or missing. Telemetry is unavailable (Offline mode).' : null)
+      );
 
       if (usersData?.data) setTimeline(usersData.data || []);
       if (pagesData?.data) setPages(pagesData.data || []);
@@ -233,6 +244,17 @@ export function AnalyticsDashboardView() {
     }));
   }, [devices]);
 
+  const isFallbackActive =
+    !isConfigured ||
+    Boolean(
+      overview?.isDemoData ||
+      overview?.isFallback ||
+      overview?.telemetryUnavailable ||
+      realtime?.isDemoData ||
+      realtime?.isFallback ||
+      realtime?.telemetryUnavailable
+    );
+
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-7xl">
       {/* Header Controls Bar */}
@@ -241,20 +263,26 @@ export function AnalyticsDashboardView() {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm">
             <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+              {isFallbackActive ? (
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500" />
+              ) : (
+                <>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+                </>
+              )}
             </span>
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-bold text-white">
-                  {realtime ? realtime.activeUsers : 0} Active Users
+                  {isFallbackActive ? 'Offline / Telemetry Inactive' : `${realtime ? realtime.activeUsers : 0} Active Users`}
                 </span>
-                <span className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">
-                  Live
+                <span className={`text-[10px] font-semibold uppercase tracking-wider ${isFallbackActive ? 'text-amber-400' : 'text-emerald-400'}`}>
+                  {isFallbackActive ? 'Offline' : 'Live'}
                 </span>
               </div>
               <span className="text-[10px] text-slate-400 font-medium">
-                Real-time active visitors on website
+                {isFallbackActive ? 'GA4 telemetry not connected' : 'Real-time active visitors on website'}
               </span>
             </div>
           </div>
@@ -351,21 +379,21 @@ export function AnalyticsDashboardView() {
       )}
 
       {/* Fallback / Offline Telemetry Notice */}
-      {(!isConfigured || overview?.isDemoData) && (
+      {isFallbackActive && (
         <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-800/50 flex items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <AlertCircle className="h-5 w-5 text-amber-400 shrink-0" />
             <div>
               <h5 className="text-xs font-bold text-amber-200">
-                Fallback Telemetry Active (Unauthenticated / Offline Mode)
+                Fallback Telemetry Active (Telemetry Unavailable / Offline Mode)
               </h5>
               <p className="text-xs text-amber-400/80 mt-0.5">
-                {configReason || 'Google Analytics 4 service account credentials are unauthenticated or missing. Displaying simulated baseline metrics.'}
+                {configReason || 'Google Analytics 4 service account credentials are unauthenticated or missing. Telemetry is operating in offline fallback mode and does not reflect authentic traffic.'}
               </p>
             </div>
           </div>
           <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
-            Fallback Mode
+            Offline Mode
           </span>
         </div>
       )}
@@ -413,9 +441,11 @@ export function AnalyticsDashboardView() {
                   </div>
                 </div>
                 <div className="text-2xl font-black text-white mt-2 tracking-tight">
-                  {overview ? overview.totalUsers.toLocaleString() : '0'}
+                  {isFallbackActive ? '—' : (overview ? overview.totalUsers.toLocaleString() : '0')}
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1 font-medium">Distinct visitors</p>
+                <p className="text-[11px] text-slate-400 mt-1 font-medium">
+                  {isFallbackActive ? 'Telemetry Unavailable' : 'Distinct visitors'}
+                </p>
               </CardContent>
             </Card>
 
@@ -429,9 +459,11 @@ export function AnalyticsDashboardView() {
                   </div>
                 </div>
                 <div className="text-2xl font-black text-white mt-2 tracking-tight">
-                  {overview ? overview.newUsers.toLocaleString() : '0'}
+                  {isFallbackActive ? '—' : (overview ? overview.newUsers.toLocaleString() : '0')}
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1 font-medium">First-time visitors</p>
+                <p className="text-[11px] text-slate-400 mt-1 font-medium">
+                  {isFallbackActive ? 'Telemetry Unavailable' : 'First-time visitors'}
+                </p>
               </CardContent>
             </Card>
 
@@ -445,9 +477,11 @@ export function AnalyticsDashboardView() {
                   </div>
                 </div>
                 <div className="text-2xl font-black text-white mt-2 tracking-tight">
-                  {overview ? overview.sessions.toLocaleString() : '0'}
+                  {isFallbackActive ? '—' : (overview ? overview.sessions.toLocaleString() : '0')}
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1 font-medium">Browsing sessions</p>
+                <p className="text-[11px] text-slate-400 mt-1 font-medium">
+                  {isFallbackActive ? 'Telemetry Unavailable' : 'Browsing sessions'}
+                </p>
               </CardContent>
             </Card>
 
@@ -461,9 +495,11 @@ export function AnalyticsDashboardView() {
                   </div>
                 </div>
                 <div className="text-2xl font-black text-white mt-2 tracking-tight">
-                  {overview ? overview.screenPageViews.toLocaleString() : '0'}
+                  {isFallbackActive ? '—' : (overview ? overview.screenPageViews.toLocaleString() : '0')}
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1 font-medium">Total screens viewed</p>
+                <p className="text-[11px] text-slate-400 mt-1 font-medium">
+                  {isFallbackActive ? 'Telemetry Unavailable' : 'Total screens viewed'}
+                </p>
               </CardContent>
             </Card>
 
@@ -477,9 +513,11 @@ export function AnalyticsDashboardView() {
                   </div>
                 </div>
                 <div className="text-2xl font-black text-white mt-2 tracking-tight">
-                  {overview ? `${overview.engagementRate}%` : '0%'}
+                  {isFallbackActive ? '—' : (overview ? `${overview.engagementRate}%` : '0%')}
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1 font-medium">Engaged sessions</p>
+                <p className="text-[11px] text-slate-400 mt-1 font-medium">
+                  {isFallbackActive ? 'Telemetry Unavailable' : 'Engaged sessions'}
+                </p>
               </CardContent>
             </Card>
 
@@ -493,9 +531,11 @@ export function AnalyticsDashboardView() {
                   </div>
                 </div>
                 <div className="text-2xl font-black text-white mt-2 tracking-tight">
-                  {overview ? overview.eventCount.toLocaleString() : '0'}
+                  {isFallbackActive ? '—' : (overview ? overview.eventCount.toLocaleString() : '0')}
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1 font-medium">GA4 interactions</p>
+                <p className="text-[11px] text-slate-400 mt-1 font-medium">
+                  {isFallbackActive ? 'Telemetry Unavailable' : 'GA4 interactions'}
+                </p>
               </CardContent>
             </Card>
           </>

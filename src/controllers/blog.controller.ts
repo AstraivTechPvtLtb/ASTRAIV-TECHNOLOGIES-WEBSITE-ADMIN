@@ -26,8 +26,8 @@ function safeRevalidate(path: string) {
  * Fallback: Supabase client
  */
 export async function getBlogArticles(): Promise<{ data: AdminBlogPost[]; error?: string }> {
-  // 1. Primary: PostgreSQL / Prisma DB
   try {
+    await requireAdminUser();
     const records = await db.blogPost.findMany({
       include: { author: true, category: true },
       orderBy: { createdAt: 'desc' },

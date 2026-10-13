@@ -9,13 +9,22 @@ import { db } from '@/models/db';
 import { requireAdminUser } from './auth.controller';
 import { logAuditAction } from './audit.controller';
 import type { MediaSlotSpec, MediaAssetItem } from '@/lib/media-specs';
-import { sanitizeSvgContent as pureSanitizeSvg } from '@/lib/media-specs';
+import {
+  sanitizeSvgContent as pureSanitizeSvg,
+  detectUnsafeSvgPayload,
+  verifyAndSanitizeSvg,
+} from '@/lib/media-specs';
 
 /**
- * Server Action for SVG Sanitization
+ * Server Action for SVG Sanitization & Content Verification.
+ * Rejects unsafe SVG payloads rather than accepting them.
  */
 export async function sanitizeSvgContent(rawSvg: string): Promise<string> {
-  return pureSanitizeSvg(rawSvg);
+  const result = verifyAndSanitizeSvg(rawSvg);
+  if (!result.isValid) {
+    throw new Error(result.error || 'Unsafe SVG markup detected and rejected.');
+  }
+  return result.sanitized;
 }
 
 /**
@@ -44,7 +53,7 @@ export async function getMediaAssets(slotFilter?: string): Promise<{ success: bo
 
 /**
  * Registers an uploaded media asset with its verified metadata.
- * Requires verified administrator authorization.
+ * Requires verified administrator authorization and strict server-side content verification.
  */
 export async function registerMediaAsset(data: {
   url: string;
@@ -73,6 +82,28 @@ export async function registerMediaAsset(data: {
       !lowerUrl.includes('data:text/html');
     if (!isSafeUrl) {
       return { success: false, error: 'Invalid or unsafe media asset URL.' };
+    }
+
+    // Strict server-side content verification for SVG assets
+    if (data.mimeType.includes('svg') || trimmedUrl.startsWith('data:image/svg+xml')) {
+      let rawSvg = '';
+      if (trimmedUrl.startsWith('data:image/svg+xml;base64,')) {
+        try {
+          const b64 = trimmedUrl.replace(/^data:image\/svg\+xml;base64,/, '');
+          rawSvg = Buffer.from(b64, 'base64').toString('utf-8');
+        } catch {
+          return { success: false, error: 'Malformed base64 SVG payload.' };
+        }
+      } else if (trimmedUrl.startsWith('data:image/svg+xml;utf8,')) {
+        rawSvg = decodeURIComponent(trimmedUrl.replace(/^data:image\/svg\+xml;utf8,/, ''));
+      }
+
+      if (rawSvg) {
+        const check = detectUnsafeSvgPayload(rawSvg);
+        if (check.isUnsafe) {
+          return { success: false, error: `Unsafe SVG content rejected: ${check.reason}` };
+        }
+      }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

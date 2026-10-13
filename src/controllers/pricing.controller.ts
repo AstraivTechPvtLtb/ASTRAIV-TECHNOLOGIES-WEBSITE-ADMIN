@@ -88,8 +88,8 @@ const DEFAULT_ENGAGEMENT_SEEDS: AdminPricingPlanInput[] = [
  * Retrieves all engagement models ordered by orderIndex.
  */
 export async function getPricingPlans(): Promise<{ data: AdminPricingPlan[]; error?: string }> {
-  // 1. Primary: Direct PostgreSQL via Prisma ORM
   try {
+    await requireAdminUser();
     let records = await db.pricingPlan.findMany({
       orderBy: { orderIndex: 'asc' },
     });
@@ -496,6 +496,7 @@ export async function togglePricingPlanStatus(
   id: string,
   active: boolean
 ): Promise<AdminActionResponse> {
+  await requireAdminUser();
   return updatePricingPlan(id, { active });
 }
 
@@ -504,6 +505,7 @@ export async function togglePricingPlanStatus(
  */
 export async function getPricingPageSettings(): Promise<{ data: AdminPricingPageSettings; error?: string }> {
   try {
+    await requireAdminUser();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const page = await (db as any).pageContent.findUnique({
       where: { pageKey: 'pricing' },

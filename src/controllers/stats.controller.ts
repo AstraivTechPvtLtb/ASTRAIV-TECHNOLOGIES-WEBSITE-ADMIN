@@ -8,12 +8,14 @@
 import { db } from '@/models/db';
 import { isSupabaseConfigured, createClient as createSupabaseClient } from '@/models/supabase';
 import { AdminDashboardStats } from '@/models/types';
+import { requireAdminUser } from './auth.controller';
 
 /**
  * Aggregates statistics across inquiries, reviews, projects, services, and articles.
  * Supports both local PostgreSQL via Prisma and Supabase cloud deployments with automatic fallback.
  */
 export async function getDashboardStats(): Promise<AdminDashboardStats> {
+  await requireAdminUser();
   // 1. Primary PostgreSQL Engine via Prisma ORM
   try {
     const [

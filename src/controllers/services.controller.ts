@@ -18,8 +18,8 @@ import { requireAdminUser } from './auth.controller';
  * If Prisma returns empty or is unavailable and Supabase is configured, falls back to Supabase client.
  */
 export async function getServices(): Promise<{ data: AdminService[]; error?: string }> {
-  // 1. Primary: Direct PostgreSQL via Prisma ORM
   try {
+    await requireAdminUser();
     const records = await db.serviceItem.findMany({
       orderBy: { orderIndex: 'asc' },
     });

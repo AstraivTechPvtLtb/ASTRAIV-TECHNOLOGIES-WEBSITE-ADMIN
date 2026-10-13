@@ -172,3 +172,50 @@ export function sanitizeSvgContent(rawSvg: string): string {
     .replace(/<animate\b[^>]*\b(?:attributeName\s*=\s*['"]?(?:href|xlink:href)['"]?|\bto\s*=\s*['"]?javascript:)[^>]*\/?>/gi, '')
     .replace(/<set\b[^>]*\b(?:attributeName\s*=\s*['"]?(?:href|xlink:href)['"]?|\bto\s*=\s*['"]?javascript:)[^>]*\/?>/gi, '');
 }
+
+/**
+ * Detects whether an SVG payload contains malicious, active, or disallowed constructs.
+ */
+export function detectUnsafeSvgPayload(rawSvg: string): { isUnsafe: boolean; reason?: string } {
+  if (/<script\b/i.test(rawSvg)) {
+    return { isUnsafe: true, reason: 'Embedded <script> tags are forbidden in SVG assets.' };
+  }
+  if (/\bon\w+\s*=/i.test(rawSvg)) {
+    return { isUnsafe: true, reason: 'Inline event handlers (onload, onerror, etc.) are forbidden in SVG assets.' };
+  }
+  if (/(?:href|xlink:href)\s*=\s*['"]\s*(?:javascript:|vbscript:|data:text\/html)/i.test(rawSvg)) {
+    return { isUnsafe: true, reason: 'Executable script URIs (javascript:, etc.) are forbidden in SVG assets.' };
+  }
+  if (/<(?:foreignObject|iframe|object|embed|applet|meta|link|base)\b/i.test(rawSvg)) {
+    return { isUnsafe: true, reason: 'Active container tags (<foreignObject>, <iframe>, etc.) are forbidden in SVG assets.' };
+  }
+  if (/<!DOCTYPE|<!ENTITY/i.test(rawSvg)) {
+    return { isUnsafe: true, reason: 'XML Entity / DTD declarations are forbidden in SVG assets (XXE protection).' };
+  }
+  if (/<use\b[^>]*\b(?:href|xlink:href)\s*=\s*['"]\s*(?!#)[^'"]+['"]/i.test(rawSvg)) {
+    return { isUnsafe: true, reason: 'External resource references in <use> tags are forbidden in SVG assets.' };
+  }
+  return { isUnsafe: false };
+}
+
+/**
+ * Verifies SVG safety and returns the sanitized markup.
+ * Rejects unsafe SVG documents rather than accepting them unchanged.
+ */
+export function verifyAndSanitizeSvg(rawSvg: string): { isValid: boolean; sanitized: string; error?: string } {
+  if (!rawSvg || !/<svg\b/i.test(rawSvg)) {
+    return { isValid: false, sanitized: '', error: 'The provided content is not a valid SVG document.' };
+  }
+
+  const check = detectUnsafeSvgPayload(rawSvg);
+  if (check.isUnsafe) {
+    return {
+      isValid: false,
+      sanitized: '',
+      error: `Security policy violation: ${check.reason || 'Unsafe SVG markup detected.'}`,
+    };
+  }
+
+  const sanitized = sanitizeSvgContent(rawSvg);
+  return { isValid: true, sanitized };
+}

@@ -191,20 +191,21 @@ export function CareersRolesManager({
     }
 
     const isSvg = file.type.includes('svg');
+    let finalDataUrl = '';
 
     if (isSvg) {
       try {
         const text = await file.text();
-        await sanitizeSvgContent(text);
-      } catch {
-        showFeedback('error', 'SVG validation failed. Please upload a valid, safe SVG file.');
+        const sanitized = await sanitizeSvgContent(text);
+        const encoded = window.btoa(unescape(encodeURIComponent(sanitized)));
+        finalDataUrl = `data:image/svg+xml;base64,${encoded}`;
+      } catch (err: unknown) {
+        showFeedback('error', (err as Error)?.message || 'SVG validation failed. Please upload a valid, safe SVG file.');
         return;
       }
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
+    const processUpload = (dataUrl: string) => {
       const img = new window.Image();
       img.onload = async () => {
         const sizeKb = Math.round(file.size / 1024);
@@ -265,7 +266,14 @@ export function CareersRolesManager({
       };
       img.src = dataUrl;
     };
-    reader.readAsDataURL(file);
+
+    if (finalDataUrl) {
+      processUpload(finalDataUrl);
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => processUpload(reader.result as string);
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSelectMediaAsset = async (asset: MediaAssetItem) => {
@@ -373,19 +381,21 @@ export function CareersRolesManager({
     }
 
     const isSvg = file.type.includes('svg');
+    let finalDataUrl = '';
+
     if (isSvg) {
       try {
         const text = await file.text();
-        await sanitizeSvgContent(text);
-      } catch {
-        showFeedback('error', 'SVG validation failed. Please upload a valid, safe SVG file.');
+        const sanitized = await sanitizeSvgContent(text);
+        const encoded = window.btoa(unescape(encodeURIComponent(sanitized)));
+        finalDataUrl = `data:image/svg+xml;base64,${encoded}`;
+      } catch (err: unknown) {
+        showFeedback('error', (err as Error)?.message || 'SVG validation failed. Please upload a valid, safe SVG file.');
         return;
       }
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
+    const processUpload = (dataUrl: string) => {
       const img = new window.Image();
       img.onload = async () => {
         const sizeKb = Math.round(file.size / 1024);
@@ -445,7 +455,14 @@ export function CareersRolesManager({
       };
       img.src = dataUrl;
     };
-    reader.readAsDataURL(file);
+
+    if (finalDataUrl) {
+      processUpload(finalDataUrl);
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => processUpload(reader.result as string);
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleToggleShowSpeculativeImage = async (checked: boolean) => {
@@ -623,19 +640,21 @@ export function CareersRolesManager({
     }
 
     const isSvg = file.type.includes('svg');
+    let finalDataUrl = '';
+
     if (isSvg) {
       try {
         const text = await file.text();
-        await sanitizeSvgContent(text);
-      } catch {
-        showFeedback('error', 'SVG validation failed. Please upload a valid, safe SVG file.');
+        const sanitized = await sanitizeSvgContent(text);
+        const encoded = window.btoa(unescape(encodeURIComponent(sanitized)));
+        finalDataUrl = `data:image/svg+xml;base64,${encoded}`;
+      } catch (err: unknown) {
+        showFeedback('error', (err as Error)?.message || 'SVG validation failed. Please upload a valid, safe SVG file.');
         return;
       }
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
+    const processUpload = (dataUrl: string) => {
       const img = new window.Image();
       img.onload = async () => {
         const sizeKb = Math.round(file.size / 1024);
@@ -695,7 +714,14 @@ export function CareersRolesManager({
       };
       img.src = dataUrl;
     };
-    reader.readAsDataURL(file);
+
+    if (finalDataUrl) {
+      processUpload(finalDataUrl);
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => processUpload(reader.result as string);
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleToggleShowJobDetailImage = async (checked: boolean) => {

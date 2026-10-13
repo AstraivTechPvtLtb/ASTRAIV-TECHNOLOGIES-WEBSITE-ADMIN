@@ -7,7 +7,7 @@
 
 import { db } from '@/models/db';
 import { revalidatePath } from 'next/cache';
-import { getAdminUser } from './auth.controller';
+import { requireAdminUser } from './auth.controller';
 import { logAuditAction } from './audit.controller';
 
 export interface AdminSolution {
@@ -35,6 +35,7 @@ export interface AdminSolution {
 
 export async function getSolutions(): Promise<{ success: boolean; data: AdminSolution[]; error?: string }> {
   try {
+    await requireAdminUser();
     const rows = await db.solutionItem.findMany({
       orderBy: { orderIndex: 'asc' }
     });
@@ -90,8 +91,7 @@ export async function createSolution(data: {
   metaDescription?: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.solutionItem.create({
       data: {
@@ -126,8 +126,7 @@ export async function createSolution(data: {
 
 export async function updateSolution(id: string, data: Partial<AdminSolution>): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.solutionItem.update({
       where: { id },
@@ -164,8 +163,7 @@ export async function updateSolution(id: string, data: Partial<AdminSolution>): 
 
 export async function deleteSolution(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.solutionItem.delete({ where: { id } });
     await logAuditAction({ action: 'DELETE_SOLUTION', entityType: 'solution', entityId: id });

@@ -233,6 +233,7 @@ export async function getCareersPageContent(): Promise<{
   error?: string;
 }> {
   try {
+    await requireAdminUser();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const page = await (db as any).pageContent.findUnique({
       where: { pageKey: 'careers' },
@@ -584,6 +585,7 @@ export async function updateCareersPageContent(
 
 export async function getJobCategories(): Promise<{ data: JobCategory[]; error?: string }> {
   try {
+    await requireAdminUser();
     const records = await db.jobCategory.findMany({
       where: { isArchived: false },
       orderBy: { orderIndex: 'asc' },
@@ -841,6 +843,7 @@ export async function reorderJobCategory(
 
 export async function getJobOpenings(): Promise<{ data: AdminJobOpening[]; error?: string }> {
   try {
+    await requireAdminUser();
     const records = await db.jobOpening.findMany({
       orderBy: { orderIndex: 'asc' },
       include: {
@@ -1309,6 +1312,7 @@ export async function toggleJobOpeningStatus(
   id: string,
   active: boolean
 ): Promise<AdminActionResponse> {
+  await requireAdminUser();
   return updateJobOpening(id, { active });
 }
 

@@ -18,6 +18,8 @@ export interface AnalyticsOverview {
   engagementRate: number; // Percentage e.g. 68.4
   eventCount: number;
   isDemoData?: boolean;
+  isFallback?: boolean;
+  telemetryUnavailable?: boolean;
 }
 
 export interface AnalyticsTimelinePoint {
@@ -77,6 +79,8 @@ export interface AnalyticsRealtime {
   topCountries: { country: string; activeUsers: number }[];
   topPages: { path: string; activeUsers: number }[];
   isDemoData?: boolean;
+  isFallback?: boolean;
+  telemetryUnavailable?: boolean;
 }
 
 // In-Memory Cache Store with TTL & Promise Deduplication
@@ -323,7 +327,9 @@ function getDemoAnalytics(_range?: { startDate: string; endDate: string }) {
     activeUsers: 0,
     topCountries: [],
     topPages: [],
-    isDemoData: false,
+    isDemoData: true,
+    isFallback: true,
+    telemetryUnavailable: true,
   };
 
   return {
@@ -334,7 +340,9 @@ function getDemoAnalytics(_range?: { startDate: string; endDate: string }) {
       screenPageViews: 0,
       engagementRate: 0,
       eventCount: 0,
-      isDemoData: false,
+      isDemoData: true,
+      isFallback: true,
+      telemetryUnavailable: true,
     },
     timeline: [] as AnalyticsTimelinePoint[],
     pages: [] as AnalyticsPageItem[],
@@ -410,7 +418,9 @@ export async function getAnalyticsOverview(
         screenPageViews: 0,
         engagementRate: 0,
         eventCount: 0,
-        isDemoData: false,
+        isDemoData: true,
+        isFallback: true,
+        telemetryUnavailable: true,
       };
     }
   });
@@ -858,8 +868,21 @@ export async function getAnalyticsRealtime(forceDemo = false): Promise<Analytics
         activeUsers: 0,
         topCountries: [],
         topPages: [],
-        isDemoData: false,
+        isDemoData: true,
+        isFallback: true,
+        telemetryUnavailable: true,
       };
     }
   });
 }
+
+/**
+ * Helper to determine if telemetry data is in fallback/offline mode.
+ */
+export function isTelemetryFallback(
+  overview?: AnalyticsOverview | AnalyticsRealtime | null
+): boolean {
+  if (!overview) return true;
+  return Boolean(overview.isDemoData || overview.isFallback || overview.telemetryUnavailable);
+}
+

@@ -7,7 +7,7 @@
 
 import { db } from '@/models/db';
 import { revalidatePath } from 'next/cache';
-import { getAdminUser } from './auth.controller';
+import { requireAdminUser } from './auth.controller';
 import { logAuditAction } from './audit.controller';
 
 export interface AdminTechnology {
@@ -29,6 +29,7 @@ export interface AdminTechnology {
 
 export async function getTechnologies(): Promise<{ success: boolean; data: AdminTechnology[]; error?: string }> {
   try {
+    await requireAdminUser();
     const rows = await db.technologyItem.findMany({
       orderBy: { orderIndex: 'asc' }
     });
@@ -70,8 +71,7 @@ export async function createTechnology(data: {
   orderIndex?: number;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.technologyItem.create({
       data: {
@@ -98,8 +98,7 @@ export async function createTechnology(data: {
 
 export async function updateTechnology(id: string, data: Partial<AdminTechnology>): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.technologyItem.update({
       where: { id },
@@ -128,8 +127,7 @@ export async function updateTechnology(id: string, data: Partial<AdminTechnology
 
 export async function deleteTechnology(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.technologyItem.delete({ where: { id } });
     await logAuditAction({ action: 'DELETE_TECHNOLOGY', entityType: 'technology', entityId: id });

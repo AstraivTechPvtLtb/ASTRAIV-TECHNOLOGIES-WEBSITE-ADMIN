@@ -6,7 +6,7 @@
  */
 
 import { db } from '@/models/db';
-import { getAdminUser } from './auth.controller';
+import { requireAdminUser } from './auth.controller';
 import { logAuditAction } from './audit.controller';
 
 export interface EntitySummary {
@@ -34,6 +34,7 @@ export interface RelationshipGraphData {
  */
 export async function getRelationshipGraph(): Promise<{ success: boolean; data?: RelationshipGraphData; error?: string }> {
   try {
+    await requireAdminUser();
     const [services, solutions, industries, technologies, projects, articles] = await Promise.all([
       db.serviceItem.findMany({ select: { id: true, title: true, slug: true, category: true, status: true } }),
       db.solutionItem.findMany({ select: { id: true, title: true, slug: true, category: true, status: true } }),
@@ -83,8 +84,7 @@ export async function getRelationshipGraph(): Promise<{ success: boolean; data?:
  */
 export async function linkServiceToTechnology(serviceId: string, technologyId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.serviceTechnology.upsert({
       where: {
@@ -110,8 +110,7 @@ export async function linkServiceToTechnology(serviceId: string, technologyId: s
  */
 export async function unlinkServiceFromTechnology(serviceId: string, technologyId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.serviceTechnology.deleteMany({
       where: { serviceId, technologyId }

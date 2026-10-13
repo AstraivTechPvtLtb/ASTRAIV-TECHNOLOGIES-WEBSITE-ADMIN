@@ -7,7 +7,7 @@
 
 import { db } from '@/models/db';
 import { revalidatePath } from 'next/cache';
-import { getAdminUser } from './auth.controller';
+import { requireAdminUser } from './auth.controller';
 import { logAuditAction } from './audit.controller';
 
 export interface SeoAuditItem {
@@ -46,6 +46,7 @@ export async function getSeoAudit(): Promise<{
   error?: string;
 }> {
   try {
+    await requireAdminUser();
     const [services, solutions, industries, projects, articles] = await Promise.all([
       db.serviceItem.findMany({ where: { active: true } }),
       db.solutionItem.findMany({ where: { active: true } }),
@@ -172,6 +173,7 @@ export async function getSeoAudit(): Promise<{
  */
 export async function getSlugRedirects(): Promise<{ success: boolean; data: SlugRedirectItem[]; error?: string }> {
   try {
+    await requireAdminUser();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rows = await (db as any).slugRedirect.findMany({
       orderBy: { createdAt: 'desc' }
@@ -194,8 +196,7 @@ export async function createSlugRedirect(data: {
   entityId?: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     let src = data.sourcePath.trim();
     if (!src.startsWith('/')) src = '/' + src;
@@ -231,8 +232,7 @@ export async function createSlugRedirect(data: {
  */
 export async function deleteSlugRedirect(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any).slugRedirect.delete({ where: { id } });

@@ -7,7 +7,7 @@
 
 import { db } from '@/models/db';
 import { revalidatePath } from 'next/cache';
-import { getAdminUser } from './auth.controller';
+import { requireAdminUser } from './auth.controller';
 import { logAuditAction } from './audit.controller';
 import { triggerClientRevalidation } from '@/lib/revalidate-client';
 
@@ -25,6 +25,7 @@ export interface AdminPageContent {
 
 export async function getPageContent(pageKey: string): Promise<{ success: boolean; data?: AdminPageContent; error?: string }> {
   try {
+    await requireAdminUser();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const page = await (db as any).pageContent.findUnique({
       where: { pageKey }
@@ -63,8 +64,7 @@ export async function savePageContent(data: {
   status?: 'published' | 'draft';
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     if (data.pageKey === 'homepage') {
       const sec = data.sections || {};

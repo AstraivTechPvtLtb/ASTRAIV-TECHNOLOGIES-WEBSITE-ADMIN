@@ -15,20 +15,30 @@ export async function GET(req: NextRequest) {
     const forceDemo = searchParams.get('demo') === 'true';
 
     const data = await getAnalyticsRealtime(forceDemo);
+    const isFallback = Boolean(data.isDemoData || data.isFallback || data.telemetryUnavailable);
 
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
+      isFallback,
+      telemetryUnavailable: isFallback,
       data,
     });
   } catch (error) {
     console.error('[API Analytics Realtime Error]:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: (error as Error)?.message || 'Failed to fetch real-time analytics.',
+    return NextResponse.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      isFallback: true,
+      telemetryUnavailable: true,
+      data: {
+        activeUsers: 0,
+        topCountries: [],
+        topPages: [],
+        isDemoData: true,
+        isFallback: true,
+        telemetryUnavailable: true,
       },
-      { status: 500 }
-    );
+    });
   }
 }

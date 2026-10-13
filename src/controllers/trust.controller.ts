@@ -7,7 +7,7 @@
 
 import { db } from '@/models/db';
 import { revalidatePath } from 'next/cache';
-import { getAdminUser } from './auth.controller';
+import { requireAdminUser } from './auth.controller';
 import { logAuditAction } from './audit.controller';
 
 export interface AdminAward {
@@ -34,6 +34,7 @@ export interface AdminAward {
 
 export async function getAwards(): Promise<{ success: boolean; data: AdminAward[]; error?: string }> {
   try {
+    await requireAdminUser();
     const rows = await db.awardItem.findMany({
       orderBy: { orderIndex: 'asc' }
     });
@@ -87,8 +88,7 @@ export async function createAward(data: {
   highlights?: string[];
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.awardItem.create({
       data: {
@@ -122,8 +122,7 @@ export async function createAward(data: {
 
 export async function updateAward(id: string, data: Partial<AdminAward>): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.awardItem.update({
       where: { id },
@@ -159,8 +158,7 @@ export async function updateAward(id: string, data: Partial<AdminAward>): Promis
 
 export async function deleteAward(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.awardItem.delete({ where: { id } });
     await logAuditAction({ action: 'DELETE_AWARD', entityType: 'award', entityId: id });

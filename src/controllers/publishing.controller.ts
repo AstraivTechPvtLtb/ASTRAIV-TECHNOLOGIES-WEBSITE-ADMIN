@@ -6,14 +6,13 @@
  */
 
 import { revalidatePath } from 'next/cache';
-import { getAdminUser } from './auth.controller';
+import { getAdminUser, requireAdminUser } from './auth.controller';
 import { logAuditAction } from './audit.controller';
 import { triggerClientRevalidation } from '@/lib/revalidate-client';
 
 export async function revalidatePublicCaches(paths: string[]): Promise<{ success: boolean; revalidated: string[]; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, revalidated: [], error: 'Unauthorized' };
+    await requireAdminUser();
 
     const revalidated: string[] = [];
     for (const path of paths) {

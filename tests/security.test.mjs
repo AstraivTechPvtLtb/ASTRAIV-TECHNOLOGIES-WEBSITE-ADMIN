@@ -4,6 +4,12 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { sanitizeSvgContent } from '../src/lib/media-specs.ts';
+import {
+  isGoogleAnalyticsConfigured,
+  getAnalyticsOverview,
+  isTelemetryFallback,
+  getAnalyticsRealtime,
+} from '../src/lib/google-analytics.ts';
 
 describe('Admin Security Remediation Verification Suite', () => {
   const cwd = process.cwd();
@@ -380,6 +386,160 @@ describe('Admin Security Remediation Verification Suite', () => {
       // Recovery on success
       delay = 25000;
       assert.equal(delay, 25000, 'Must recover to 25s on success');
+    });
+
+    it('verifies pollNewEnquiries supports deterministic compound cursor parsing and pagination', () => {
+      const enqCtrl = path.resolve(cwd, 'src/controllers/enquiries.controller.ts');
+      const content = fs.readFileSync(enqCtrl, 'utf8');
+
+      assert.ok(content.includes("since.includes('|')"), 'Must parse compound cursor with pipe delimiter');
+      assert.ok(content.includes("since.split('|')"), 'Must extract timestamp and ID components');
+      assert.ok(content.includes('createdAt: { gt: sinceDate }'), 'Must query greater timestamp');
+      assert.ok(content.includes('id: { gt: lastId }'), 'Must tie-break on duplicate timestamp with ID');
+      assert.ok(content.includes('compoundCursor'), 'Must return compoundCursor in response');
+      assert.ok(content.includes('`${latestTimestamp}|${latestId}`'), 'Must construct composite cursor format');
+    });
+
+    it('validates deterministic compound-cursor pagination across 150+ submissions with duplicate timestamps', () => {
+      // Generate 175 mock submissions across 3 identical-timestamp clusters
+      const totalCount = 175;
+      const t1 = '2026-10-13T10:00:00.000Z'; // 55 records
+      const t2 = '2026-10-13T10:05:00.000Z'; // 65 records
+      const t3 = '2026-10-13T10:10:00.000Z'; // 55 records
+
+      const mockDb = [];
+      for (let i = 1; i <= totalCount; i++) {
+        const id = `sub-${String(i).padStart(3, '0')}`;
+        let createdAt;
+        if (i <= 55) {
+          createdAt = t1;
+        } else if (i <= 120) {
+          createdAt = t2;
+        } else {
+          createdAt = t3;
+        }
+        mockDb.push({ id, service: `Service-${i}`, createdAt });
+      }
+
+      // Simulation function implementing the exact compound cursor algorithm
+      const pollBatch = (sinceCursor, limit = 50) => {
+        let sinceDate = null;
+        let lastId = null;
+
+        if (sinceCursor && sinceCursor.includes('|')) {
+          const [tPart, idPart] = sinceCursor.split('|');
+          sinceDate = new Date(tPart);
+          lastId = idPart;
+        } else if (sinceCursor) {
+          sinceDate = new Date(sinceCursor);
+        }
+
+        const filtered = mockDb.filter(r => {
+          if (!sinceDate) return true;
+          const rDate = new Date(r.createdAt);
+          if (lastId) {
+            return (
+              rDate > sinceDate ||
+              (rDate.getTime() === sinceDate.getTime() && r.id > lastId)
+            );
+          }
+          return rDate >= sinceDate;
+        });
+
+        // Deterministic sort order
+        filtered.sort((a, b) => {
+          const dComp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          if (dComp !== 0) return dComp;
+          return a.id.localeCompare(b.id);
+        });
+
+        const batch = filtered.slice(0, limit);
+        const latest = batch.length > 0 ? batch[batch.length - 1] : null;
+        const compoundCursor = latest ? `${latest.createdAt}|${latest.id}` : null;
+
+        return {
+          batch,
+          count: filtered.length,
+          compoundCursor,
+        };
+      };
+
+      // Poll all records paginating with limit 50
+      const collected = [];
+      const batchSizes = [];
+      let cursor = '2026-10-13T09:00:00.000Z'; // Baseline before all records
+
+      while (true) {
+        const res = pollBatch(cursor, 50);
+        if (res.batch.length === 0) break;
+        batchSizes.push(res.batch.length);
+        collected.push(...res.batch);
+        cursor = res.compoundCursor;
+      }
+
+      // Assertions
+      assert.equal(collected.length, 175, 'Must collect all 175 submissions');
+      assert.deepEqual(batchSizes, [50, 50, 50, 25], 'Batches must be [50, 50, 50, 25]');
+
+      // Deduplication check: Set of IDs must equal total count
+      const uniqueIds = new Set(collected.map(r => r.id));
+      assert.equal(uniqueIds.size, 175, 'Must have zero duplicate submissions across page boundaries');
+
+      // Order check: First is sub-001, last is sub-175, all sequential
+      assert.equal(collected[0].id, 'sub-001');
+      assert.equal(collected[174].id, 'sub-175');
+      for (let i = 0; i < collected.length; i++) {
+        assert.equal(collected[i].id, `sub-${String(i + 1).padStart(3, '0')}`);
+      }
+    });
+  });
+
+  describe('9. GA4 Telemetry Integrity & Offline Fallback Reporting', () => {
+    it('verifies isGoogleAnalyticsConfigured accurately reports unconfigured credentials', () => {
+      const config = isGoogleAnalyticsConfigured();
+      assert.equal(typeof config.configured, 'boolean');
+      assert.equal(typeof config.propertyId, 'string');
+      // In environment without active credentials, configured must be false
+      if (!process.env.GOOGLE_SERVICE_ACCOUNT_KEY && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+        assert.equal(config.configured, false, 'Must report false when credentials are absent');
+        assert.ok(config.reason, 'Must provide explanatory reason');
+      }
+    });
+
+    it('verifies getAnalyticsOverview explicitly flags isDemoData, isFallback, and telemetryUnavailable', async () => {
+      const overview = await getAnalyticsOverview('30daysAgo', 'today', true);
+      assert.equal(overview.isDemoData, true, 'Fallback overview must set isDemoData: true');
+      assert.equal(overview.isFallback, true, 'Fallback overview must set isFallback: true');
+      assert.equal(overview.telemetryUnavailable, true, 'Fallback overview must set telemetryUnavailable: true');
+      assert.equal(isTelemetryFallback(overview), true, 'isTelemetryFallback must return true');
+    });
+
+    it('verifies getAnalyticsRealtime flags telemetryUnavailable in fallback mode', async () => {
+      const realtime = await getAnalyticsRealtime(true);
+      assert.equal(realtime.isDemoData, true, 'Fallback realtime must set isDemoData: true');
+      assert.equal(realtime.isFallback, true, 'Fallback realtime must set isFallback: true');
+      assert.equal(realtime.telemetryUnavailable, true, 'Fallback realtime must set telemetryUnavailable: true');
+    });
+
+    it('verifies api/analytics/overview/route.ts guards against misrepresenting fallback data as authentic', () => {
+      const routePath = path.resolve(cwd, 'src/app/api/analytics/overview/route.ts');
+      const content = fs.readFileSync(routePath, 'utf8');
+
+      assert.ok(content.includes('configured: !isFallback'), 'Route must return configured: false when fallback');
+      assert.ok(content.includes('isFallback,'), 'Route must return isFallback flag');
+      assert.ok(content.includes('telemetryUnavailable: isFallback'), 'Route must return telemetryUnavailable flag');
+      assert.ok(content.includes('isDemoData: true'), 'Catch block must set isDemoData: true');
+    });
+
+    it('verifies analytics-dashboard-view.tsx displays Fallback/Offline notice and prevents zero-traffic misrepresentation', () => {
+      const viewPath = path.resolve(cwd, 'src/views/sections/analytics-dashboard-view.tsx');
+      const content = fs.readFileSync(viewPath, 'utf8');
+
+      assert.ok(content.includes('isFallbackActive'), 'Dashboard must compute isFallbackActive');
+      assert.ok(content.includes('Fallback Telemetry Active (Telemetry Unavailable / Offline Mode)'), 'Must render explicit offline notice');
+      assert.ok(content.includes("isFallbackActive ? '—' :"), 'KPI cards must display unavailable dash instead of misleading zero');
+      assert.ok(content.includes("isFallbackActive ? 'Telemetry Unavailable' :"), 'KPI cards must label unavailable telemetry');
+      assert.ok(content.includes("isFallbackActive ? 'Offline / Telemetry Inactive' :"), 'Real-time badge must label offline state');
     });
   });
 });

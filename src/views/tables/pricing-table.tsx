@@ -112,77 +112,86 @@ export function PricingTable({
     }
 
     setSettingsFeedback(null);
-    const objectUrl = URL.createObjectURL(file);
     const isSvg = file.type.includes('svg');
+    let finalDataUrl = '';
 
     if (isSvg) {
       try {
         const text = await file.text();
-        await sanitizeSvgContent(text);
+        const sanitized = await sanitizeSvgContent(text);
+        const encoded = window.btoa(unescape(encodeURIComponent(sanitized)));
+        finalDataUrl = `data:image/svg+xml;base64,${encoded}`;
       } catch (err) {
         setSettingsFeedback({
           type: 'error',
-          message: 'SVG validation failed. Please upload a valid, safe SVG file.',
+          message: (err as Error)?.message || 'SVG validation failed. Unsafe SVG rejected.',
         });
         return;
       }
     }
 
-    // Read natural image dimensions
-    const img = new window.Image();
-    img.onload = async () => {
-      const sizeKb = Math.round(file.size / 1024);
-      const sizeLabel = sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(2)} MB` : `${sizeKb} KB`;
+    const processUpload = (dataUrl: string) => {
+      // Read natural image dimensions
+      const img = new window.Image();
+      img.onload = async () => {
+        const sizeKb = Math.round(file.size / 1024);
+        const sizeLabel = sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(2)} MB` : `${sizeKb} KB`;
 
-      // Persistent image path on public assets
-      const uploadedPath = `/images/engagement-models-hero.jpg`;
+        const newSettings: AdminPricingPageSettings = {
+          ...pageSettings,
+          heroImageUrl: dataUrl,
+          showHeroImage: true,
+          imageWidth: img.width || 1792,
+          imageHeight: img.height || 1008,
+          imageSizeBytes: file.size,
+          imageSizeLabel: sizeLabel,
+        };
 
-      const newSettings: AdminPricingPageSettings = {
-        ...pageSettings,
-        heroImageUrl: uploadedPath,
-        showHeroImage: true,
-        imageWidth: img.width || 1792,
-        imageHeight: img.height || 1008,
-        imageSizeBytes: file.size,
-        imageSizeLabel: sizeLabel,
-      };
+        setPageSettings(newSettings);
+        setIsSavingSettings(true);
 
-      setPageSettings(newSettings);
-      setIsSavingSettings(true);
-
-      // Register in media library for traceability
-      try {
-        await registerMediaAsset({
-          url: uploadedPath,
-          filename: file.name,
-          mimeType: file.type,
-          sizeBytes: file.size,
-          width: img.width,
-          height: img.height,
-          aspectRatio: '16:9',
-          altText: pageSettings.heroImageAlt || 'Astraiv Technologies Engagement Models Architecture & Roadmaps',
-          slot: 'engagement_hero',
-        });
-      } catch (regErr) {
-        console.warn('[MediaAsset Registration Notice]:', regErr);
-      }
-
-      // Auto-save settings
-      try {
-        const res = await updatePricingPageSettings(newSettings);
-        if (res.success) {
-          setSettingsFeedback({
-            type: 'success',
-            message: 'Uploaded new image and published to client website!',
+        // Register in media library for traceability
+        try {
+          await registerMediaAsset({
+            url: dataUrl,
+            filename: file.name,
+            mimeType: file.type,
+            sizeBytes: file.size,
+            width: img.width,
+            height: img.height,
+            aspectRatio: '16:9',
+            altText: pageSettings.heroImageAlt || 'Astraiv Technologies Engagement Models Architecture & Roadmaps',
+            slot: 'engagement_hero',
           });
+        } catch (regErr) {
+          console.warn('[MediaAsset Registration Notice]:', regErr);
         }
-      } catch (err) {
-        console.warn('[Auto-save Upload Error]:', err);
-      } finally {
-        setIsSavingSettings(false);
-      }
+
+        // Auto-save settings
+        try {
+          const res = await updatePricingPageSettings(newSettings);
+          if (res.success) {
+            setSettingsFeedback({
+              type: 'success',
+              message: 'Uploaded new image and published to client website!',
+            });
+          }
+        } catch (err) {
+          console.warn('[Auto-save Upload Error]:', err);
+        } finally {
+          setIsSavingSettings(false);
+        }
+      };
+      img.src = dataUrl;
     };
-    img.src = objectUrl;
+
+    if (finalDataUrl) {
+      processUpload(finalDataUrl);
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => processUpload(reader.result as string);
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSelectMediaAsset = async (asset: MediaAssetItem) => {

@@ -7,7 +7,7 @@
 
 import { db } from '@/models/db';
 import { revalidatePath } from 'next/cache';
-import { getAdminUser } from './auth.controller';
+import { getAdminUser, requireAdminUser } from './auth.controller';
 import { logAuditAction } from './audit.controller';
 
 export interface AdminIndustry {
@@ -37,6 +37,7 @@ export interface AdminIndustry {
 
 export async function getIndustries(): Promise<{ success: boolean; data: AdminIndustry[]; error?: string }> {
   try {
+    await requireAdminUser();
     const rows = await db.industryItem.findMany({
       orderBy: { orderIndex: 'asc' }
     });
@@ -96,8 +97,7 @@ export async function createIndustry(data: {
   metaDescription?: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.industryItem.create({
       data: {
@@ -134,8 +134,7 @@ export async function createIndustry(data: {
 
 export async function updateIndustry(id: string, data: Partial<AdminIndustry>): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.industryItem.update({
       where: { id },
@@ -174,8 +173,7 @@ export async function updateIndustry(id: string, data: Partial<AdminIndustry>): 
 
 export async function deleteIndustry(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const admin = await getAdminUser();
-    if (!admin) return { success: false, error: 'Unauthorized' };
+    await requireAdminUser();
 
     await db.industryItem.delete({ where: { id } });
     await logAuditAction({ action: 'DELETE_INDUSTRY', entityType: 'industry', entityId: id });

@@ -6,7 +6,7 @@
  */
 
 import { db } from '@/models/db';
-import { getAdminUser } from './auth.controller';
+import { getAdminUser, requireAdminUser } from './auth.controller';
 
 export interface AuditLogItem {
   id: string;
@@ -49,6 +49,7 @@ export async function logAuditAction(params: {
 
 export async function getAuditLogs(limit = 100): Promise<{ success: boolean; data: AuditLogItem[] }> {
   try {
+    await requireAdminUser();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const logs = await (db as any).auditLog.findMany({
       orderBy: { createdAt: 'desc' },

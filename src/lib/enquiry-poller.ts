@@ -201,7 +201,9 @@ class EnquiryNotificationPoller {
       this.currentDelayMs = this.baseDelayMs; // Reset backoff on success
       nextPollDelay = this.currentDelayMs;
 
-      if (data.latestTimestamp && new Date(data.latestTimestamp).getTime() >= new Date(this.cursor).getTime()) {
+      if (data.compoundCursor) {
+        this.cursor = data.compoundCursor;
+      } else if (data.latestTimestamp && new Date(data.latestTimestamp).getTime() >= new Date(this.cursor.split('|')[0]).getTime()) {
         this.cursor = data.latestTimestamp;
       }
 

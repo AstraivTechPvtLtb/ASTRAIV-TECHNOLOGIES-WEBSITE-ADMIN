@@ -187,12 +187,14 @@ export interface PollEnquiriesResponse {
   hasNew: boolean;
   count: number;
   latestTimestamp: string | null;
+  latestId?: string | null;
+  compoundCursor?: string | null;
   newEnquiries: EnquiryNotificationItem[];
   error?: string;
 }
 
 /**
- * Lightweight, admin-authenticated enquiry polling action.
+ * Lightweight, admin-authenticated enquiry polling action with deterministic compound-cursor pagination.
  * Returns only non-sensitive event identifiers, service labels, and timestamps.
  * Raw PII (names, emails, phone numbers, messages) is never exposed.
  */
@@ -202,20 +204,42 @@ export async function pollNewEnquiries(
   try {
     await requireAdminUser();
 
-    let sinceDate: Date;
-    if (since && !isNaN(new Date(since).getTime())) {
-      sinceDate = new Date(since);
-    } else {
+    let sinceDate: Date | null = null;
+    let lastId: string | null = null;
+
+    if (since) {
+      if (since.includes('|')) {
+        const [tPart, idPart] = since.split('|');
+        const parsedDate = new Date(tPart);
+        if (!isNaN(parsedDate.getTime())) {
+          sinceDate = parsedDate;
+          lastId = idPart?.trim() || null;
+        }
+      } else {
+        const parsedDate = new Date(since);
+        if (!isNaN(parsedDate.getTime())) {
+          sinceDate = parsedDate;
+        }
+      }
+    }
+
+    if (!sinceDate) {
       sinceDate = new Date();
     }
 
     // 1. Primary PostgreSQL Engine via Prisma ORM
     try {
-      // 5-second overlap window to handle delayed DB visibility and transaction commits
-      const overlapDate = new Date(sinceDate.getTime() - 5000);
-      const where: Prisma.ContactSubmissionWhereInput = {
-        createdAt: { gte: overlapDate },
-      };
+      // Deterministic compound cursor: (createdAt > sinceDate) OR (createdAt == sinceDate AND id > lastId)
+      const where: Prisma.ContactSubmissionWhereInput = lastId
+        ? {
+            OR: [
+              { createdAt: { gt: sinceDate } },
+              { createdAt: sinceDate, id: { gt: lastId } },
+            ],
+          }
+        : {
+            createdAt: { gte: sinceDate },
+          };
 
       const [count, records] = await Promise.all([
         db.contactSubmission.count({ where }),
@@ -237,12 +261,17 @@ export async function pollNewEnquiries(
         createdAt: r.createdAt.toISOString(),
       }));
 
-      const latestTimestamp = records.length > 0 ? records[records.length - 1].createdAt.toISOString() : null;
+      const latestRecord = records.length > 0 ? records[records.length - 1] : null;
+      const latestTimestamp = latestRecord ? latestRecord.createdAt.toISOString() : null;
+      const latestId = latestRecord ? latestRecord.id : null;
+      const compoundCursor = latestRecord ? `${latestTimestamp}|${latestId}` : null;
 
       return {
         hasNew: count > 0,
         count,
         latestTimestamp,
+        latestId,
+        compoundCursor,
         newEnquiries,
       };
     } catch (prismaErr) {
@@ -252,12 +281,21 @@ export async function pollNewEnquiries(
     // 2. Supabase Cloud Fallback
     if (isSupabaseConfigured()) {
       const supabase = await createSupabaseClient();
-      const overlapDate = new Date(sinceDate.getTime() - 5000);
-      const { data, count, error } = await supabase
+      let query = supabase
         .from('contact_submissions')
-        .select('id, service, created_at', { count: 'exact' })
-        .gte('created_at', overlapDate.toISOString())
+        .select('id, service, created_at', { count: 'exact' });
+
+      if (lastId && sinceDate) {
+        query = query.or(
+          `created_at.gt.${sinceDate.toISOString()},and(created_at.eq.${sinceDate.toISOString()},id.gt.${lastId})`
+        );
+      } else {
+        query = query.gte('created_at', sinceDate.toISOString());
+      }
+
+      const { data, count, error } = await query
         .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
         .limit(50);
 
       if (error) throw error;
@@ -269,12 +307,17 @@ export async function pollNewEnquiries(
         createdAt: r.created_at,
       }));
 
-      const latestTimestamp = records.length > 0 ? records[records.length - 1].created_at : null;
+      const latestRecord = records.length > 0 ? records[records.length - 1] : null;
+      const latestTimestamp = latestRecord ? latestRecord.created_at : null;
+      const latestId = latestRecord ? latestRecord.id : null;
+      const compoundCursor = latestRecord ? `${latestTimestamp}|${latestId}` : null;
 
       return {
         hasNew: (count || 0) > 0,
         count: count || 0,
         latestTimestamp,
+        latestId,
+        compoundCursor,
         newEnquiries,
       };
     }
@@ -283,6 +326,8 @@ export async function pollNewEnquiries(
       hasNew: false,
       count: 0,
       latestTimestamp: null,
+      latestId: null,
+      compoundCursor: null,
       newEnquiries: [],
     };
   } catch (error) {
@@ -291,6 +336,8 @@ export async function pollNewEnquiries(
       hasNew: false,
       count: 0,
       latestTimestamp: null,
+      latestId: null,
+      compoundCursor: null,
       newEnquiries: [],
       error: 'Failed to poll enquiries',
     };

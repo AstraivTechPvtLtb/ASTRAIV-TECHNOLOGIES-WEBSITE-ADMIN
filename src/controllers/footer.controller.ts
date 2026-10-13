@@ -34,6 +34,7 @@ export async function getFooterData(): Promise<{
   error?: string;
 }> {
   try {
+    await requireAdminUser();
     let settingsRecord = await db.footerSetting.findFirst();
 
     if (!settingsRecord) {

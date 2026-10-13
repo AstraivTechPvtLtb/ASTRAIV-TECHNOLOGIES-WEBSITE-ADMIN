@@ -272,6 +272,7 @@ export async function getComplianceSettings(): Promise<{
   error?: string;
 }> {
   try {
+    await requireAdminUser();
     const record = await fetchComplianceRecord();
 
     let clientLogos = DEFAULT_CLIENT_LOGOS;
