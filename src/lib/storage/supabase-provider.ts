@@ -132,6 +132,24 @@ export class SupabaseStorageProvider implements StorageProvider {
     };
   }
 
+  async saveBuffer(key: string, buffer: Buffer, mimeType: string): Promise<boolean> {
+    try {
+      const supabase = await createClient();
+      const { error } = await supabase.storage.from(this.bucket).upload(key, buffer, {
+        contentType: mimeType,
+        upsert: true,
+      });
+      if (error) {
+        console.error('[Supabase saveBuffer Error]:', error);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('[Supabase saveBuffer Exception]:', err);
+      return false;
+    }
+  }
+
   async deleteObject(key: string): Promise<boolean> {
     try {
       const supabase = await createClient();
@@ -142,3 +160,4 @@ export class SupabaseStorageProvider implements StorageProvider {
     }
   }
 }
+

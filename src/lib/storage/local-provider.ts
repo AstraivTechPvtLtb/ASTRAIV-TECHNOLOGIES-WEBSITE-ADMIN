@@ -121,6 +121,25 @@ export class LocalStorageProvider implements StorageProvider {
     };
   }
 
+  async saveBuffer(key: string, buffer: Buffer, _mimeType?: string): Promise<boolean> {
+    const normalizedKey = key.replace(/\\/g, '/');
+    const targetPath = path.resolve(this.baseDir, normalizedKey);
+    const resolvedBase = path.resolve(this.baseDir);
+
+    // Cross-platform path traversal containment
+    if (!targetPath.startsWith(resolvedBase + path.sep)) {
+      throw new Error('Access denied: Path traversal detected');
+    }
+
+    const dir = path.dirname(targetPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    fs.writeFileSync(targetPath, buffer);
+    return true;
+  }
+
   async deleteObject(key: string): Promise<boolean> {
     const filePath = path.join(this.baseDir, key);
     if (fs.existsSync(filePath)) {
@@ -134,3 +153,4 @@ export class LocalStorageProvider implements StorageProvider {
     return true;
   }
 }
+

@@ -186,6 +186,22 @@ export class CloudflareR2StorageProvider implements StorageProvider {
     return { downloadUrl, expiresAt };
   }
 
+  async saveBuffer(key: string, buffer: Buffer, mimeType: string): Promise<boolean> {
+    try {
+      const command = new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: buffer,
+        ContentType: mimeType,
+      });
+      await this.s3.send(command);
+      return true;
+    } catch (err) {
+      console.error('[R2 saveBuffer Error]:', err);
+      return false;
+    }
+  }
+
   async deleteObject(key: string): Promise<boolean> {
     try {
       await this.s3.send(
@@ -201,3 +217,4 @@ export class CloudflareR2StorageProvider implements StorageProvider {
     }
   }
 }
+

@@ -400,7 +400,7 @@ describe('Admin Security Remediation Verification Suite', () => {
       assert.ok(content.includes('`${latestTimestamp}|${latestId}`'), 'Must construct composite cursor format');
     });
 
-    it('validates deterministic compound-cursor pagination across 150+ submissions with duplicate timestamps', () => {
+    it('validates deterministic compound-cursor pagination across 175+ submissions with duplicate timestamps', () => {
       // Generate 175 mock submissions across 3 identical-timestamp clusters
       const totalCount = 175;
       const t1 = '2026-10-13T10:00:00.000Z'; // 55 records

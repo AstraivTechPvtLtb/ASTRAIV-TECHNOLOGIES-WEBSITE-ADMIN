@@ -65,7 +65,13 @@ export interface StorageProvider {
   }): Promise<DownloadUrlResult>;
 
   /**
+   * Directly stores a pre-validated buffer under a safe object key in private storage.
+   */
+  saveBuffer(key: string, buffer: Buffer, mimeType: string): Promise<boolean>;
+
+  /**
    * Permanently deletes an object from storage.
    */
   deleteObject(key: string): Promise<boolean>;
 }
+

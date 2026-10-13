@@ -27,6 +27,8 @@
 *credentials*.json
 credentials/
 *.key.json
+.data/
+scratch/
 
 # debug
 npm-debug.log*
