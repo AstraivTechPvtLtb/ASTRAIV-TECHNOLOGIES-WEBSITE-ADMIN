@@ -10,6 +10,7 @@ import { LocalStorageProvider } from './local-provider';
 
 export * from './types';
 export * from './validator';
+export * from './token';
 export * from './r2-provider';
 export * from './supabase-provider';
 export * from './local-provider';
@@ -33,7 +34,7 @@ export function getStorageProvider(): StorageProvider {
     }
   }
 
-  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_LOCAL_STORAGE_IN_PROD !== 'true') {
+  if (process.env.NODE_ENV === 'production') {
     throw new Error(
       '[CRITICAL_STORAGE_CONFIG]: No durable cloud storage provider (Cloudflare R2 or Supabase Storage) is configured for production. Refusing to fall back to LocalStorageProvider in production.'
     );
@@ -42,4 +43,3 @@ export function getStorageProvider(): StorageProvider {
   cachedProvider = new LocalStorageProvider();
   return cachedProvider;
 }
-

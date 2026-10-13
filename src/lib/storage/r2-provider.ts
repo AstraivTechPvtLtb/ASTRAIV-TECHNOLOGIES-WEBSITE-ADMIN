@@ -21,7 +21,11 @@ import {
   DownloadUrlResult,
 } from './types';
 import { sanitizeFilename, validateDocumentBuffer } from './validator';
+import { generateUploadSessionToken, verifyUploadSessionToken } from './token';
 import crypto from 'crypto';
+
+const STAGING_KEY_PATTERN = /^staging\/\d{4}-\d{2}-\d{2}\/[a-f0-9]{32}\.(pdf|docx)$/i;
+const FINAL_KEY_PATTERN = /^resumes\/\d{4}-\d{2}-\d{2}\/[a-f0-9]{32}\.(pdf|docx)$/i;
 
 export class CloudflareR2StorageProvider implements StorageProvider {
   readonly providerName: StorageProviderType = 'r2';
@@ -56,11 +60,15 @@ export class CloudflareR2StorageProvider implements StorageProvider {
     const cleanName = sanitizeFilename(req.filename);
     const datePrefix = new Date().toISOString().split('T')[0];
     const randomHex = crypto.randomBytes(16).toString('hex');
-    const ext = cleanName.split('.').pop() || 'pdf';
+    const ext = (cleanName.split('.').pop() || 'pdf').toLowerCase();
+
+    if (ext !== 'pdf' && ext !== 'docx') {
+      throw new Error('Unsupported file extension. Only PDF and DOCX files are permitted.');
+    }
 
     const stagingKey = `staging/${datePrefix}/${randomHex}.${ext}`;
     const finalKey = `resumes/${datePrefix}/${randomHex}.${ext}`;
-    const sessionToken = crypto.randomBytes(24).toString('hex');
+    const { sessionToken, expiresAt } = generateUploadSessionToken(stagingKey, finalKey, 900);
 
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -73,7 +81,6 @@ export class CloudflareR2StorageProvider implements StorageProvider {
     });
 
     const uploadUrl = await getSignedUrl(this.s3, command, { expiresIn: 900 });
-    const expiresAt = new Date(Date.now() + 900 * 1000).toISOString();
 
     return {
       provider: 'r2',
@@ -95,6 +102,75 @@ export class CloudflareR2StorageProvider implements StorageProvider {
     sessionToken: string;
   }): Promise<VerifyObjectResult> {
     try {
+      // 1. Strict key pattern and prefix restrictions
+      if (!STAGING_KEY_PATTERN.test(params.stagingKey)) {
+        return {
+          verified: false,
+          actualSizeBytes: 0,
+          verifiedMime: '',
+          error: 'Invalid staging key format or disallowed prefix.',
+        };
+      }
+      if (!FINAL_KEY_PATTERN.test(params.finalKey)) {
+        return {
+          verified: false,
+          actualSizeBytes: 0,
+          verifiedMime: '',
+          error: 'Invalid destination key format or disallowed prefix.',
+        };
+      }
+
+      const stagingSuffix = params.stagingKey.replace(/^staging\//, '');
+      const finalSuffix = params.finalKey.replace(/^resumes\//, '');
+      if (stagingSuffix.toLowerCase() !== finalSuffix.toLowerCase()) {
+        return {
+          verified: false,
+          actualSizeBytes: 0,
+          verifiedMime: '',
+          error: 'Mismatched staging and destination object keys.',
+        };
+      }
+
+      // 2. Validate cryptographic upload session token strictly bound to stagingKey and finalKey
+      const tokenCheck = verifyUploadSessionToken(params.stagingKey, params.finalKey, params.sessionToken);
+      if (!tokenCheck.valid) {
+        await this.deleteObject(params.stagingKey).catch(() => {});
+        return {
+          verified: false,
+          actualSizeBytes: 0,
+          verifiedMime: '',
+          error: tokenCheck.error || 'Invalid upload session token.',
+        };
+      }
+
+      // 3. Replay protection & overwrite prevention: ensure destination object does NOT already exist
+      try {
+        const destCheck = await this.s3.send(
+          new HeadObjectCommand({
+            Bucket: this.bucket,
+            Key: params.finalKey,
+          })
+        );
+        if (destCheck) {
+          // Destination object already exists: reject replay / overwrite attempt
+          await this.deleteObject(params.stagingKey).catch(() => {});
+          return {
+            verified: false,
+            actualSizeBytes: 0,
+            verifiedMime: '',
+            error: 'Destination resume object already exists. Replay or overwrite is prohibited.',
+          };
+        }
+      } catch (headErr: unknown) {
+        // Expected behavior: destination key must not exist (404 / NotFound)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const errObj = headErr as any;
+        if (errObj?.name !== 'NotFound' && errObj?.$metadata?.httpStatusCode !== 404 && !errObj?.message?.includes('Not Found')) {
+          console.warn('[R2 Destination Head Check]: Non-404 status received, continuing verification.', errObj?.name);
+        }
+      }
+
+      // 4. Verify staging object presence and actual stored object size
       const head = await this.s3.send(
         new HeadObjectCommand({
           Bucket: this.bucket,
@@ -104,15 +180,24 @@ export class CloudflareR2StorageProvider implements StorageProvider {
 
       const actualSize = head.ContentLength || 0;
       if (actualSize === 0) {
+        await this.deleteObject(params.stagingKey).catch(() => {});
         return { verified: false, actualSizeBytes: 0, verifiedMime: '', error: 'Uploaded object is empty.' };
       }
+      if (actualSize > 10 * 1024 * 1024) {
+        await this.deleteObject(params.stagingKey).catch(() => {});
+        return {
+          verified: false,
+          actualSizeBytes: actualSize,
+          verifiedMime: '',
+          error: `Uploaded file exceeds the 10MB limit (size: ${(actualSize / (1024 * 1024)).toFixed(2)} MB).`,
+        };
+      }
 
-      // 2. Fetch first 64KB to inspect magic numbers and document structure
+      // 5. Download the ENTIRE document (not a partial 64KB sample) for comprehensive verification
       const getObj = await this.s3.send(
         new GetObjectCommand({
           Bucket: this.bucket,
           Key: params.stagingKey,
-          Range: 'bytes=0-65535',
         })
       );
 
@@ -125,9 +210,19 @@ export class CloudflareR2StorageProvider implements StorageProvider {
         return Buffer.concat(chunks);
       };
 
-      const headerBuffer = await streamToBuffer(getObj.Body);
-      const valResult = validateDocumentBuffer(headerBuffer, params.stagingKey);
+      const fullBuffer = await streamToBuffer(getObj.Body);
+      if (fullBuffer.length !== actualSize) {
+        await this.deleteObject(params.stagingKey).catch(() => {});
+        return {
+          verified: false,
+          actualSizeBytes: fullBuffer.length,
+          verifiedMime: '',
+          error: 'Stored object size mismatch during download verification.',
+        };
+      }
 
+      // 6. Deep document structure, magic bytes, and ZIP/Open XML package validation
+      const valResult = validateDocumentBuffer(fullBuffer, params.stagingKey);
       if (!valResult.isValid) {
         await this.deleteObject(params.stagingKey).catch(() => {});
         return {
@@ -138,6 +233,7 @@ export class CloudflareR2StorageProvider implements StorageProvider {
         };
       }
 
+      // 7. Atomic promotion: copy validated staging object to server-only final key
       await this.s3.send(
         new CopyObjectCommand({
           Bucket: this.bucket,
@@ -147,6 +243,7 @@ export class CloudflareR2StorageProvider implements StorageProvider {
         })
       );
 
+      // 8. Safely retire staging object
       await this.deleteObject(params.stagingKey).catch(() => {});
 
       return {
@@ -156,6 +253,8 @@ export class CloudflareR2StorageProvider implements StorageProvider {
       };
     } catch (err) {
       console.error('[R2 Verify & Promote Error]:', err);
+      // Clean up staging object on unexpected error
+      await this.deleteObject(params.stagingKey).catch(() => {});
       return {
         verified: false,
         actualSizeBytes: 0,
@@ -218,4 +317,3 @@ export class CloudflareR2StorageProvider implements StorageProvider {
     }
   }
 }
-

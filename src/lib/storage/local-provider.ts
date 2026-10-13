@@ -14,14 +14,19 @@ import {
   DownloadUrlResult,
 } from './types';
 import { sanitizeFilename, validateDocumentBuffer } from './validator';
+import { generateUploadSessionToken, verifyUploadSessionToken } from './token';
 import crypto from 'crypto';
+
+const STAGING_KEY_PATTERN = /^staging\/\d{4}-\d{2}-\d{2}\/[a-f0-9]{32}\.(pdf|docx)$/i;
+const FINAL_KEY_PATTERN = /^resumes\/\d{4}-\d{2}-\d{2}\/[a-f0-9]{32}\.(pdf|docx)$/i;
 
 export class LocalStorageProvider implements StorageProvider {
   readonly providerName: StorageProviderType = 'local';
   private baseDir: string;
 
   constructor() {
-    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_LOCAL_STORAGE_IN_PROD !== 'true') {
+    // Strictly prevent local disk fallback in production environments
+    if (process.env.NODE_ENV === 'production') {
       throw new Error(
         'Access denied: LocalStorageProvider is restricted to authorized local development and testing environments only.'
       );
@@ -40,19 +45,23 @@ export class LocalStorageProvider implements StorageProvider {
     const cleanName = sanitizeFilename(req.filename);
     const datePrefix = new Date().toISOString().split('T')[0];
     const randomHex = crypto.randomBytes(16).toString('hex');
-    const ext = cleanName.split('.').pop() || 'pdf';
+    const ext = (cleanName.split('.').pop() || 'pdf').toLowerCase();
+
+    if (ext !== 'pdf' && ext !== 'docx') {
+      throw new Error('Unsupported file extension. Only PDF and DOCX files are permitted.');
+    }
 
     const stagingKey = `staging/${datePrefix}/${randomHex}.${ext}`;
     const finalKey = `resumes/${datePrefix}/${randomHex}.${ext}`;
-    const sessionToken = crypto.randomBytes(24).toString('hex');
+    const { sessionToken, expiresAt } = generateUploadSessionToken(stagingKey, finalKey, 900);
 
     return {
       provider: 'local',
-      uploadUrl: `/api/applications/upload-direct?key=${encodeURIComponent(stagingKey)}&token=${sessionToken}`,
+      uploadUrl: `/api/applications/upload-direct?key=${encodeURIComponent(stagingKey)}&token=${encodeURIComponent(sessionToken)}`,
       stagingKey,
       finalKey,
       sessionToken,
-      expiresAt: new Date(Date.now() + 900 * 1000).toISOString(),
+      expiresAt,
     };
   }
 
@@ -62,8 +71,65 @@ export class LocalStorageProvider implements StorageProvider {
     expectedMime: string;
     sessionToken: string;
   }): Promise<VerifyObjectResult> {
+    // 1. Strict key pattern and prefix restrictions
+    if (!STAGING_KEY_PATTERN.test(params.stagingKey)) {
+      return {
+        verified: false,
+        actualSizeBytes: 0,
+        verifiedMime: '',
+        error: 'Invalid staging key format or disallowed prefix.',
+      };
+    }
+    if (!FINAL_KEY_PATTERN.test(params.finalKey)) {
+      return {
+        verified: false,
+        actualSizeBytes: 0,
+        verifiedMime: '',
+        error: 'Invalid destination key format or disallowed prefix.',
+      };
+    }
+
+    const stagingSuffix = params.stagingKey.replace(/^staging\//, '');
+    const finalSuffix = params.finalKey.replace(/^resumes\//, '');
+    if (stagingSuffix.toLowerCase() !== finalSuffix.toLowerCase()) {
+      return {
+        verified: false,
+        actualSizeBytes: 0,
+        verifiedMime: '',
+        error: 'Mismatched staging and destination object keys.',
+      };
+    }
+
+    // 2. Validate cryptographic upload session token
+    const tokenCheck = verifyUploadSessionToken(params.stagingKey, params.finalKey, params.sessionToken);
+    if (!tokenCheck.valid) {
+      const stagingPath = path.join(this.baseDir, params.stagingKey);
+      if (fs.existsSync(stagingPath)) {
+        try { fs.unlinkSync(stagingPath); } catch {}
+      }
+      return {
+        verified: false,
+        actualSizeBytes: 0,
+        verifiedMime: '',
+        error: tokenCheck.error || 'Invalid upload session token.',
+      };
+    }
+
     const stagingPath = path.join(this.baseDir, params.stagingKey);
     const finalPath = path.join(this.baseDir, params.finalKey);
+
+    // 3. Replay protection: prevent overwriting existing final object
+    if (fs.existsSync(finalPath)) {
+      if (fs.existsSync(stagingPath)) {
+        try { fs.unlinkSync(stagingPath); } catch {}
+      }
+      return {
+        verified: false,
+        actualSizeBytes: 0,
+        verifiedMime: '',
+        error: 'Destination resume object already exists. Replay or overwrite is prohibited.',
+      };
+    }
 
     if (!fs.existsSync(stagingPath)) {
       return {
@@ -76,8 +142,28 @@ export class LocalStorageProvider implements StorageProvider {
 
     try {
       const buffer = fs.readFileSync(stagingPath);
-      const valResult = validateDocumentBuffer(buffer, params.stagingKey);
 
+      if (buffer.length === 0) {
+        fs.unlinkSync(stagingPath);
+        return {
+          verified: false,
+          actualSizeBytes: 0,
+          verifiedMime: '',
+          error: 'Uploaded object is empty.',
+        };
+      }
+
+      if (buffer.length > 10 * 1024 * 1024) {
+        fs.unlinkSync(stagingPath);
+        return {
+          verified: false,
+          actualSizeBytes: buffer.length,
+          verifiedMime: '',
+          error: 'Uploaded file exceeds 10MB limit.',
+        };
+      }
+
+      const valResult = validateDocumentBuffer(buffer, params.stagingKey);
       if (!valResult.isValid) {
         fs.unlinkSync(stagingPath);
         return {
@@ -101,6 +187,9 @@ export class LocalStorageProvider implements StorageProvider {
         verifiedMime: valResult.mimeType,
       };
     } catch (err) {
+      if (fs.existsSync(stagingPath)) {
+        try { fs.unlinkSync(stagingPath); } catch {}
+      }
       return {
         verified: false,
         actualSizeBytes: 0,
@@ -158,4 +247,3 @@ export class LocalStorageProvider implements StorageProvider {
     return true;
   }
 }
-

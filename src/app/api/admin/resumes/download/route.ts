@@ -12,7 +12,7 @@ import fs from 'fs';
 export async function GET(req: NextRequest) {
   try {
     const admin = await getAdminUser();
-    if (!admin) {
+    if (!admin || admin.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized: Admin authentication required' }, { status: 401 });
     }
 
@@ -24,12 +24,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Storage object key is required' }, { status: 400 });
     }
 
+    const normalizedKey = decodeURIComponent(key).replace(/\\/g, '/');
+    // Enforce private-resume prefix restriction and path traversal containment
+    if (normalizedKey.includes('..') || !normalizedKey.startsWith('resumes/')) {
+      return NextResponse.json({ error: 'Access denied: Invalid or unauthorized resume key' }, { status: 403 });
+    }
+
     const provider = getStorageProvider();
 
     // If local provider in dev mode, stream file directly with attachment header
     if (provider.providerName === 'local') {
       const baseDir = path.resolve(process.cwd(), '.data', 'resumes');
-      const normalizedKey = decodeURIComponent(key).replace(/\\/g, '/');
       const filePath = path.resolve(baseDir, normalizedKey);
 
       // Strict cross-platform path traversal containment

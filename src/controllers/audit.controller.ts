@@ -26,14 +26,13 @@ export async function logAuditAction(params: {
   entityId?: string | null;
   details?: Record<string, unknown>;
   ipAddress?: string | null;
-  isSystem?: boolean;
 }): Promise<{ success: boolean; error?: string }> {
   try {
     const admin = await getAdminUser().catch(() => null);
 
-    // Prevent anonymous callers from forging or writing audit records
-    if (!admin && !params.isSystem) {
-      console.warn('[Audit Security Warning]: Rejected anonymous attempt to write audit log.');
+    // Enforce authenticated administrator authorization for exported server actions
+    if (!admin || admin.role !== 'ADMIN') {
+      console.warn('[Audit Security Warning]: Rejected unauthenticated attempt to invoke logAuditAction.');
       return { success: false, error: 'Unauthorized: Admin authentication required.' };
     }
 
@@ -43,8 +42,8 @@ export async function logAuditAction(params: {
         action: params.action,
         entityType: params.entityType,
         entityId: params.entityId || null,
-        userId: admin?.id || (params.isSystem ? 'system' : null),
-        userName: admin?.fullName || admin?.email || (params.isSystem ? 'System' : 'Admin'),
+        userId: admin.id,
+        userName: admin.fullName || admin.email || 'Admin',
         details: (params.details || {}) as object,
         ipAddress: params.ipAddress || null,
       }

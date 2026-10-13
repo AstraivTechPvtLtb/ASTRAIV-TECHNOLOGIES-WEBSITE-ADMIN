@@ -119,6 +119,39 @@ describe('Admin Security Remediation Verification Suite', () => {
       assert.ok(res.error?.includes('Unauthorized'), 'Error must indicate authorization requirement');
     });
 
+    it('proves an unauthenticated caller CANNOT invoke logAuditAction with isSystem: true bypass attempt', () => {
+      const script = `
+        import('../src/controllers/audit.controller.ts').then(async (m) => {
+          const res = await m.logAuditAction({
+            action: 'SPOOFED_SYSTEM_ACTION',
+            entityType: 'system_bypass',
+            isSystem: true
+          });
+          console.log('AUDIT_SPOOF_RESULT:' + JSON.stringify(res));
+        }).catch((err) => {
+          console.error(err);
+          process.exit(1);
+        });
+      `;
+      const output = child_process.execSync(
+        `npx tsx -e "${script.replace(/\n/g, ' ')}"`,
+        { cwd: path.resolve(cwd, 'tests'), env: { ...process.env, NODE_ENV: 'test' }, encoding: 'utf8' }
+      );
+      const match = output.match(/AUDIT_SPOOF_RESULT:(.+)/);
+      assert.ok(match, 'Must output AUDIT_SPOOF_RESULT');
+      const res = JSON.parse(match[1]);
+      assert.equal(res.success, false, 'Unauthenticated caller with isSystem: true MUST still be rejected');
+      assert.ok(res.error?.includes('Unauthorized'), 'Error must indicate authorization requirement');
+    });
+
+    it('verifies src/lib/audit-internal.ts is strictly server-only and does NOT contain use server directive', () => {
+      const internalPath = path.resolve(cwd, 'src/lib/audit-internal.ts');
+      const content = fs.readFileSync(internalPath, 'utf8');
+      assert.ok(!content.includes("'use server'"), 'audit-internal.ts must not contain use server directive');
+      assert.ok(!content.includes('"use server"'), 'audit-internal.ts must not contain use server directive');
+      assert.ok(content.includes('export async function logSystemAuditEvent'), 'Must export logSystemAuditEvent');
+    });
+
     it('validates real runtime negative authorization when an unauthenticated caller invokes getAuditLogs', () => {
       const script = `
         import('../src/controllers/audit.controller.ts').then(async (m) => {
@@ -615,23 +648,45 @@ describe('Admin Security Remediation Verification Suite', () => {
 
       assert.ok(content.includes('[CRITICAL_STORAGE_CONFIG]'), 'Storage factory must throw CRITICAL_STORAGE_CONFIG in production');
       assert.ok(content.includes("process.env.NODE_ENV === 'production'"), 'Storage factory must check production environment');
+      assert.ok(!content.includes('ALLOW_LOCAL_STORAGE_IN_PROD'), 'Storage factory must NOT contain ALLOW_LOCAL_STORAGE_IN_PROD escape hatch');
     });
 
-    it('verifies LocalStorageProvider constructor forbids instantiation in production', () => {
+    it('verifies LocalStorageProvider constructor forbids instantiation in production and has no escape hatches', () => {
       const localPath = path.resolve(cwd, 'src/lib/storage/local-provider.ts');
       const content = fs.readFileSync(localPath, 'utf8');
 
       assert.ok(content.includes("process.env.NODE_ENV === 'production'"), 'LocalStorageProvider must guard constructor against production use');
       assert.ok(content.includes('Access denied: LocalStorageProvider is restricted to authorized local development'), 'Must throw access denied error in production');
+      assert.ok(!content.includes('ALLOW_LOCAL_STORAGE_IN_PROD'), 'LocalStorageProvider must NOT contain ALLOW_LOCAL_STORAGE_IN_PROD escape hatch');
     });
 
-    it('verifies DOCX validation requires real Open Packaging Conventions components rather than raw magic bytes alone', () => {
+    it('verifies SupabaseStorageProvider does NOT contain ALLOW_LOCAL_STORAGE_IN_PROD escape hatch', () => {
+      const supaPath = path.resolve(cwd, 'src/lib/storage/supabase-provider.ts');
+      const content = fs.readFileSync(supaPath, 'utf8');
+      assert.ok(!content.includes('ALLOW_LOCAL_STORAGE_IN_PROD'), 'Supabase provider must NOT contain ALLOW_LOCAL_STORAGE_IN_PROD escape hatch');
+    });
+
+    it('verifies DOCX validation requires genuine Office Open XML package structure and rejects fake DOCX files', () => {
       const valPath = path.resolve(cwd, 'src/lib/storage/validator.ts');
       const content = fs.readFileSync(valPath, 'utf8');
 
       assert.ok(content.includes('[Content_Types].xml'), 'Validator must check for [Content_Types].xml');
-      assert.ok(content.includes('word/'), 'Validator must check for word/ directory');
-      assert.ok(content.includes('Invalid DOCX structure'), 'Validator must return descriptive error for invalid docx');
+      assert.ok(content.includes('word/document.xml'), 'Validator must check for word/document.xml');
+      assert.ok(content.includes('validateDocxZipPackage'), 'Validator must perform genuine ZIP parsing');
+      assert.ok(content.includes('0x06054b50'), 'Validator must locate EOCD record');
+      assert.ok(content.includes('vbaproject.bin'), 'Validator must reject macro components');
+      assert.ok(content.includes('..'), 'Validator must reject path traversal entries');
+    });
+
+    it('verifies src/lib/storage/token.ts implements cryptographic HMAC session tokens bound to both stagingKey and finalKey', () => {
+      const tokenPath = path.resolve(cwd, 'src/lib/storage/token.ts');
+      const content = fs.readFileSync(tokenPath, 'utf8');
+
+      assert.ok(content.includes('generateUploadSessionToken'), 'Must export generateUploadSessionToken');
+      assert.ok(content.includes('verifyUploadSessionToken'), 'Must export verifyUploadSessionToken');
+      assert.ok(content.includes('crypto.timingSafeEqual'), 'Must use timing-safe comparison');
+      assert.ok(content.includes('stagingKey'), 'Must bind stagingKey');
+      assert.ok(content.includes('finalKey'), 'Must bind finalKey');
     });
   });
 });
