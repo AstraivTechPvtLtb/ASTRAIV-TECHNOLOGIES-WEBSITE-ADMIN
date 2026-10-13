@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import child_process from 'child_process';
 import { sanitizeSvgContent } from '../src/lib/media-specs.ts';
 import {
   isGoogleAnalyticsConfigured,
@@ -97,30 +98,68 @@ describe('Admin Security Remediation Verification Suite', () => {
       assert.ok(content.includes('data:text/html'), 'registerMediaAsset must reject data:text/html URLs');
     });
 
-    it('validates negative authorization behavior when an unauthenticated caller invokes media functions', () => {
-      // Simulation of unauthenticated server action call flow
-      function simulateUnauthenticatedMediaCall(isAuthenticated, role) {
-        if (!isAuthenticated || role !== 'ADMIN') {
-          return { success: false, data: [], error: 'Unauthorized: Valid administrator privileges required.' };
-        }
-        return { success: true, data: [{ id: 'asset-1', url: '/images/hero.webp', isPrivate: true }] };
-      }
+    it('validates real runtime negative authorization when an unauthenticated caller invokes logAuditAction', () => {
+      const script = `
+        import('../src/controllers/audit.controller.ts').then(async (m) => {
+          const res = await m.logAuditAction({ action: 'MALICIOUS_LOG_ATTEMPT', entityType: 'exploit' });
+          console.log('AUDIT_RESULT:' + JSON.stringify(res));
+        }).catch((err) => {
+          console.error(err);
+          process.exit(1);
+        });
+      `;
+      const output = child_process.execSync(
+        `npx tsx -e "${script.replace(/\n/g, ' ')}"`,
+        { cwd: path.resolve(cwd, 'tests'), env: { ...process.env, NODE_ENV: 'test' }, encoding: 'utf8' }
+      );
+      const match = output.match(/AUDIT_RESULT:(.+)/);
+      assert.ok(match, 'Must output AUDIT_RESULT');
+      const res = JSON.parse(match[1]);
+      assert.equal(res.success, false, 'Unauthenticated caller must be rejected from writing audit logs');
+      assert.ok(res.error?.includes('Unauthorized'), 'Error must indicate authorization requirement');
+    });
 
-      // Anonymous caller
-      const anonResult = simulateUnauthenticatedMediaCall(false, null);
-      assert.equal(anonResult.success, false, 'Anonymous caller must be rejected');
-      assert.equal(anonResult.data.length, 0, 'Anonymous caller must receive zero asset records');
-      assert.ok(anonResult.error?.includes('Unauthorized'), 'Error message must reflect authorization failure');
+    it('validates real runtime negative authorization when an unauthenticated caller invokes getAuditLogs', () => {
+      const script = `
+        import('../src/controllers/audit.controller.ts').then(async (m) => {
+          const res = await m.getAuditLogs();
+          console.log('AUDIT_GET_RESULT:' + JSON.stringify(res));
+        }).catch((err) => {
+          console.error(err);
+          process.exit(1);
+        });
+      `;
+      const output = child_process.execSync(
+        `npx tsx -e "${script.replace(/\n/g, ' ')}"`,
+        { cwd: path.resolve(cwd, 'tests'), env: { ...process.env, NODE_ENV: 'test' }, encoding: 'utf8' }
+      );
+      const match = output.match(/AUDIT_GET_RESULT:(.+)/);
+      assert.ok(match, 'Must output AUDIT_GET_RESULT');
+      const res = JSON.parse(match[1]);
+      assert.equal(res.success, false, 'Unauthenticated caller must not retrieve audit logs');
+      assert.deepEqual(res.data, [], 'Must return empty data array');
+    });
 
-      // Client portal session (role !== 'ADMIN')
-      const clientSessionResult = simulateUnauthenticatedMediaCall(true, 'CLIENT');
-      assert.equal(clientSessionResult.success, false, 'Client role caller must be rejected');
-      assert.equal(clientSessionResult.data.length, 0, 'Client session must receive zero asset records');
-
-      // Authenticated admin
-      const adminResult = simulateUnauthenticatedMediaCall(true, 'ADMIN');
-      assert.equal(adminResult.success, true, 'Verified admin must succeed');
-      assert.equal(adminResult.data.length, 1);
+    it('validates real runtime negative authorization when an unauthenticated caller invokes getMediaAssets', () => {
+      const script = `
+        import('../src/controllers/media.controller.ts').then(async (m) => {
+          const res = await m.getMediaAssets();
+          console.log('MEDIA_RESULT:' + JSON.stringify(res));
+        }).catch((err) => {
+          console.error(err);
+          process.exit(1);
+        });
+      `;
+      const output = child_process.execSync(
+        `npx tsx -e "${script.replace(/\n/g, ' ')}"`,
+        { cwd: path.resolve(cwd, 'tests'), env: { ...process.env, NODE_ENV: 'test' }, encoding: 'utf8' }
+      );
+      const match = output.match(/MEDIA_RESULT:(.+)/);
+      assert.ok(match, 'Must output MEDIA_RESULT');
+      const res = JSON.parse(match[1]);
+      assert.equal(res.success, false, 'Unauthenticated caller must be rejected from media queries');
+      assert.ok(res.error?.includes('Unauthorized'), 'Error message must reflect authorization failure');
+      assert.deepEqual(res.data, [], 'Anonymous caller must receive zero asset records');
     });
   });
 
@@ -185,6 +224,15 @@ describe('Admin Security Remediation Verification Suite', () => {
 
       assert.ok(content.includes('rejectUnauthorized: true'), 'db.ts must enforce rejectUnauthorized: true for remote production TLS');
       assert.ok(!content.includes('rejectUnauthorized: false'), 'db.ts must NOT disable TLS verification');
+    });
+
+    it('verifies src/models/db.ts does NOT silently rewrite connection ports (e.g. 5432 to 6543)', () => {
+      const dbPath = path.resolve(cwd, 'src/models/db.ts');
+      const content = fs.readFileSync(dbPath, 'utf8');
+
+      assert.ok(!content.includes("replace(':5432'"), 'db.ts must NOT rewrite port 5432 string');
+      assert.ok(!content.includes("replace('5432'"), 'db.ts must NOT manipulate port numbers');
+      assert.ok(!content.includes(':6543'), 'db.ts must NOT hardcode port 6543 rewrite');
     });
   });
 
@@ -540,6 +588,50 @@ describe('Admin Security Remediation Verification Suite', () => {
       assert.ok(content.includes("isFallbackActive ? '—' :"), 'KPI cards must display unavailable dash instead of misleading zero');
       assert.ok(content.includes("isFallbackActive ? 'Telemetry Unavailable' :"), 'KPI cards must label unavailable telemetry');
       assert.ok(content.includes("isFallbackActive ? 'Offline / Telemetry Inactive' :"), 'Real-time badge must label offline state');
+    });
+  });
+
+  describe('10. Private Resume Storage Provider Security & Isolation', () => {
+    it('verifies R2 provider standardizes both R2_* and CLOUDFLARE_R2_* environment variable aliases', () => {
+      const r2Path = path.resolve(cwd, 'src/lib/storage/r2-provider.ts');
+      const content = fs.readFileSync(r2Path, 'utf8');
+
+      assert.ok(content.includes('process.env.R2_ACCOUNT_ID || process.env.CLOUDFLARE_R2_ACCOUNT_ID'), 'Must support both account ID aliases');
+      assert.ok(content.includes('process.env.R2_ACCESS_KEY_ID || process.env.CLOUDFLARE_R2_ACCESS_KEY_ID'), 'Must support both access key ID aliases');
+      assert.ok(content.includes('process.env.R2_SECRET_ACCESS_KEY || process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY'), 'Must support both secret access key aliases');
+    });
+
+    it('verifies strict separation between candidate-resume bucket and public asset bucket', () => {
+      const r2Path = path.resolve(cwd, 'src/lib/storage/r2-provider.ts');
+      const content = fs.readFileSync(r2Path, 'utf8');
+
+      assert.ok(content.includes("process.env.R2_RESUME_BUCKET_NAME || 'astraiv-candidate-resumes'"), 'Must isolate private candidate resumes to dedicated bucket');
+      assert.ok(!content.includes('astraiv-assets'), 'R2 resume provider must NOT point to public astraiv-assets bucket');
+    });
+
+    it('verifies storage factory rejects LocalStorageProvider fallback in production without durable cloud storage', () => {
+      const factoryPath = path.resolve(cwd, 'src/lib/storage/index.ts');
+      const content = fs.readFileSync(factoryPath, 'utf8');
+
+      assert.ok(content.includes('[CRITICAL_STORAGE_CONFIG]'), 'Storage factory must throw CRITICAL_STORAGE_CONFIG in production');
+      assert.ok(content.includes("process.env.NODE_ENV === 'production'"), 'Storage factory must check production environment');
+    });
+
+    it('verifies LocalStorageProvider constructor forbids instantiation in production', () => {
+      const localPath = path.resolve(cwd, 'src/lib/storage/local-provider.ts');
+      const content = fs.readFileSync(localPath, 'utf8');
+
+      assert.ok(content.includes("process.env.NODE_ENV === 'production'"), 'LocalStorageProvider must guard constructor against production use');
+      assert.ok(content.includes('Access denied: LocalStorageProvider is restricted to authorized local development'), 'Must throw access denied error in production');
+    });
+
+    it('verifies DOCX validation requires real Open Packaging Conventions components rather than raw magic bytes alone', () => {
+      const valPath = path.resolve(cwd, 'src/lib/storage/validator.ts');
+      const content = fs.readFileSync(valPath, 'utf8');
+
+      assert.ok(content.includes('[Content_Types].xml'), 'Validator must check for [Content_Types].xml');
+      assert.ok(content.includes('word/'), 'Validator must check for word/ directory');
+      assert.ok(content.includes('Invalid DOCX structure'), 'Validator must return descriptive error for invalid docx');
     });
   });
 });

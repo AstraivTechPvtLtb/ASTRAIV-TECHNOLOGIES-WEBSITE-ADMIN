@@ -29,10 +29,11 @@ export class CloudflareR2StorageProvider implements StorageProvider {
   private bucket: string;
 
   constructor() {
-    const accountId = process.env.R2_ACCOUNT_ID || '';
-    const accessKeyId = process.env.R2_ACCESS_KEY_ID || '';
-    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
-    this.bucket = process.env.R2_RESUME_BUCKET_NAME || 'astraiv-candidate-resumes';
+    const accountId = (process.env.R2_ACCOUNT_ID || process.env.CLOUDFLARE_R2_ACCOUNT_ID || '').trim();
+    const accessKeyId = (process.env.R2_ACCESS_KEY_ID || process.env.CLOUDFLARE_R2_ACCESS_KEY_ID || '').trim();
+    const secretAccessKey = (process.env.R2_SECRET_ACCESS_KEY || process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY || '').trim();
+    // Strictly separate private candidate-resume bucket from public asset storage
+    this.bucket = (process.env.R2_RESUME_BUCKET_NAME || 'astraiv-candidate-resumes').trim();
 
     this.s3 = new S3Client({
       region: 'auto',
@@ -45,11 +46,10 @@ export class CloudflareR2StorageProvider implements StorageProvider {
   }
 
   static isConfigured(): boolean {
-    return Boolean(
-      process.env.R2_ACCOUNT_ID &&
-      process.env.R2_ACCESS_KEY_ID &&
-      process.env.R2_SECRET_ACCESS_KEY
-    );
+    const accountId = process.env.R2_ACCOUNT_ID || process.env.CLOUDFLARE_R2_ACCOUNT_ID;
+    const accessKeyId = process.env.R2_ACCESS_KEY_ID || process.env.CLOUDFLARE_R2_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY || process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY;
+    return Boolean(accountId && accessKeyId && secretAccessKey);
   }
 
   async createUploadSession(req: UploadSessionRequest): Promise<UploadSessionResponse> {
@@ -107,11 +107,12 @@ export class CloudflareR2StorageProvider implements StorageProvider {
         return { verified: false, actualSizeBytes: 0, verifiedMime: '', error: 'Uploaded object is empty.' };
       }
 
+      // 2. Fetch first 64KB to inspect magic numbers and document structure
       const getObj = await this.s3.send(
         new GetObjectCommand({
           Bucket: this.bucket,
           Key: params.stagingKey,
-          Range: 'bytes=0-1023',
+          Range: 'bytes=0-65535',
         })
       );
 

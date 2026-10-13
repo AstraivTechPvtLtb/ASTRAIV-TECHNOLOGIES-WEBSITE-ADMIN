@@ -27,19 +27,11 @@ function getCleanConnectionString(): string {
     }
   }
 
-  let conn = raw.trim().replace(/^["']|["']$/g, '').trim();
-
-  // If a pooler.supabase.com URL uses port 5432 (session mode), automatically upgrade to port 6543 (transaction mode with pgbouncer)
-  // to avoid (EMAXCONNSESSION) max clients reached errors on serverless
-  if (conn.includes('pooler.supabase.com:5432')) {
-    conn = conn.replace('pooler.supabase.com:5432', 'pooler.supabase.com:6543');
-    if (!conn.includes('pgbouncer=true')) {
-      conn += (conn.includes('?') ? '&' : '?') + 'pgbouncer=true';
-    }
-  }
+  const conn = raw.trim().replace(/^["']|["']$/g, '').trim();
 
   return conn;
 }
+
 
 const connectionString = getCleanConnectionString();
 const isLocalhost = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');

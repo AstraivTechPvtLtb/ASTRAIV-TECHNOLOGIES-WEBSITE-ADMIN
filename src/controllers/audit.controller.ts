@@ -26,24 +26,34 @@ export async function logAuditAction(params: {
   entityId?: string | null;
   details?: Record<string, unknown>;
   ipAddress?: string | null;
-}): Promise<void> {
+  isSystem?: boolean;
+}): Promise<{ success: boolean; error?: string }> {
   try {
     const admin = await getAdminUser().catch(() => null);
+
+    // Prevent anonymous callers from forging or writing audit records
+    if (!admin && !params.isSystem) {
+      console.warn('[Audit Security Warning]: Rejected anonymous attempt to write audit log.');
+      return { success: false, error: 'Unauthorized: Admin authentication required.' };
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any).auditLog.create({
       data: {
         action: params.action,
         entityType: params.entityType,
         entityId: params.entityId || null,
-        userId: admin?.id || null,
-        userName: admin?.fullName || admin?.email || 'Admin',
+        userId: admin?.id || (params.isSystem ? 'system' : null),
+        userName: admin?.fullName || admin?.email || (params.isSystem ? 'System' : 'Admin'),
         details: (params.details || {}) as object,
         ipAddress: params.ipAddress || null,
       }
     });
+    return { success: true };
   } catch (err) {
     // Non-blocking logger
     console.warn('[Audit Logger Warning]:', err);
+    return { success: false, error: (err as Error)?.message || 'Failed to record audit log' };
   }
 }
 

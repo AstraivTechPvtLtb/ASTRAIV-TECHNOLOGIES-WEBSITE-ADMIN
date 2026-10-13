@@ -21,6 +21,11 @@ export class LocalStorageProvider implements StorageProvider {
   private baseDir: string;
 
   constructor() {
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_LOCAL_STORAGE_IN_PROD !== 'true') {
+      throw new Error(
+        'Access denied: LocalStorageProvider is restricted to authorized local development and testing environments only.'
+      );
+    }
     this.baseDir = path.join(process.cwd(), '.data', 'resumes');
     if (!fs.existsSync(this.baseDir)) {
       try {

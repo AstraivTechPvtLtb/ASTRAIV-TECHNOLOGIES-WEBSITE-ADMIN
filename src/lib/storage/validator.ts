@@ -73,6 +73,23 @@ export function validateDocumentBuffer(
       };
     }
 
+    // Verify real DOCX structure: genuine Office Open XML documents must contain [Content_Types].xml and word/
+    const bufferStr = Buffer.isBuffer(bytes)
+      ? bytes.toString('latin1')
+      : Buffer.from(bytes).toString('latin1');
+
+    const hasContentTypes = bufferStr.includes('[Content_Types].xml');
+    const hasWordDir = bufferStr.includes('word/') || bufferStr.includes('word\\');
+
+    if (!hasContentTypes || !hasWordDir) {
+      return {
+        isValid: false,
+        mimeType: 'application/octet-stream',
+        detectedFormat: 'unknown',
+        error: 'Invalid DOCX structure. File lacks required Office Open XML components ([Content_Types].xml and word/).',
+      };
+    }
+
     return {
       isValid: true,
       mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
