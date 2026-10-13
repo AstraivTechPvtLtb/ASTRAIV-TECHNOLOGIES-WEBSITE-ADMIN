@@ -42,11 +42,21 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Access denied: Path traversal detected' }, { status: 403 });
       }
 
-      if (!fs.existsSync(filePath)) {
+      let resolvedPath = filePath;
+      if (!fs.existsSync(resolvedPath)) {
+        // Fallback for independent local development processes where Client wrote to client/.data/resumes
+        const clientBaseDir = path.resolve(process.cwd(), '..', 'client', '.data', 'resumes');
+        const clientFilePath = path.resolve(clientBaseDir, normalizedKey);
+        if (clientFilePath.startsWith(clientBaseDir + path.sep) && fs.existsSync(clientFilePath)) {
+          resolvedPath = clientFilePath;
+        }
+      }
+
+      if (!fs.existsSync(resolvedPath)) {
         return NextResponse.json({ error: 'File not found on disk' }, { status: 404 });
       }
 
-      const fileBuffer = fs.readFileSync(filePath);
+      const fileBuffer = fs.readFileSync(resolvedPath);
       const isDocx = filename.endsWith('.docx');
       const mime = isDocx
         ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'

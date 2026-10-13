@@ -50,10 +50,26 @@ export class CloudflareR2StorageProvider implements StorageProvider {
   }
 
   static isConfigured(): boolean {
-    const accountId = process.env.R2_ACCOUNT_ID || process.env.CLOUDFLARE_R2_ACCOUNT_ID;
-    const accessKeyId = process.env.R2_ACCESS_KEY_ID || process.env.CLOUDFLARE_R2_ACCESS_KEY_ID;
-    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY || process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY;
-    return Boolean(accountId && accessKeyId && secretAccessKey);
+    const rawAccountId = process.env.R2_ACCOUNT_ID || process.env.CLOUDFLARE_R2_ACCOUNT_ID;
+    const rawAccessKeyId = process.env.R2_ACCESS_KEY_ID || process.env.CLOUDFLARE_R2_ACCESS_KEY_ID;
+    const rawSecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY;
+
+    if (!rawAccountId || !rawAccessKeyId || !rawSecretAccessKey) {
+      return false;
+    }
+
+    const accountId = rawAccountId.trim();
+    const accessKeyId = rawAccessKeyId.trim();
+    const secretAccessKey = rawSecretAccessKey.trim();
+
+    const isPlaceholder = (val: string) =>
+      val.startsWith('your_') ||
+      val.includes('placeholder') ||
+      val.includes('example') ||
+      val.includes('xxx') ||
+      val.startsWith('<');
+
+    return !isPlaceholder(accountId) && !isPlaceholder(accessKeyId) && !isPlaceholder(secretAccessKey);
   }
 
   async createUploadSession(req: UploadSessionRequest): Promise<UploadSessionResponse> {
