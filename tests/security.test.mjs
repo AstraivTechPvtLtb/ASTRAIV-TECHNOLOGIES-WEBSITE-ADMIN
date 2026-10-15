@@ -10,6 +10,10 @@ import {
   getAnalyticsOverview,
   isTelemetryFallback,
   getAnalyticsRealtime,
+  resolveServiceAccountCredentials,
+  isAuthError,
+  isPermissionError,
+  resetAnalyticsState,
 } from '../src/lib/google-analytics.ts';
 
 describe('Admin Security Remediation Verification Suite', () => {
@@ -581,7 +585,7 @@ describe('Admin Security Remediation Verification Suite', () => {
       assert.equal(typeof config.configured, 'boolean');
       assert.equal(typeof config.propertyId, 'string');
       // In environment without active credentials, configured must be false
-      if (!process.env.GOOGLE_SERVICE_ACCOUNT_KEY && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+      if (!process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
         assert.equal(config.configured, false, 'Must report false when credentials are absent');
         assert.ok(config.reason, 'Must provide explanatory reason');
       }
@@ -621,6 +625,128 @@ describe('Admin Security Remediation Verification Suite', () => {
       assert.ok(content.includes("isFallbackActive ? '—' :"), 'KPI cards must display unavailable dash instead of misleading zero');
       assert.ok(content.includes("isFallbackActive ? 'Telemetry Unavailable' :"), 'KPI cards must label unavailable telemetry');
       assert.ok(content.includes("isFallbackActive ? 'Offline / Telemetry Inactive' :"), 'Real-time badge must label offline state');
+    });
+
+    // 10 Focused GA4 Credential Loading & Auth Verification Tests
+    it('1. correctly parses valid Base64 service-account JSON credential', () => {
+      const fakeSa = {
+        type: 'service_account',
+        project_id: 'test-project-123',
+        client_email: 'ga4-tester@test-project-123.iam.gserviceaccount.com',
+        private_key: '-----BEGIN RSA PRIVATE KEY-----\\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQ\\n-----END RSA PRIVATE KEY-----\\n',
+      };
+      const b64 = Buffer.from(JSON.stringify(fakeSa)).toString('base64');
+      const res = resolveServiceAccountCredentials(b64);
+      assert.equal(res.status, 'valid');
+      assert.ok(res.credentials);
+      assert.equal(res.credentials.client_email, fakeSa.client_email);
+      assert.ok(res.credentials.private_key.includes('\n'));
+      assert.ok(!res.credentials.private_key.includes('\\n'));
+    });
+
+    it('2. correctly identifies missing environment variable without crashing', () => {
+      const resEmpty = resolveServiceAccountCredentials('');
+      assert.equal(resEmpty.status, 'missing');
+      assert.equal(resEmpty.credentials, null);
+      assert.ok(resEmpty.errorMessage.includes('not defined'));
+
+      const resWhitespace = resolveServiceAccountCredentials('   ');
+      assert.equal(resWhitespace.status, 'missing');
+      assert.equal(resWhitespace.credentials, null);
+    });
+
+    it('3. rejects invalid or malformed Base64 content with granular status', () => {
+      const res = resolveServiceAccountCredentials('not-valid-base64-content!@#$%^&*()');
+      assert.equal(res.status, 'malformed_base64');
+      assert.equal(res.credentials, null);
+      assert.ok(res.errorMessage.includes('invalid Base64'));
+    });
+
+    it('4. rejects Base64 that does not evaluate to valid JSON', () => {
+      const b64Garbage = Buffer.from('this is plain text, not JSON').toString('base64');
+      const res = resolveServiceAccountCredentials(b64Garbage);
+      assert.equal(res.status, 'invalid_json');
+      assert.equal(res.credentials, null);
+      assert.ok(res.errorMessage.includes('JSON'));
+    });
+
+    it('5. rejects service-account JSON with missing required fields (client_email or private_key)', () => {
+      // Missing client_email
+      const noEmail = Buffer.from(JSON.stringify({ private_key: '-----BEGIN RSA PRIVATE KEY-----\nkey\n-----END RSA PRIVATE KEY-----\n' })).toString('base64');
+      const res1 = resolveServiceAccountCredentials(noEmail);
+      assert.equal(res1.status, 'missing_fields');
+      assert.ok(res1.errorMessage.includes('client_email'));
+
+      // Missing private_key
+      const noKey = Buffer.from(JSON.stringify({ client_email: 'service@project.iam.gserviceaccount.com' })).toString('base64');
+      const res2 = resolveServiceAccountCredentials(noKey);
+      assert.equal(res2.status, 'missing_fields');
+      assert.ok(res2.errorMessage.includes('private_key'));
+    });
+
+    it('6. handles raw JSON strings as well as quoted strings in GOOGLE_SERVICE_ACCOUNT_KEY', () => {
+      const fakeSa = {
+        type: 'service_account',
+        client_email: 'direct@project.iam.gserviceaccount.com',
+        private_key: '-----BEGIN PRIVATE KEY-----\\nFAKEKEY\\n-----END PRIVATE KEY-----\\n',
+      };
+      // Raw unquoted JSON
+      const resRaw = resolveServiceAccountCredentials(JSON.stringify(fakeSa));
+      assert.equal(resRaw.status, 'valid');
+      assert.equal(resRaw.credentials.client_email, fakeSa.client_email);
+
+      // Quoted Base64
+      const b64 = Buffer.from(JSON.stringify(fakeSa)).toString('base64');
+      const resQuoted = resolveServiceAccountCredentials(`"${b64}"`);
+      assert.equal(resQuoted.status, 'valid');
+      assert.equal(resQuoted.credentials.client_email, fakeSa.client_email);
+    });
+
+    it('7. accurately classifies auth errors and permission errors without leaking secrets', () => {
+      assert.equal(isAuthError({ code: 16 }), true);
+      assert.equal(isAuthError(new Error('UNAUTHENTICATED request')), true);
+      assert.equal(isAuthError(new Error('invalid_grant: Invalid JWT Signature')), true);
+      assert.equal(isAuthError(new Error('Generic network timeout')), false);
+
+      assert.equal(isPermissionError({ code: 7 }), true);
+      assert.equal(isPermissionError(new Error('PERMISSION_DENIED: User does not have sufficient permissions')), true);
+      assert.equal(isPermissionError(new Error('Syntax error in query')), false);
+    });
+
+    it('8. verifies complete removal of file-based GA4 credential loading (no fs, no path, no GOOGLE_APPLICATION_CREDENTIALS)', () => {
+      const gaPath = path.resolve(cwd, 'src/lib/google-analytics.ts');
+      const content = fs.readFileSync(gaPath, 'utf8');
+
+      assert.ok(!content.includes("from 'fs'"), 'Must not import fs in google-analytics.ts');
+      assert.ok(!content.includes('from "fs"'), 'Must not import fs in google-analytics.ts');
+      assert.ok(!content.includes("from 'path'"), 'Must not import path in google-analytics.ts');
+      assert.ok(!content.includes('from "path"'), 'Must not import path in google-analytics.ts');
+      assert.ok(!content.includes('GOOGLE_APPLICATION_CREDENTIALS'), 'Must not reference GOOGLE_APPLICATION_CREDENTIALS');
+      assert.ok(!content.includes('service-account.json'), 'Must not reference service-account.json');
+      assert.ok(!content.includes('readFileSync'), 'Must not call readFileSync');
+    });
+
+    it('9. verifies diagnostic messages never leak service account private keys or credentials', () => {
+      const resMissing = resolveServiceAccountCredentials('');
+      assert.ok(!resMissing.errorMessage.includes('PRIVATE KEY'));
+
+      const resBad = resolveServiceAccountCredentials('invalid-base64');
+      assert.ok(!resBad.errorMessage.includes('PRIVATE KEY'));
+
+      resetAnalyticsState();
+      const config = isGoogleAnalyticsConfigured();
+      if (config.reason) {
+        assert.ok(!config.reason.includes('PRIVATE KEY'));
+        assert.ok(!config.reason.includes('BEGIN'));
+      }
+    });
+
+    it('10. verifies telemetry endpoints require verified Admin session and reject anonymous callers', async () => {
+      const overviewRoute = path.resolve(cwd, 'src/app/api/analytics/overview/route.ts');
+      const content = fs.readFileSync(overviewRoute, 'utf8');
+
+      assert.ok(content.includes('verifyAdminSession'), 'Route must enforce verifyAdminSession');
+      assert.ok(content.includes('if (!auth.authorized)'), 'Route must abort when unauthorized');
     });
   });
 

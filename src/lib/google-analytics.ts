@@ -6,8 +6,6 @@
  */
 
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
-import fs from 'fs';
-import path from 'path';
 
 // Types for GA4 Reports
 export interface AnalyticsOverview {
@@ -132,51 +130,153 @@ async function fetchWithCache<T>(
 
 const DEFAULT_GA_PROPERTY_ID = '555075963';
 
-function resolveServiceAccountCredentials(): {
+export interface ParsedServiceAccountCredentials {
   client_email: string;
   private_key: string;
   project_id?: string;
-} | null {
-  const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY?.trim();
-  if (rawKey) {
+  type?: string;
+}
+
+export interface CredentialResolutionResult {
+  credentials: ParsedServiceAccountCredentials | null;
+  status: 'valid' | 'missing' | 'malformed_base64' | 'invalid_json' | 'missing_fields';
+  errorMessage?: string;
+}
+
+/**
+ * Safely parses and validates Google Service Account credentials strictly from
+ * the GOOGLE_SERVICE_ACCOUNT_KEY environment variable.
+ * Supports Base64-encoded JSON strings, raw JSON objects, handles surrounding quotes,
+ * internal whitespace/newlines, and strips UTF-8 BOM.
+ * Never throws and never logs sensitive private key material.
+ */
+export function resolveServiceAccountCredentials(rawInput?: string): CredentialResolutionResult {
+  const envVal = rawInput !== undefined ? rawInput : process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  if (!envVal || typeof envVal !== 'string' || envVal.trim() === '') {
+    return {
+      credentials: null,
+      status: 'missing',
+      errorMessage: 'GOOGLE_SERVICE_ACCOUNT_KEY is not defined in environment',
+    };
+  }
+
+  let clean = envVal.trim();
+
+  // Strip enclosing quotes if present (e.g. from .env file quote wrappers)
+  if (
+    (clean.startsWith('"') && clean.endsWith('"')) ||
+    (clean.startsWith("'") && clean.endsWith("'"))
+  ) {
+    clean = clean.slice(1, -1).trim();
+  }
+
+  if (!clean) {
+    return {
+      credentials: null,
+      status: 'missing',
+      errorMessage: 'GOOGLE_SERVICE_ACCOUNT_KEY is empty',
+    };
+  }
+
+  let jsonStr = '';
+
+  if (clean.startsWith('{')) {
+    // Raw JSON string
+    jsonStr = clean;
+  } else {
+    // Base64 encoded string - strip any interior whitespace/newlines
+    const sanitizedBase64 = clean.replace(/\s+/g, '');
+
+    // Validate that the string contains only valid Base64 characters
+    if (!/^[A-Za-z0-9+/=_-]+$/.test(sanitizedBase64)) {
+      return {
+        credentials: null,
+        status: 'malformed_base64',
+        errorMessage: 'GOOGLE_SERVICE_ACCOUNT_KEY contains invalid Base64 characters',
+      };
+    }
+
     try {
-      const decoded = rawKey.startsWith('{')
-        ? rawKey
-        : Buffer.from(rawKey, 'base64').toString('utf8');
-      const parsed = JSON.parse(decoded);
-      if (parsed.client_email && parsed.private_key) {
-        return parsed;
-      }
-    } catch (e) {
-      console.warn('[GA4 Auth]: Failed to parse GOOGLE_SERVICE_ACCOUNT_KEY', e);
+      jsonStr = Buffer.from(sanitizedBase64, 'base64').toString('utf8');
+    } catch {
+      return {
+        credentials: null,
+        status: 'malformed_base64',
+        errorMessage: 'Failed to decode Base64 in GOOGLE_SERVICE_ACCOUNT_KEY',
+      };
+    }
+
+    // Strip UTF-8 Byte Order Mark (BOM) if present
+    if (jsonStr.charCodeAt(0) === 0xfeff) {
+      jsonStr = jsonStr.slice(1);
+    }
+    jsonStr = jsonStr.trim();
+
+    if (!jsonStr.startsWith('{')) {
+      return {
+        credentials: null,
+        status: 'invalid_json',
+        errorMessage: 'GOOGLE_SERVICE_ACCOUNT_KEY Base64 payload does not evaluate to a valid JSON object',
+      };
     }
   }
 
-  const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim();
-  if (credPath) {
-    try {
-      const resolvedPath = path.isAbsolute(credPath)
-        ? credPath
-        : path.join(/*turbopackIgnore: true*/ process.cwd(), credPath);
-      if (fs.existsSync(resolvedPath)) {
-        const fileContent = fs.readFileSync(resolvedPath, 'utf8');
-        const parsed = JSON.parse(fileContent);
-        if (parsed.client_email && parsed.private_key) {
-          return parsed;
-        }
-      }
-    } catch (e) {
-      console.warn('[GA4 Auth]: Failed to load credentials from GOOGLE_APPLICATION_CREDENTIALS file', e);
-    }
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch {
+    return {
+      credentials: null,
+      status: 'invalid_json',
+      errorMessage: 'GOOGLE_SERVICE_ACCOUNT_KEY contains invalid JSON',
+    };
   }
 
-  return null;
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return {
+      credentials: null,
+      status: 'invalid_json',
+      errorMessage: 'GOOGLE_SERVICE_ACCOUNT_KEY JSON must be an object',
+    };
+  }
+
+  const client_email = typeof parsed.client_email === 'string' ? parsed.client_email.trim() : '';
+  const rawPrivateKey = typeof parsed.private_key === 'string' ? parsed.private_key.trim() : '';
+  const project_id = typeof parsed.project_id === 'string' ? parsed.project_id.trim() : undefined;
+  const type = typeof parsed.type === 'string' ? parsed.type.trim() : undefined;
+
+  if (!client_email || !client_email.includes('@')) {
+    return {
+      credentials: null,
+      status: 'missing_fields',
+      errorMessage: 'GOOGLE_SERVICE_ACCOUNT_KEY is missing a valid client_email field',
+    };
+  }
+
+  if (!rawPrivateKey || !rawPrivateKey.includes('PRIVATE KEY') || !rawPrivateKey.includes('-----')) {
+    return {
+      credentials: null,
+      status: 'missing_fields',
+      errorMessage: 'GOOGLE_SERVICE_ACCOUNT_KEY is missing a valid private_key PEM structure',
+    };
+  }
+
+  return {
+    credentials: {
+      client_email,
+      private_key: rawPrivateKey.replace(/\\n/g, '\n'),
+      project_id,
+      type,
+    },
+    status: 'valid',
+  };
 }
 
 interface AuthFailureState {
   hasFailed: boolean;
   message: string;
   failedAt: number;
+  fingerprint: string;
 }
 
 let authFailureState: AuthFailureState | null = null;
@@ -196,21 +296,59 @@ export function isAuthError(err: unknown): boolean {
   );
 }
 
-function handleTelemetryError(reportName: string, error: unknown) {
+export function isPermissionError(err: unknown): boolean {
+  if (!err) return false;
+  const msg = (err as Error)?.message || String(err);
+  const code = (err as { code?: number })?.code;
+  return (
+    code === 7 ||
+    msg.includes('PERMISSION_DENIED') ||
+    msg.includes('not have sufficient permissions') ||
+    msg.includes('does not have permission')
+  );
+}
+
+function handleTelemetryError(reportName: string, error: unknown, fingerprint?: string) {
+  const currentFp = fingerprint || lastCredsFingerprint;
   if (isAuthError(error)) {
-    if (!authFailureState || Date.now() - authFailureState.failedAt > AUTH_FAILURE_COOLDOWN_MS) {
+    if (!authFailureState || authFailureState.fingerprint !== currentFp || Date.now() - authFailureState.failedAt > AUTH_FAILURE_COOLDOWN_MS) {
       console.warn(
-        `[GA4 Telemetry Notice]: Google Analytics service account key was rejected (UNAUTHENTICATED). Telemetry is gracefully operating in fallback mode. To enable live GA4 telemetry, update service-account.json or GOOGLE_SERVICE_ACCOUNT_KEY with an active key from Google Cloud Console.`
+        `[GA4 Telemetry Notice]: Google Analytics service account key was rejected (UNAUTHENTICATED). Telemetry is gracefully operating in fallback mode. Update GOOGLE_SERVICE_ACCOUNT_KEY with an active key from Google Cloud Console.`
       );
       authFailureState = {
         hasFailed: true,
         message: 'Google Service Account credentials invalid or revoked (UNAUTHENTICATED)',
         failedAt: Date.now(),
+        fingerprint: currentFp,
+      };
+    }
+  } else if (isPermissionError(error)) {
+    if (!authFailureState || authFailureState.fingerprint !== currentFp || Date.now() - authFailureState.failedAt > AUTH_FAILURE_COOLDOWN_MS) {
+      console.warn(
+        `[GA4 Telemetry Notice]: Google Analytics permission denied (PERMISSION_DENIED). Ensure the service account has Viewer access in GA4 Property Access Management.`
+      );
+      authFailureState = {
+        hasFailed: true,
+        message: 'Service account lacks Viewer permission on GA4 Property. Add it in GA4 Property Access Management.',
+        failedAt: Date.now(),
+        fingerprint: currentFp,
       };
     }
   } else {
     console.warn(`[GA4 ${reportName} Warning]:`, (error as Error)?.message || error);
   }
+}
+
+/**
+ * Resets memory cache, pending requests, and circuit-breaker cooldowns.
+ * Useful for development server reloads and unit testing.
+ */
+export function resetAnalyticsState(): void {
+  clientInstance = null;
+  authFailureState = null;
+  lastCredsFingerprint = '';
+  memoryCache.clear();
+  pendingRequests.clear();
 }
 
 /**
@@ -230,7 +368,28 @@ export function isGoogleAnalyticsConfigured(): {
     propertyId = DEFAULT_GA_PROPERTY_ID;
   }
 
-  // If in auth failure cooldown, report unconfigured with clear reason
+  const credRes = resolveServiceAccountCredentials();
+  const currentFingerprint = credRes.credentials
+    ? `${credRes.credentials.client_email}:${propertyId}`
+    : `unconfigured:${propertyId}`;
+
+  // If credentials or property ID changed, immediately clear any prior failure cooldown
+  if (authFailureState && authFailureState.fingerprint !== currentFingerprint) {
+    authFailureState = null;
+    clientInstance = null;
+    lastCredsFingerprint = currentFingerprint;
+  }
+
+  // If credentials are not valid, report the exact reason
+  if (!credRes.credentials) {
+    return {
+      configured: false,
+      propertyId: propertyId || DEFAULT_GA_PROPERTY_ID,
+      reason: credRes.errorMessage || 'Google Service Account credentials not configured in environment',
+    };
+  }
+
+  // If in active auth failure cooldown for this specific credential
   if (authFailureState?.hasFailed) {
     if (Date.now() - authFailureState.failedAt < AUTH_FAILURE_COOLDOWN_MS) {
       return {
@@ -244,24 +403,29 @@ export function isGoogleAnalyticsConfigured(): {
     }
   }
 
-  const creds = resolveServiceAccountCredentials();
-  const configured = Boolean(creds);
-
   return {
-    configured,
+    configured: true,
     propertyId: propertyId || DEFAULT_GA_PROPERTY_ID,
-    reason: configured ? undefined : 'Google Service Account credentials not configured in environment',
+    reason: undefined,
   };
 }
 
 /**
- * Instantiates the BetaAnalyticsDataClient with supported credential sources.
+ * Instantiates the BetaAnalyticsDataClient with explicit credentials.
+ * Throws an explicit error if credentials are not configured.
+ * Never falls back to implicit Application Default Credentials (ADC).
  */
 let clientInstance: BetaAnalyticsDataClient | null = null;
 
 function getAnalyticsClient(): BetaAnalyticsDataClient {
-  const creds = resolveServiceAccountCredentials();
-  const currentFingerprint = creds ? `${creds.client_email}:${creds.private_key?.slice(-30)}` : '';
+  const credRes = resolveServiceAccountCredentials();
+  if (!credRes.credentials) {
+    throw new Error(credRes.errorMessage || 'Google Service Account credentials not configured in environment');
+  }
+
+  const creds = credRes.credentials;
+  const propertyId = (process.env.GA_PROPERTY_ID || DEFAULT_GA_PROPERTY_ID).replace(/^["']|["']$/g, '').replace(/^properties\//, '').trim();
+  const currentFingerprint = `${creds.client_email}:${propertyId}`;
 
   if (currentFingerprint && currentFingerprint !== lastCredsFingerprint) {
     clientInstance = null;
@@ -273,19 +437,14 @@ function getAnalyticsClient(): BetaAnalyticsDataClient {
     return clientInstance;
   }
 
-  if (creds && creds.client_email && creds.private_key) {
-    clientInstance = new BetaAnalyticsDataClient({
-      credentials: {
-        client_email: creds.client_email,
-        private_key: creds.private_key.replace(/\\n/g, '\n'),
-      },
-      projectId: creds.project_id || 'spartan-theorem-509103-a3',
-    });
-    return clientInstance;
-  }
+  clientInstance = new BetaAnalyticsDataClient({
+    credentials: {
+      client_email: creds.client_email,
+      private_key: creds.private_key,
+    },
+    projectId: creds.project_id || 'spartan-theorem-509103-a3',
+  });
 
-  // Fallback client
-  clientInstance = new BetaAnalyticsDataClient();
   return clientInstance;
 }
 

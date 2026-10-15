@@ -25,6 +25,7 @@
     "@tanstack/react-table": "^8.21.3",
     "better-auth": "^1.6.22",
     "class-variance-authority": "^0.7.1",
+    "cloudflare": "^7.3.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.42.0",
     "lucide-react": "^1.22.0",
