@@ -52,3 +52,5 @@ jobs:
 
       - name: Verify Production Build
         run: npm run build
+        env:
+          DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/astraiv_db'
