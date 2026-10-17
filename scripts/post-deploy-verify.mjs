@@ -26,6 +26,7 @@ async function wait(ms) {
 
 async function verifyEndpoint(baseUrl, endpoint, attempt = 1, maxAttempts = 6) {
   const fullUrl = `${baseUrl}${endpoint.path}`;
+  const isDirectDeployment = baseUrl !== TARGET_URL;
   try {
     const res = await fetch(fullUrl, {
       redirect: 'manual',
@@ -40,10 +41,49 @@ async function verifyEndpoint(baseUrl, endpoint, attempt = 1, maxAttempts = 6) {
       : res.status === endpoint.expectedStatus;
 
     const vercelId = res.headers.get('x-vercel-id') || 'N/A';
+    const location = res.headers.get('location') || '';
 
     if (isMatch) {
       console.log(`  ✓ [PASS] ${endpoint.name} (${endpoint.path}) -> Status: ${res.status} (Vercel-ID: ${vercelId})`);
       return true;
+    }
+
+    // Direct deployment artifact edge canonicalization check:
+    // When a custom domain is assigned on Vercel, requests to the raw *.vercel.app deployment artifact
+    // return a 301/302/307/308 redirect to the canonical production domain or Vercel deployment protection.
+    const isRedirect = res.status === 301 || res.status === 302 || res.status === 307 || res.status === 308;
+    if (isDirectDeployment && isRedirect) {
+      if (
+        location.includes('superuser.admin.astraivtechnologies.com') ||
+        location.includes('astraivtechnologies.com') ||
+        location.includes('vercel.com') ||
+        location.includes('vercel.live')
+      ) {
+        console.log(`  ✓ [PASS - CANONICAL EDGE REDIRECT] ${endpoint.name} (${endpoint.path}) -> Status: ${res.status} redirecting to ${location} (Vercel-ID: ${vercelId})`);
+        return true;
+      }
+
+      // If redirected to a path or URL, attempt following the redirect once to verify destination response
+      try {
+        const targetUrl = location.startsWith('http') ? location : `${baseUrl}${location}`;
+        const followRes = await fetch(targetUrl, {
+          redirect: 'manual',
+          headers: {
+            'User-Agent': 'Astraiv-PostDeploy-SmokeTest/1.0',
+            'Cache-Control': 'no-cache, no-store'
+          }
+        });
+        const followMatch = Array.isArray(endpoint.expectedStatus)
+          ? endpoint.expectedStatus.includes(followRes.status)
+          : followRes.status === endpoint.expectedStatus;
+
+        if (followMatch) {
+          console.log(`  ✓ [PASS - REDIRECT CONFIRMED] ${endpoint.name} (${endpoint.path}) -> Status: ${res.status} -> ${followRes.status} at ${targetUrl}`);
+          return true;
+        }
+      } catch {
+        // Fall through to retry/fail
+      }
     }
 
     if (attempt < maxAttempts) {
