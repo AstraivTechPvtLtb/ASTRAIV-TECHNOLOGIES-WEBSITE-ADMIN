@@ -5,8 +5,13 @@
  */
 
 const TARGET_URL = (process.env.DEPLOYMENT_URL || 'https://superuser.admin.astraivtechnologies.com').replace(/\/$/, '');
+const DIRECT_URL = (process.env.DIRECT_DEPLOYMENT_URL || '').replace(/\/$/, '');
 
-console.log(`[Smoke Test] Starting post-deployment verification against: ${TARGET_URL}`);
+console.log(`[Smoke Test] Starting post-deployment verification.`);
+console.log(`  Target URL: ${TARGET_URL}`);
+if (DIRECT_URL && DIRECT_URL !== TARGET_URL) {
+  console.log(`  Direct Deployment URL: ${DIRECT_URL}`);
+}
 
 const CRITICAL_CHECKS = [
   { path: '/login', expectedStatus: 200, name: 'Admin Login View' },
@@ -19,13 +24,14 @@ async function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function verifyEndpoint(endpoint, attempt = 1, maxAttempts = 5) {
-  const fullUrl = `${TARGET_URL}${endpoint.path}`;
+async function verifyEndpoint(baseUrl, endpoint, attempt = 1, maxAttempts = 6) {
+  const fullUrl = `${baseUrl}${endpoint.path}`;
   try {
     const res = await fetch(fullUrl, {
       redirect: 'manual',
       headers: {
-        'User-Agent': 'Astraiv-PostDeploy-SmokeTest/1.0'
+        'User-Agent': 'Astraiv-PostDeploy-SmokeTest/1.0',
+        'Cache-Control': 'no-cache, no-store'
       }
     });
 
@@ -41,45 +47,60 @@ async function verifyEndpoint(endpoint, attempt = 1, maxAttempts = 5) {
     }
 
     if (attempt < maxAttempts) {
-      console.warn(`  ⚠ [RETRY ${attempt}/${maxAttempts}] ${endpoint.name} returned status ${res.status} (expected ${endpoint.expectedStatus}). Waiting 4s for edge propagation...`);
-      await wait(4000);
-      return verifyEndpoint(endpoint, attempt + 1, maxAttempts);
+      console.warn(`  ⚠ [RETRY ${attempt}/${maxAttempts}] ${endpoint.name} returned status ${res.status} (expected ${endpoint.expectedStatus}). Waiting 5s for edge propagation...`);
+      await wait(5000);
+      return verifyEndpoint(baseUrl, endpoint, attempt + 1, maxAttempts);
     }
 
     console.error(`  ✗ [FAIL] ${endpoint.name} (${endpoint.path}) -> Expected ${endpoint.expectedStatus}, got ${res.status}`);
     return false;
   } catch (err) {
     if (attempt < maxAttempts) {
-      console.warn(`  ⚠ [RETRY ${attempt}/${maxAttempts}] ${endpoint.name} network error: ${err.message}. Retrying in 4s...`);
-      await wait(4000);
-      return verifyEndpoint(endpoint, attempt + 1, maxAttempts);
+      console.warn(`  ⚠ [RETRY ${attempt}/${maxAttempts}] ${endpoint.name} network error: ${err.message}. Retrying in 5s...`);
+      await wait(5000);
+      return verifyEndpoint(baseUrl, endpoint, attempt + 1, maxAttempts);
     }
     console.error(`  ✗ [FAIL] ${endpoint.name} (${endpoint.path}) -> Network error: ${err.message}`);
     return false;
   }
 }
 
-async function run() {
-  console.log(`[Smoke Test] Waiting 5 seconds for edge CDN cache invalidation & routing propagation...`);
-  await wait(5000);
-
+async function verifyTarget(url, label) {
+  console.log(`\n--- Verifying [${label}] against: ${url} ---`);
   let passed = 0;
   let failed = 0;
 
   for (const check of CRITICAL_CHECKS) {
-    const ok = await verifyEndpoint(check);
+    const ok = await verifyEndpoint(url, check);
     if (ok) passed++;
     else failed++;
   }
 
-  console.log(`\n[Smoke Test Summary] Passed: ${passed}/${CRITICAL_CHECKS.length}, Failed: ${failed}`);
+  console.log(`[${label} Summary] Passed: ${passed}/${CRITICAL_CHECKS.length}, Failed: ${failed}`);
+  return failed === 0;
+}
 
-  if (failed > 0) {
+async function run() {
+  console.log(`[Smoke Test] Waiting 6 seconds for edge CDN cache invalidation & routing propagation...`);
+  await wait(6000);
+
+  // If a direct deployment URL was provided, verify it first to validate the build artifacts
+  if (DIRECT_URL && DIRECT_URL !== TARGET_URL) {
+    const directOk = await verifyTarget(DIRECT_URL, 'Direct Deployment Artifact');
+    if (!directOk) {
+      console.error(`[Smoke Test] Direct deployment artifact verification failed.`);
+      process.exit(1);
+    }
+    console.log(`  ✓ Direct deployment verified healthy. Checking canonical domain...`);
+  }
+
+  const targetOk = await verifyTarget(TARGET_URL, 'Canonical Production Domain');
+  if (!targetOk) {
     console.error(`[Smoke Test] POST-DEPLOYMENT VERIFICATION FAILED. Critical admin endpoints did not meet health criteria.`);
     process.exit(1);
   }
 
-  console.log(`[Smoke Test] ALL CRITICAL ADMIN ENDPOINTS VERIFIED HEALTHY.`);
+  console.log(`\n[Smoke Test] ALL CRITICAL ADMIN ENDPOINTS VERIFIED HEALTHY.`);
   process.exit(0);
 }
 

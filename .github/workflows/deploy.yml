@@ -79,6 +79,9 @@ jobs:
       (github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch'))
     runs-on: ubuntu-latest
 
+    outputs:
+      deployment_url: ${{ steps.deploy_step.outputs.url }}
+
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -107,7 +110,19 @@ jobs:
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Prebuilt Artifacts to Vercel Production
-        run: vercel deploy --prebuilt --prod --archive=tgz --token=${{ secrets.VERCEL_TOKEN }}
+        id: deploy_step
+        run: |
+          DEPLOY_OUTPUT=$(vercel deploy --prebuilt --prod --archive=tgz --token=${{ secrets.VERCEL_TOKEN }})
+          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -E '^https?://' | tail -n 1)
+          if [ -z "$DEPLOY_URL" ]; then
+            DEPLOY_URL="$DEPLOY_OUTPUT"
+          fi
+          echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+          echo "Successfully deployed to: $DEPLOY_URL"
+
+          # Explicitly alias custom production domains to eliminate any branch-lock or promotion delays
+          echo "Binding custom domains to new production deployment..."
+          vercel alias set "$DEPLOY_URL" superuser.admin.astraivtechnologies.com --token=${{ secrets.VERCEL_TOKEN }} || true
 
   # ============================================================================
   # STAGE 3: Post-Deployment Automated Smoke Tests
@@ -133,3 +148,4 @@ jobs:
         run: node scripts/post-deploy-verify.mjs
         env:
           DEPLOYMENT_URL: 'https://superuser.admin.astraivtechnologies.com'
+          DIRECT_DEPLOYMENT_URL: ${{ needs.deploy.outputs.deployment_url }}
