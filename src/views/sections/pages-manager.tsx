@@ -241,10 +241,10 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
       )}
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
         <button
           onClick={() => setActiveTab('homepage')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 ${activeTab === 'homepage' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-400 hover:text-white hover:bg-slate-900'}`}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer ${activeTab === 'homepage' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'}`}
         >
           <Sparkles className="h-3.5 w-3.5" />
           <span>Homepage Hero & CTAs</span>
@@ -252,7 +252,7 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
 
         <button
           onClick={() => setActiveTab('company')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 ${activeTab === 'company' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-400 hover:text-white hover:bg-slate-900'}`}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer ${activeTab === 'company' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'}`}
         >
           <Building className="h-3.5 w-3.5" />
           <span>Company & About Page</span>
@@ -260,7 +260,7 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
 
         <button
           onClick={() => setActiveTab('process')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 ${activeTab === 'process' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-400 hover:text-white hover:bg-slate-900'}`}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer ${activeTab === 'process' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'}`}
         >
           <Compass className="h-3.5 w-3.5" />
           <span>Process & Methodology</span>
@@ -269,17 +269,17 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
 
       {/* HOMEPAGE FORM */}
       {activeTab === 'homepage' && (
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
             <div>
-              <h3 className="text-sm font-bold text-white">Homepage Hero & Master CTAs</h3>
-              <p className="text-xs text-slate-400">Configure global hero typography, value proposition, and conversion buttons.</p>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Homepage Hero & Master CTAs</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Configure global hero typography, value proposition, and conversion buttons.</p>
             </div>
 
             <Button
               onClick={() => handleSave('homepage')}
               disabled={isSaving}
-              className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-md shadow-blue-600/20 flex items-center gap-1.5 cursor-pointer"
+              className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-md shadow-blue-600/20 flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
             >
               {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
               <span>Save Homepage</span>
@@ -288,16 +288,16 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
 
           <div className="space-y-4">
             {/* Hero Headlines Group */}
-            <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-slate-800/60">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-slate-200 dark:border-slate-800/60">
                 <div>
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                     <span>Hero Headlines</span>
-                    <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full font-semibold normal-case">
+                    <span className="text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full font-semibold normal-case">
                       Typewriter Rotation
                     </span>
                   </h4>
-                  <p className="text-[11px] text-slate-400 mt-1">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                     Headlines cycle sequentially on the client homepage using a typewriter animation. Leave optional headlines blank if they are not required.
                   </p>
                 </div>
@@ -306,16 +306,16 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
               {/* Headline 1 — Primary */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <span>Hero Headline 1 — Primary</span>
-                    <span className="text-red-400 text-xs font-bold">*</span>
+                    <span className="text-red-500 text-xs font-bold">*</span>
                   </label>
                   <span className="text-[10px] font-medium text-slate-500">Required</span>
                 </div>
                 <Input
                   value={heroHeadline1}
                   onChange={(e) => setHeroHeadline1(e.target.value)}
-                  className="bg-slate-900 border-slate-800 text-xs font-semibold"
+                  className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-semibold"
                   placeholder="e.g. We Engineer the Digital Future"
                   required
                 />
@@ -324,7 +324,7 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
               {/* Headline 2 — Optional */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-300">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                     Hero Headline 2 — Optional
                   </label>
                   <span className="text-[10px] font-medium text-slate-500">Optional</span>
@@ -332,7 +332,7 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
                 <Input
                   value={heroHeadline2}
                   onChange={(e) => setHeroHeadline2(e.target.value)}
-                  className="bg-slate-900 border-slate-800 text-xs"
+                  className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs"
                   placeholder="e.g. We Build Intelligent Digital Experiences"
                 />
               </div>
@@ -340,7 +340,7 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
               {/* Headline 3 — Optional */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-300">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                     Hero Headline 3 — Optional
                   </label>
                   <span className="text-[10px] font-medium text-slate-500">Optional</span>
@@ -348,15 +348,15 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
                 <Input
                   value={heroHeadline3}
                   onChange={(e) => setHeroHeadline3(e.target.value)}
-                  className="bg-slate-900 border-slate-800 text-xs"
+                  className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs"
                   placeholder="e.g. We Transform Ideas Into Scalable Technology"
                 />
               </div>
 
               {/* Headline Preview */}
-              <div className="pt-2 border-t border-slate-800/60 space-y-2">
+              <div className="pt-2 border-t border-slate-200 dark:border-slate-800/60 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-slate-400">Live Typography Preview:</span>
+                  <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Live Typography Preview:</span>
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
@@ -364,7 +364,7 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
                       className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
                         activeHeadlinePreview === 1
                           ? 'bg-blue-600 text-white'
-                          : 'bg-slate-900 text-slate-400 hover:text-white'
+                          : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Headline 1
@@ -376,7 +376,7 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
                         className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
                           activeHeadlinePreview === 2
                             ? 'bg-blue-600 text-white'
-                            : 'bg-slate-900 text-slate-400 hover:text-white'
+                            : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
                         Headline 2
@@ -389,7 +389,7 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
                         className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
                           activeHeadlinePreview === 3
                             ? 'bg-blue-600 text-white'
-                            : 'bg-slate-900 text-slate-400 hover:text-white'
+                            : 'bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
                         Headline 3
@@ -411,48 +411,48 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Hero Subheadline</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Hero Subheadline</label>
               <textarea
                 rows={3}
                 value={heroSubheadline}
                 onChange={(e) => setHeroSubheadline(e.target.value)}
-                className="w-full rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs p-3 leading-relaxed focus:outline-none focus:border-blue-500"
+                className="w-full rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs p-3 leading-relaxed focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 shadow-2xs"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/60 space-y-3">
-                <span className="text-xs font-bold text-blue-400">Primary CTA Button</span>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/60 space-y-3">
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400">Primary CTA Button</span>
                 <div className="space-y-2">
                   <Input
                     value={primaryCtaText}
                     onChange={(e) => setPrimaryCtaText(e.target.value)}
                     placeholder="Button Text (e.g. Start a Project)"
-                    className="bg-slate-900 border-slate-800 text-xs"
+                    className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs"
                   />
                   <Input
                     value={primaryCtaUrl}
                     onChange={(e) => setPrimaryCtaUrl(e.target.value)}
                     placeholder="Destination URL (e.g. /start-project)"
-                    className="bg-slate-900 border-slate-800 text-xs font-mono"
+                    className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-mono"
                   />
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800/60 space-y-3">
-                <span className="text-xs font-bold text-slate-300">Secondary CTA Button</span>
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/60 space-y-3">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Secondary CTA Button</span>
                 <div className="space-y-2">
                   <Input
                     value={secondaryCtaText}
                     onChange={(e) => setSecondaryCtaText(e.target.value)}
                     placeholder="Button Text (e.g. Explore Case Studies)"
-                    className="bg-slate-900 border-slate-800 text-xs"
+                    className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs"
                   />
                   <Input
                     value={secondaryCtaUrl}
                     onChange={(e) => setSecondaryCtaUrl(e.target.value)}
                     placeholder="Destination URL (e.g. /work)"
-                    className="bg-slate-900 border-slate-800 text-xs font-mono"
+                    className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-mono"
                   />
                 </div>
               </div>
@@ -463,17 +463,17 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
 
       {/* COMPANY FORM */}
       {activeTab === 'company' && (
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
             <div>
-              <h3 className="text-sm font-bold text-white">Company, Mission & Core Values</h3>
-              <p className="text-xs text-slate-400">Configure corporate narrative and value propositions.</p>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Company, Mission & Core Values</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Configure corporate narrative and value propositions.</p>
             </div>
 
             <Button
               onClick={() => handleSave('company')}
               disabled={isSaving}
-              className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-md shadow-blue-600/20 flex items-center gap-1.5 cursor-pointer"
+              className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-md shadow-blue-600/20 flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
             >
               {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
               <span>Save Company Page</span>
@@ -482,33 +482,33 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
 
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Company Page Headline</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Company Page Headline</label>
               <Input
                 value={companyHeadline}
                 onChange={(e) => setCompanyHeadline(e.target.value)}
-                className="bg-slate-950 border-slate-800 text-xs font-semibold"
+                className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-semibold"
                 placeholder="e.g. Software Craftsmanship Driven by First-Principles Engineering"
               />
               <HeadlinePreview text={companyHeadline} />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Corporate Origin & Story Narrative</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Corporate Origin & Story Narrative</label>
               <textarea
                 rows={4}
                 value={companyStory}
                 onChange={(e) => setCompanyStory(e.target.value)}
-                className="w-full rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs p-3 leading-relaxed focus:outline-none focus:border-blue-500"
+                className="w-full rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs p-3 leading-relaxed focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 shadow-2xs"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Core Engineering Values (One per line)</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Core Engineering Values (One per line)</label>
               <textarea
                 rows={4}
                 value={companyValues}
                 onChange={(e) => setCompanyValues(e.target.value)}
-                className="w-full rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs p-3 leading-relaxed font-mono focus:outline-none focus:border-blue-500"
+                className="w-full rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs p-3 leading-relaxed font-mono focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 shadow-2xs"
               />
             </div>
           </div>
@@ -517,17 +517,17 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
 
       {/* PROCESS FORM */}
       {activeTab === 'process' && (
-        <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
             <div>
-              <h3 className="text-sm font-bold text-white">Engineering Process & Delivery Roadmap</h3>
-              <p className="text-xs text-slate-400">Configure the 6-stage roadmap and sprint guarantees.</p>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Engineering Process & Delivery Roadmap</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Configure the 6-stage roadmap and sprint guarantees.</p>
             </div>
 
             <Button
               onClick={() => handleSave('process')}
               disabled={isSaving}
-              className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-md shadow-blue-600/20 flex items-center gap-1.5 cursor-pointer"
+              className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-md shadow-blue-600/20 flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
             >
               {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
               <span>Save Process Page</span>
@@ -536,23 +536,23 @@ export function PagesManager({ initialHomepage, initialCompany, initialProcess }
 
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Process Headline</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Process Headline</label>
               <Input
                 value={processHeadline}
                 onChange={(e) => setProcessHeadline(e.target.value)}
-                className="bg-slate-950 border-slate-800 text-xs font-semibold"
+                className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-semibold"
                 placeholder="e.g. Disciplined 6-Stage Engineering Delivery Roadmap"
               />
               <HeadlinePreview text={processHeadline} />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Delivery Roadmap Stages (One per line)</label>
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Delivery Roadmap Stages (One per line)</label>
               <textarea
                 rows={7}
                 value={processStages}
                 onChange={(e) => setProcessStages(e.target.value)}
-                className="w-full rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs p-3 leading-relaxed font-mono focus:outline-none focus:border-blue-500"
+                className="w-full rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs p-3 leading-relaxed font-mono focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 shadow-2xs"
               />
             </div>
           </div>

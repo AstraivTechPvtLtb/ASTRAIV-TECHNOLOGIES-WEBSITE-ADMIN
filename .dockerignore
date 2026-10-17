@@ -1,0 +1,41 @@
+# Dependency directories
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js build and cache output
+.next
+out
+
+# Git and GitHub
+.git
+.github
+.gitignore
+
+# Environment files with secrets (NEVER bake into image layers)
+.env
+.env*.local
+.env.development
+.env.test
+.env.production
+!.env.docker.example
+
+# IDE and OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Tests and scripts
+tests
+scripts
+coverage
+
+# Documentation and markdown notes
+README.md
+SETUP.md
+*.md
+!next-env.d.ts

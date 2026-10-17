@@ -228,16 +228,16 @@ export function TrustTable({ initialData }: TrustTableProps) {
   return (
     <div className="space-y-6">
       {/* Contextual Banner linking to Settings ISO compliance */}
-      <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2.5 text-slate-300">
-          <ShieldCheck className="h-4 w-4 text-blue-400 shrink-0" />
+      <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-sm">
+        <div className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300">
+          <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
           <span>
             Looking to toggle the global ISO Trust Strip badge, configure live SLA/uptime KPI metrics, or update partner logos?
           </span>
         </div>
         <a
           href="/settings"
-          className="text-blue-400 hover:text-blue-300 font-bold underline flex items-center gap-1 shrink-0"
+          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-bold underline flex items-center gap-1 shrink-0"
         >
           <span>Open Settings & ISO Metrics</span>
           <ExternalLink className="h-3 w-3" />
@@ -246,7 +246,7 @@ export function TrustTable({ initialData }: TrustTableProps) {
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         {/* Category Tabs */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {[
             { key: 'all', label: `All (${data.length})` },
             { key: 'certification', label: 'Certifications' },
@@ -257,7 +257,11 @@ export function TrustTable({ initialData }: TrustTableProps) {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as typeof activeTab)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${activeTab === tab.key ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}`}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                activeTab === tab.key
+                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
+              }`}
             >
               {tab.label}
             </button>
@@ -266,7 +270,7 @@ export function TrustTable({ initialData }: TrustTableProps) {
 
         <Button
           onClick={openCreateModal}
-          className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-lg shadow-blue-600/20 flex items-center gap-1.5 cursor-pointer"
+          className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-md shadow-blue-600/20 flex items-center gap-1.5 cursor-pointer w-full sm:w-auto justify-center"
         >
           <Plus className="h-4 w-4" />
           <span>New Credential</span>
@@ -280,17 +284,17 @@ export function TrustTable({ initialData }: TrustTableProps) {
           return (
             <div
               key={item.id}
-              className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition-all flex flex-col justify-between space-y-3"
+              className="p-5 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700/80 transition-all shadow-sm flex flex-col justify-between space-y-3"
             >
               <div className="space-y-2.5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                    <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
                       <IconComp className="h-4.5 w-4.5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white tracking-tight">{item.title}</h3>
-                      <span className="text-[11px] text-slate-400">{item.organization} ({item.year})</span>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">{item.title}</h3>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">{item.organization} ({item.year})</span>
                     </div>
                   </div>
 
@@ -298,29 +302,29 @@ export function TrustTable({ initialData }: TrustTableProps) {
                     variant="outline"
                     className={
                       item.status === 'verified'
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px]'
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px]'
                         : item.status === 'contractual'
-                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/30 text-[10px]'
-                        : 'bg-amber-500/10 text-amber-400 border-amber-500/30 text-[10px]'
+                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 text-[10px]'
+                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px]'
                     }
                   >
                     {item.status.toUpperCase()}
                   </Badge>
                 </div>
 
-                <div className="inline-block px-2 py-0.5 rounded-md bg-slate-800/80 text-blue-300 text-[10px] font-mono border border-slate-700/60">
+                <div className="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800/80 text-blue-600 dark:text-blue-300 text-[10px] font-mono border border-slate-200 dark:border-slate-700/60">
                   {item.badgeText}
                 </div>
 
-                <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
                   {item.description}
                 </p>
 
                 {item.highlights && item.highlights.length > 0 && (
-                  <ul className="space-y-1 text-[11px] text-slate-400 pt-1">
+                  <ul className="space-y-1 text-[11px] text-slate-600 dark:text-slate-400 pt-1">
                     {item.highlights.map((h, i) => (
                       <li key={i} className="flex items-center gap-1.5">
-                        <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
+                        <CheckCircle2 className="h-3 w-3 text-emerald-500 dark:text-emerald-400 shrink-0" />
                         <span>{h}</span>
                       </li>
                     ))}
@@ -328,19 +332,19 @@ export function TrustTable({ initialData }: TrustTableProps) {
                 )}
               </div>
 
-              <div className="pt-3 border-t border-slate-800/60 flex items-center justify-between">
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
                 {item.verificationUrl ? (
                   <a
                     href={item.verificationUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1 font-medium"
                   >
                     <span>{item.verificationLabel || 'Verify Online'}</span>
                     <ExternalLink className="h-3 w-3" />
                   </a>
                 ) : (
-                  <span className="text-[11px] text-slate-500">Internal Accreditation</span>
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500">Internal Accreditation</span>
                 )}
 
                 <div className="flex items-center gap-1.5">
@@ -348,7 +352,7 @@ export function TrustTable({ initialData }: TrustTableProps) {
                     size="sm"
                     variant="ghost"
                     onClick={() => openEditModal(item)}
-                    className="h-7 text-xs text-slate-300 hover:text-white hover:bg-slate-800"
+                    className="h-7 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                   >
                     <Edit className="h-3 w-3 mr-1" /> Edit
                   </Button>
@@ -358,7 +362,7 @@ export function TrustTable({ initialData }: TrustTableProps) {
                     variant="ghost"
                     onClick={() => handleDelete(item.id)}
                     disabled={deletingId === item.id}
-                    className="h-7 text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                    className="h-7 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
                   >
                     {deletingId === item.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
                   </Button>
@@ -371,25 +375,25 @@ export function TrustTable({ initialData }: TrustTableProps) {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4 my-8">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h2 className="text-base font-bold text-white">
+        <div className="fixed inset-0 z-50 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4 my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 {editingAward ? 'Edit Trust Credential' : 'Add Trust Credential'}
               </h2>
-              <Button size="icon" variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 w-8 text-slate-400 hover:text-white">
+              <Button size="icon" variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 w-8 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Credential Type</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Credential Type</label>
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value as AdminAward['type'])}
-                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="certification">Certification</option>
                     <option value="partnership">Partnership</option>
@@ -399,11 +403,11 @@ export function TrustTable({ initialData }: TrustTableProps) {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Factual Claim Verification Status</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Factual Claim Verification Status</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as AdminAward['status'])}
-                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="verified">Verified with Documentation</option>
                     <option value="contractual">Active Contractual Partner</option>
@@ -414,58 +418,58 @@ export function TrustTable({ initialData }: TrustTableProps) {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Credential Title</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Credential Title</label>
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. ISO 27001:2022 Information Security Management"
-                  className="bg-slate-950 border-slate-800 text-xs"
+                  className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Issuing Organization / Partner</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Issuing Organization / Partner</label>
                   <Input
                     value={organization}
                     onChange={(e) => setOrganization(e.target.value)}
                     placeholder="e.g. International Organization for Standardization"
-                    className="bg-slate-950 border-slate-800 text-xs"
+                    className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white"
                     required
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Year / Date</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Year / Date</label>
                   <Input
                     value={year}
                     onChange={(e) => setYear(e.target.value)}
                     placeholder="e.g. 2026"
-                    className="bg-slate-950 border-slate-800 text-xs"
+                    className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white"
                     required
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Display Badge Text</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Display Badge Text</label>
                   <Input
                     value={badgeText}
                     onChange={(e) => setBadgeText(e.target.value)}
                     placeholder="e.g. ISO 27001:2022"
-                    className="bg-slate-950 border-slate-800 text-xs font-mono"
+                    className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-white"
                     required
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Icon Symbol</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Icon Symbol</label>
                   <select
                     value={icon}
                     onChange={(e) => setIcon(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {ICONS.map(ic => (
                       <option key={ic.value} value={ic.value}>{ic.label}</option>
@@ -475,66 +479,66 @@ export function TrustTable({ initialData }: TrustTableProps) {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Scope & Description</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Scope & Description</label>
                 <textarea
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Detailed governance description..."
-                  className="w-full rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs p-3 leading-relaxed focus:outline-none focus:border-blue-500"
+                  className="w-full rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs p-3 leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Achievement Statement</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Achievement Statement</label>
                 <Input
                   value={achievement}
                   onChange={(e) => setAchievement(e.target.value)}
                   placeholder="e.g. Zero non-conformities during third-party audit."
-                  className="bg-slate-950 border-slate-800 text-xs"
+                  className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Verification URL</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Verification URL</label>
                   <Input
                     value={verificationUrl}
                     onChange={(e) => setVerificationUrl(e.target.value)}
                     placeholder="https://..."
-                    className="bg-slate-950 border-slate-800 text-xs font-mono"
+                    className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-900 dark:text-white"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Button Label</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Button Label</label>
                   <Input
                     value={verificationLabel}
                     onChange={(e) => setVerificationLabel(e.target.value)}
                     placeholder="e.g. Verify Certificate"
-                    className="bg-slate-950 border-slate-800 text-xs"
+                    className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Audit Highlights (One per line)</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Audit Highlights (One per line)</label>
                 <textarea
                   rows={3}
                   value={highlightsText}
                   onChange={(e) => setHighlightsText(e.target.value)}
                   placeholder="AES-256 Data-at-Rest Encryption&#10;Mandatory 2FA Access Controls&#10;Continuous Vulnerability Scans"
-                  className="w-full rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs p-3 leading-relaxed font-mono focus:outline-none focus:border-blue-500"
+                  className="w-full rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs p-3 leading-relaxed font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-800">
-                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="bg-slate-800 border-slate-700 text-slate-300 text-xs">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs hover:bg-slate-200 dark:hover:bg-slate-700">
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl">
+                <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm">
                   {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save Credential'}
                 </Button>
               </div>

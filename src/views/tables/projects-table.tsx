@@ -173,16 +173,16 @@ export function ProjectsTable({ initialData }: ProjectsTableProps) {
       {/* Controls Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search projects..."
-            className="pl-10 h-10 bg-slate-900 border-slate-800 text-slate-200 placeholder:text-slate-500 rounded-xl"
+            className="pl-10 h-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 placeholder:text-slate-400 rounded-xl"
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1.5">
             {(['all', 'published', 'draft', 'archived'] as const).map((st) => (
               <Button
@@ -191,10 +191,10 @@ export function ProjectsTable({ initialData }: ProjectsTableProps) {
                 size="sm"
                 onClick={() => setStatusFilter(st)}
                 className={cn(
-                  'h-9 rounded-xl text-xs font-bold capitalize',
+                  'h-9 rounded-xl text-xs font-bold capitalize cursor-pointer',
                   statusFilter === st
                     ? 'bg-blue-600 text-white'
-                    : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800'
+                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                 )}
               >
                 {st}
@@ -205,7 +205,7 @@ export function ProjectsTable({ initialData }: ProjectsTableProps) {
           <Button
             size="sm"
             onClick={openCreateModal}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-9 rounded-xl flex items-center gap-1.5"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-9 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-600/20"
           >
             <Plus className="h-4 w-4" /> Add Project
           </Button>
@@ -213,10 +213,10 @@ export function ProjectsTable({ initialData }: ProjectsTableProps) {
       </div>
 
       {/* Projects Table */}
-      <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-sm">
+      <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-950/70 border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+            <thead className="bg-slate-100/75 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
               <tr>
                 <th className="py-3.5 px-4">Project</th>
                 <th className="py-3.5 px-4">Client</th>
@@ -225,30 +225,30 @@ export function ProjectsTable({ initialData }: ProjectsTableProps) {
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
               {filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-500 font-medium">
+                  <td colSpan={5} className="py-12 text-center text-slate-400 dark:text-slate-500 font-medium">
                     No projects found.
                   </td>
                 </tr>
               ) : (
                 filteredData.map((proj) => (
-                  <tr key={proj.id} className="hover:bg-slate-800/40 transition-colors">
+                  <tr key={proj.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                     <td className="py-4 px-4">
                       <div className="flex flex-col">
-                        <span className="font-bold text-white text-sm">{proj.title}</span>
-                        <span className="text-slate-400 text-xs font-mono">/{proj.slug}</span>
+                        <span className="font-bold text-slate-900 dark:text-white text-sm">{proj.title}</span>
+                        <span className="text-slate-500 dark:text-slate-400 text-xs font-mono">/{proj.slug}</span>
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="text-slate-200 font-medium">{proj.client || '—'}</span>
+                      <span className="text-slate-700 dark:text-slate-200 font-medium">{proj.client || '—'}</span>
                     </td>
                     <td className="py-4 px-4">
                       {proj.metric ? (
-                        <span className="text-emerald-400 font-bold">{proj.metric}</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">{proj.metric}</span>
                       ) : (
-                        <span className="text-slate-500">—</span>
+                        <span className="text-slate-400 dark:text-slate-500">—</span>
                       )}
                     </td>
                     <td className="py-4 px-4">
@@ -256,10 +256,10 @@ export function ProjectsTable({ initialData }: ProjectsTableProps) {
                         variant="outline"
                         className={
                           proj.status === 'published'
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                             : proj.status === 'draft'
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                            : 'bg-slate-500/10 text-slate-400 border-slate-500/30'
+                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                            : 'bg-slate-100 dark:bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-500/30'
                         }
                       >
                         {proj.status}
@@ -271,7 +271,7 @@ export function ProjectsTable({ initialData }: ProjectsTableProps) {
                           size="icon"
                           variant="ghost"
                           onClick={() => openEditModal(proj)}
-                          className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800"
+                          className="h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -279,7 +279,7 @@ export function ProjectsTable({ initialData }: ProjectsTableProps) {
                           size="icon"
                           variant="ghost"
                           onClick={() => handleDelete(proj.id)}
-                          className="h-8 w-8 text-slate-400 hover:text-destructive hover:bg-destructive/10"
+                          className="h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-destructive hover:bg-destructive/10 cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -295,152 +295,152 @@ export function ProjectsTable({ initialData }: ProjectsTableProps) {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-2xl p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between">
-              <h3 className="text-xl font-bold text-white">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                 {editingProject ? 'Edit Project' : 'Create New Project'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-full bg-slate-800 text-slate-400 hover:text-white"
+                className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400">Project Title</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Project Title</label>
                   <Input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     required
                     placeholder="e.g. PulseFit Platform"
-                    className="mt-1 bg-slate-950 border-slate-800"
+                    className="mt-1 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400">URL Slug</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">URL Slug</label>
                   <Input
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
                     placeholder="e.g. pulsefit"
-                    className="mt-1 bg-slate-950 border-slate-800"
+                    className="mt-1 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono text-xs"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400">Client Partner</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Client Partner</label>
                   <Input
                     value={client}
                     onChange={(e) => setClient(e.target.value)}
                     placeholder="e.g. PulseFit Global"
-                    className="mt-1 bg-slate-950 border-slate-800"
+                    className="mt-1 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400">Industry</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Industry</label>
                   <Input
                     value={industry}
                     onChange={(e) => setIndustry(e.target.value)}
                     placeholder="e.g. SaaS & HealthTech"
-                    className="mt-1 bg-slate-950 border-slate-800"
+                    className="mt-1 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400">Impact Metric</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Impact Metric</label>
                   <Input
                     value={metric}
                     onChange={(e) => setMetric(e.target.value)}
                     placeholder="e.g. 65% faster page loads"
-                    className="mt-1 bg-slate-950 border-slate-800"
+                    className="mt-1 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400">Metric Label</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Metric Label</label>
                   <Input
                     value={metricLabel}
                     onChange={(e) => setMetricLabel(e.target.value)}
                     placeholder="e.g. Performance Increase"
-                    className="mt-1 bg-slate-950 border-slate-800"
+                    className="mt-1 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase text-slate-400">Technologies (Comma separated)</label>
+                <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Technologies (Comma separated)</label>
                 <Input
                   value={technologiesInput}
                   onChange={(e) => setTechnologiesInput(e.target.value)}
                   placeholder="Next.js 16, Prisma ORM, PostgreSQL"
-                  className="mt-1 bg-slate-950 border-slate-800"
+                  className="mt-1 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase text-slate-400">Short Summary</label>
+                <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Short Summary</label>
                 <textarea
                   rows={2}
                   value={shortDesc}
                   onChange={(e) => setShortDesc(e.target.value)}
-                  className="w-full mt-1 p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs resize-none"
+                  className="w-full mt-1 p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs resize-none shadow-2xs"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase text-slate-400">Full Description</label>
+                <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Full Description</label>
                 <textarea
                   rows={3}
                   value={desc}
                   onChange={(e) => setDesc(e.target.value)}
-                  className="w-full mt-1 p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs resize-none"
+                  className="w-full mt-1 p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs resize-none shadow-2xs font-mono"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400">Status</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Status</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as 'draft' | 'published' | 'archived')}
-                    className="w-full mt-1 h-10 px-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs"
+                    className="w-full mt-1 h-10 px-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs cursor-pointer"
                   >
                     <option value="draft">Draft</option>
                     <option value="published">Published</option>
                     <option value="archived">Archived</option>
                   </select>
                 </div>
-                <div className="flex items-center gap-2 mt-6">
+                <div className="flex items-center gap-2 mt-4 sm:mt-6">
                   <input
                     type="checkbox"
                     id="feat"
                     checked={featured}
                     onChange={(e) => setFeatured(e.target.checked)}
-                    className="h-4 w-4 rounded bg-slate-950 border-slate-800 text-blue-600"
+                    className="h-4 w-4 rounded bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 text-blue-600 cursor-pointer"
                   />
-                  <label htmlFor="feat" className="text-xs text-slate-300 font-bold select-none cursor-pointer">
+                  <label htmlFor="feat" className="text-xs text-slate-700 dark:text-slate-300 font-bold select-none cursor-pointer">
                     Feature on Homepage
                   </label>
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end gap-2 border-t border-slate-800">
+              <div className="pt-4 flex justify-end gap-2 border-t border-slate-200 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsModalOpen(false)}
-                  className="border-slate-800 text-slate-400"
+                  className="border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white font-bold">
+                <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white font-bold cursor-pointer">
                   {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Project'}
                 </Button>
               </div>

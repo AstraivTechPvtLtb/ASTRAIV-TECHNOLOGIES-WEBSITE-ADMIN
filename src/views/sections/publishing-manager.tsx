@@ -86,16 +86,16 @@ export function PublishingManager() {
   return (
     <div className="space-y-6">
       {/* Top Card */}
-      <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
+      <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 shadow-xs space-y-4 transition-colors">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-base font-bold text-white tracking-tight">On-Demand ISR Cache Revalidation</span>
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
+              <span className="text-base font-bold text-slate-900 dark:text-white tracking-tight">On-Demand ISR Cache Revalidation</span>
+              <Badge className="bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px]">
                 Instant Edge Purge
               </Badge>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Trigger Next.js incremental static regeneration (ISR) to refresh cached HTML across Cloudflare & Vercel edge networks.
             </p>
           </div>
@@ -111,7 +111,7 @@ export function PublishingManager() {
         </div>
 
         {feedback && (
-          <div className={`p-4 rounded-xl text-xs font-medium flex items-center gap-2.5 ${feedback.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30'}`}>
+          <div className={`p-4 rounded-xl text-xs font-medium flex items-center gap-2.5 ${feedback.type === 'success' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30'}`}>
             {feedback.type === 'success' ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <AlertTriangle className="h-4 w-4 shrink-0" />}
             <span>{feedback.message}</span>
           </div>
@@ -119,12 +119,12 @@ export function PublishingManager() {
       </div>
 
       {/* Target Routes Checklist */}
-      <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <span className="text-xs font-bold text-white">Public Target Routes for Revalidation</span>
+      <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 shadow-xs space-y-4 transition-colors">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+          <span className="text-xs font-bold text-slate-900 dark:text-white">Public Target Routes for Revalidation</span>
           <button
             onClick={handleSelectAll}
-            className="text-xs text-blue-400 hover:text-blue-300 font-semibold transition-colors"
+            className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold transition-colors cursor-pointer"
           >
             {selectedPaths.length === CACHE_TARGETS.length ? 'Deselect All' : 'Select All'}
           </button>
@@ -136,13 +136,13 @@ export function PublishingManager() {
             return (
               <label
                 key={target.path}
-                className={`p-3.5 rounded-xl border flex items-center gap-3 cursor-pointer transition-colors ${isChecked ? 'bg-slate-950 border-blue-500/40 text-white' : 'bg-slate-950/40 border-slate-800/60 text-slate-400'}`}
+                className={`p-3.5 rounded-xl border flex items-center gap-3 cursor-pointer transition-colors ${isChecked ? 'bg-blue-50/60 dark:bg-slate-950 border-blue-300 dark:border-blue-500/40 text-slate-900 dark:text-white' : 'bg-slate-50/60 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800/60 text-slate-600 dark:text-slate-400'}`}
               >
                 <input
                   type="checkbox"
                   checked={isChecked}
                   onChange={() => togglePath(target.path)}
-                  className="rounded border-slate-800 bg-slate-900 text-blue-600 focus:ring-0"
+                  className="rounded border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-blue-600 focus:ring-0"
                 />
                 <div className="min-w-0">
                   <span className="text-xs font-semibold block truncate">{target.label}</span>

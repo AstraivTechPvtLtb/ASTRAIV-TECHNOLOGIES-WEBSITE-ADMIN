@@ -371,23 +371,23 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
         {/* Search & Source Page Filter */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by lead #, client, email, service, source page..."
-              className="pl-10 h-10 bg-slate-900 border-slate-800 text-slate-200 placeholder:text-slate-500 rounded-xl text-xs"
+              className="pl-10 h-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl text-xs"
             />
           </div>
 
           {/* Source Page Filter Dropdown */}
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-slate-400 shrink-0" />
-            <span className="text-xs text-slate-400 font-semibold shrink-0">Source:</span>
+            <Filter className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
+            <span className="text-xs text-slate-600 dark:text-slate-400 font-semibold shrink-0">Source:</span>
             <select
               value={sourcePageFilter}
               onChange={(e) => setSourcePageFilter(e.target.value)}
-              className="h-10 px-3 bg-slate-900 border border-slate-800 text-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-blue-500"
+              className="h-10 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-blue-500"
             >
               <option value="all">All Source Pages ({data.length})</option>
               {sourcePages.map((page) => {
@@ -419,15 +419,15 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                 className={cn(
                   'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border',
                   isSelected
-                    ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-600/20'
-                    : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800'
+                    ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
+                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800'
                 )}
               >
                 <span>{st.label}</span>
                 <span
                   className={cn(
                     'text-[10px] px-1.5 py-0.5 rounded-md font-mono',
-                    isSelected ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'
+                    isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                   )}
                 >
                   {count}
@@ -439,10 +439,10 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
       </div>
 
       {/* Main Leads Table */}
-      <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-sm">
+      <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-950/70 border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300 min-w-150">
+            <thead className="bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               <tr>
                 <th className="py-3.5 px-4">Lead #</th>
                 <th className="py-3.5 px-4">Client Contact</th>
@@ -453,7 +453,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
               {filteredData.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-500 font-medium">
@@ -464,13 +464,13 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                 filteredData.map((lead) => (
                   <tr
                     key={lead.id}
-                    className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
                     onClick={() => handleOpenLead(lead)}
                   >
                     {/* Lead Number */}
                     <td className="py-4 px-4 whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-bold text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20 text-xs">
+                        <span className="font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-500/20 text-xs">
                           {lead.lead_number}
                         </span>
                       </div>
@@ -479,8 +479,8 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                     {/* Client Contact */}
                     <td className="py-4 px-4">
                       <div className="flex flex-col">
-                        <span className="font-bold text-white text-sm">{lead.name}</span>
-                        <span className="text-slate-400 text-xs mt-0.5">{lead.email}</span>
+                        <span className="font-bold text-slate-900 dark:text-white text-sm">{lead.name}</span>
+                        <span className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">{lead.email}</span>
                         {lead.company && (
                           <span className="text-[11px] text-slate-500 font-medium mt-0.5">
                             {lead.company}
@@ -492,11 +492,11 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                     {/* Discipline & Scope */}
                     <td className="py-4 px-4">
                       <div className="flex flex-col gap-1 max-w-xs">
-                        <span className="font-semibold text-slate-200 capitalize truncate">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 capitalize truncate">
                           {lead.service_id?.replace(/-/g, ' ') || 'Custom Project'}
                         </span>
                         {lead.budget_range && (
-                          <span className="text-[11px] text-slate-400 font-mono">
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                             {lead.budget_range} • {lead.timeline || 'Flexible'}
                           </span>
                         )}
@@ -516,7 +516,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                     </td>
 
                     {/* Date */}
-                    <td className="py-4 px-4 text-slate-400 whitespace-nowrap text-xs">
+                    <td className="py-4 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">
                       {new Date(lead.created_at).toLocaleDateString(undefined, {
                         month: 'short',
                         day: 'numeric',
@@ -531,7 +531,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                           variant="ghost"
                           size="sm"
                           onClick={() => handleOpenLead(lead)}
-                          className="h-8 px-2 text-slate-400 hover:text-white hover:bg-slate-800"
+                          className="h-8 px-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -555,13 +555,13 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
 
       {/* Detailed Lead Inspector Modal */}
       {selectedLead && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
             {/* Header */}
-            <div className="flex items-start justify-between border-b border-slate-800 pb-5">
+            <div className="flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-5">
               <div className="space-y-1">
                 <div className="flex items-center gap-2.5">
-                  <span className="font-mono font-bold text-sm text-blue-400 bg-blue-500/15 px-3 py-1 rounded-lg border border-blue-500/30">
+                  <span className="font-mono font-bold text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15 px-3 py-1 rounded-lg border border-blue-200 dark:border-blue-500/30">
                     {selectedLead.lead_number}
                   </span>
                   <Badge variant="outline" className={cn('text-xs font-bold uppercase', getStatusBadgeClass(selectedLead.status))}>
@@ -569,35 +569,35 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                   </Badge>
                   {renderPortalBadge(selectedLead)}
                 </div>
-                <h3 className="text-2xl font-black text-white mt-1">{selectedLead.name}</h3>
-                <p className="text-xs text-slate-400">
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">{selectedLead.name}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Captured on {new Date(selectedLead.created_at).toLocaleString()}
                 </p>
               </div>
               <button
                 onClick={() => setSelectedLead(null)}
-                className="p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Client Portal Access & 24-Hour Onboarding Engine */}
-            <div className="p-5 rounded-2xl bg-linear-to-br from-slate-950 via-slate-900 to-blue-950/30 border border-blue-500/30 space-y-4">
+            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-linear-to-br dark:from-slate-950 dark:via-slate-900 dark:to-blue-950/30 border border-blue-200 dark:border-blue-500/30 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Key className="h-4 w-4 text-blue-400" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-white">
+                  <Key className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                     Client Portal &amp; Agile Tracker Access
                   </span>
                 </div>
                 {selectedLead.portal_approved ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     Approved for Portal
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
                     <ShieldAlert className="h-3.5 w-3.5" />
                     Unapproved Lead (Login Locked)
                   </span>
@@ -605,8 +605,8 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
               </div>
 
               {portalActionMsg && (
-                <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-blue-400 shrink-0" />
+                <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
                   <span>{portalActionMsg}</span>
                 </div>
               )}
@@ -614,7 +614,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
               {/* Approval & Credentials Box */}
               {!selectedLead.portal_approved ? (
                 <div className="space-y-3 pt-1">
-                  <p className="text-xs text-slate-300 leading-relaxed">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                     Client cannot log in until approved. Approving will generate login credentials and dispatch an email with the <strong>Lead Number ({selectedLead.lead_number})</strong>, <strong>Email ({selectedLead.email})</strong>, and a temporary password. The client has <strong>24 hours</strong> for their initial login.
                   </p>
                   <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
@@ -623,7 +623,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                       placeholder="Custom Password (leave blank for auto-generated)"
                       value={customPasswordInput}
                       onChange={(e) => setCustomPasswordInput(e.target.value)}
-                      className="bg-slate-900 border-slate-700 text-xs h-9 font-mono"
+                      className="bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-xs h-9 font-mono"
                     />
                     <Button
                       onClick={() => handleApprovePortal(selectedLead.id)}
@@ -639,58 +639,58 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                 <div className="space-y-3 pt-1">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
                     {/* Lead Number */}
-                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1">
                         Lead Number
                       </span>
                       <div className="flex items-center justify-between">
-                        <span className="font-mono font-bold text-blue-400 text-sm">{selectedLead.lead_number}</span>
+                        <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm">{selectedLead.lead_number}</span>
                         <button
                           type="button"
                           onClick={() => handleCopy(selectedLead.lead_number, 'leadNum')}
-                          className="text-slate-400 hover:text-white"
+                          className="text-slate-400 hover:text-slate-900 dark:hover:text-white"
                         >
-                          {copiedKey === 'leadNum' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                          {copiedKey === 'leadNum' ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
                         </button>
                       </div>
                     </div>
 
                     {/* Client Email */}
-                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block mb-1">
                         Portal Email ID
                       </span>
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-200 truncate pr-1">{selectedLead.email}</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 truncate pr-1">{selectedLead.email}</span>
                         <button
                           type="button"
                           onClick={() => handleCopy(selectedLead.email, 'email')}
-                          className="text-slate-400 hover:text-white shrink-0"
+                          className="text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0"
                         >
-                          {copiedKey === 'email' ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                          {copiedKey === 'email' ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
                         </button>
                       </div>
                     </div>
 
                     {/* Portal Password Security Status */}
-                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
                           Password Security
                         </span>
                         <button
                           type="button"
                           onClick={() => handleResetPassword(selectedLead.id)}
                           disabled={isUpdating}
-                          className="text-[10px] text-blue-400 hover:underline flex items-center gap-1"
+                          className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                         >
                           <RotateCcw className="h-2.5 w-2.5" />
                           Reset Password
                         </button>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs text-slate-200 flex items-center gap-1.5">
-                          <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                        <span className="font-mono text-xs text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                           <span>Secure (scrypt hash)</span>
                         </span>
                         <span className="text-[10px] text-slate-500 font-mono">one-way</span>
@@ -700,12 +700,12 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
 
                   {/* Temporary Password Display Banner (Shown Once Upon Approval or Reset) */}
                   {tempGeneratedPassword && (
-                    <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex items-center justify-between gap-2 text-xs">
+                    <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-500/40 flex items-center justify-between gap-2 text-xs">
                       <div>
-                        <span className="text-[10px] font-bold text-emerald-400 uppercase block">
+                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase block">
                           New Temporary Password (Dispatched Once)
                         </span>
-                        <span className="font-mono font-bold text-emerald-200 text-sm">
+                        <span className="font-mono font-bold text-emerald-900 dark:text-emerald-200 text-sm">
                           {tempGeneratedPassword}
                         </span>
                       </div>
@@ -713,19 +713,19 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                         size="xs"
                         variant="outline"
                         onClick={() => handleCopy(tempGeneratedPassword, 'tempPwd')}
-                        className="border-emerald-600 text-emerald-300 hover:text-white"
+                        className="border-emerald-400 text-emerald-700 dark:text-emerald-300 hover:text-emerald-900 dark:hover:text-white"
                       >
-                        {copiedKey === 'tempPwd' ? <Check className="h-3.5 w-3.5 text-emerald-400 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
+                        {copiedKey === 'tempPwd' ? <Check className="h-3.5 w-3.5 text-emerald-500 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
                         Copy Password
                       </Button>
                     </div>
                   )}
 
                   {/* 24-Hour Expiration Telemetry */}
-                  <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                  <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                     <div>
                       {selectedLead.has_logged_in ? (
-                        <div className="flex items-center gap-2 text-emerald-400">
+                        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                           <CheckCircle2 className="h-4 w-4 shrink-0" />
                           <span className="font-bold">
                             Client has completed their first login! Access is permanently unlocked for project duration.
@@ -733,13 +733,13 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                         </div>
                       ) : (
                         <div className="space-y-0.5">
-                          <div className="flex items-center gap-1.5 text-amber-300 font-bold">
+                          <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-300 font-bold">
                             <Clock className="h-3.5 w-3.5" />
                             <span>Initial 24-Hour Login Countdown</span>
                           </div>
-                          <span className="text-slate-400 text-[11px] block">
+                          <span className="text-slate-500 dark:text-slate-400 text-[11px] block">
                             Expires at:{' '}
-                            <strong className="text-slate-200">
+                            <strong className="text-slate-800 dark:text-slate-200">
                               {selectedLead.first_login_expires_at
                                 ? new Date(selectedLead.first_login_expires_at).toLocaleString()
                                 : 'Pending Activation'}
@@ -755,7 +755,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                         variant="outline"
                         onClick={() => handleResetWindow(selectedLead.id)}
                         disabled={isUpdating}
-                        className="h-8 border-slate-700 text-slate-300 hover:text-white text-xs rounded-lg"
+                        className="h-8 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs rounded-lg"
                       >
                         <RotateCcw className="h-3 w-3 mr-1" />
                         Reset 24h Window
@@ -765,7 +765,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                         variant="ghost"
                         onClick={() => handleRevokePortal(selectedLead.id)}
                         disabled={isUpdating}
-                        className="h-8 text-rose-400 hover:bg-rose-500/10 text-xs rounded-lg"
+                        className="h-8 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-xs rounded-lg"
                       >
                         Revoke Access
                       </Button>
@@ -776,12 +776,12 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
             </div>
 
             {/* Lifecycle Progression Stepper */}
-            <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2.5">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Lead Lifecycle Progression
                 </span>
-                <span className="text-[11px] text-blue-400 font-mono">
+                <span className="text-[11px] text-blue-600 dark:text-blue-400 font-mono">
                   Current Stage: {selectedLead.status}
                 </span>
               </div>
@@ -797,8 +797,8 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                       className={cn(
                         'py-2 px-1 text-center rounded-xl text-[10px] font-bold transition-all border',
                         isCurrent
-                          ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-600/30 scale-105'
-                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'
+                          ? 'bg-blue-600 text-white border-blue-400 shadow-sm scale-105'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
                       )}
                     >
                       {stage}
@@ -809,63 +809,63 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
             </div>
 
             {/* Contact & Organization Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-xs">
-              <div className="flex items-center gap-2.5 text-slate-300">
-                <Mail className="h-4 w-4 text-blue-400 shrink-0" />
-                <a href={`mailto:${selectedLead.email}`} className="text-blue-400 hover:underline font-semibold truncate">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs">
+              <div className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300">
+                <Mail className="h-4 w-4 text-blue-500 dark:text-blue-400 shrink-0" />
+                <a href={`mailto:${selectedLead.email}`} className="text-blue-600 dark:text-blue-400 hover:underline font-semibold truncate">
                   {selectedLead.email}
                 </a>
               </div>
               {selectedLead.phone && (
-                <div className="flex items-center gap-2.5 text-slate-300">
-                  <Phone className="h-4 w-4 text-slate-500 shrink-0" />
+                <div className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300">
+                  <Phone className="h-4 w-4 text-slate-400 shrink-0" />
                   <span>{selectedLead.phone}</span>
                 </div>
               )}
               {selectedLead.company && (
-                <div className="flex items-center gap-2.5 text-slate-300">
-                  <Building className="h-4 w-4 text-slate-500 shrink-0" />
+                <div className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300">
+                  <Building className="h-4 w-4 text-slate-400 shrink-0" />
                   <span className="font-semibold">{selectedLead.company}</span>
                 </div>
               )}
-              <div className="flex items-center gap-2.5 text-slate-300">
-                <Layers className="h-4 w-4 text-slate-500 shrink-0" />
-                <span>Service: <strong className="text-white capitalize">{selectedLead.service_id?.replace(/-/g, ' ') || 'Not Specified'}</strong></span>
+              <div className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300">
+                <Layers className="h-4 w-4 text-slate-400 shrink-0" />
+                <span>Service: <strong className="text-slate-900 dark:text-white capitalize">{selectedLead.service_id?.replace(/-/g, ' ') || 'Not Specified'}</strong></span>
               </div>
             </div>
 
             {/* Scope & Parameters */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-xs">
               <div>
                 <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Budget Range</span>
-                <span className="font-mono font-bold text-emerald-400 text-sm">{selectedLead.budget_range || 'Flexible'}</span>
+                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">{selectedLead.budget_range || 'Flexible'}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Target Timeline</span>
-                <span className="font-semibold text-slate-200">{selectedLead.timeline || 'Unspecified'}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedLead.timeline || 'Unspecified'}</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Target Industry</span>
-                <span className="font-semibold text-slate-200 capitalize">{selectedLead.industry_id?.replace(/-/g, ' ') || 'General'}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200 capitalize">{selectedLead.industry_id?.replace(/-/g, ' ') || 'General'}</span>
               </div>
             </div>
 
             {/* Attribution & Marketing Origin */}
-            <div className="p-4 rounded-2xl bg-blue-950/30 border border-blue-500/20 space-y-2 text-xs">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
+            <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-500/20 space-y-2 text-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                 <Compass className="h-3.5 w-3.5" />
                 Attribution &amp; Lead Source Telemetry
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div>
-                  <span className="text-[11px] text-slate-400 block font-medium">Source Page:</span>
-                  <span className="font-mono font-bold text-blue-300 text-xs break-all">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Source Page:</span>
+                  <span className="font-mono font-bold text-blue-700 dark:text-blue-300 text-xs break-all">
                     {selectedLead.source_page || '/start-project'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[11px] text-slate-400 block font-medium">Campaign Parameters:</span>
-                  <span className="font-mono text-slate-300 text-[11px]">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Campaign Parameters:</span>
+                  <span className="font-mono text-slate-600 dark:text-slate-300 text-[11px]">
                     {selectedLead.utm_source
                       ? `source: ${selectedLead.utm_source} • medium: ${selectedLead.utm_medium || 'direct'} • campaign: ${selectedLead.utm_campaign || 'none'}`
                       : 'Organic / Direct Inbound'}
@@ -876,10 +876,10 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
 
             {/* Project Requirements */}
             <div className="space-y-2">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                 Project Requirements &amp; Specifications
               </label>
-              <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 text-slate-200 text-xs leading-relaxed whitespace-pre-wrap font-sans max-h-48 overflow-y-auto">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs leading-relaxed whitespace-pre-wrap font-sans max-h-48 overflow-y-auto">
                 {selectedLead.project_description || selectedLead.notes || 'No project description submitted.'}
               </div>
             </div>
@@ -887,7 +887,7 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
             {/* Internal Notes Editor */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Internal Administrative Notes
                 </label>
                 <Button
@@ -904,18 +904,18 @@ export function LeadsTable({ initialData, uniqueSourcePages = [] }: LeadsTablePr
                 value={notesEdit}
                 onChange={(e) => setNotesEdit(e.target.value)}
                 placeholder="Add private internal notes, call logs, proposal links, or next steps..."
-                className="w-full p-3 rounded-xl bg-slate-950/90 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-blue-500 font-sans"
+                className="w-full p-3 rounded-xl bg-white dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs focus:outline-none focus:border-blue-500 font-sans"
               />
             </div>
 
             {/* Footer Actions */}
-            <div className="pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleDelete(selectedLead.id)}
                 disabled={isUpdating}
-                className="border-slate-800 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 text-xs h-9 rounded-xl"
+                className="border-slate-200 dark:border-slate-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-xs h-9 rounded-xl"
               >
                 <Trash2 className="h-4 w-4 mr-1.5" /> Delete Lead
               </Button>

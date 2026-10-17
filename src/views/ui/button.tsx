@@ -3,16 +3,16 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-xs font-bold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none active:scale-[0.98]',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-xs font-bold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 dark:focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer select-none active:scale-[0.98]',
   {
     variants: {
       variant: {
         default: 'bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-600/20',
-        destructive: 'bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20',
-        outline: 'border border-slate-800 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white',
-        secondary: 'bg-slate-800 text-slate-200 hover:bg-slate-700',
-        ghost: 'hover:bg-slate-800 text-slate-400 hover:text-white',
-        link: 'text-blue-400 underline-offset-4 hover:underline',
+        destructive: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 dark:border-red-500/30 hover:bg-red-500/20',
+        outline: 'border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white shadow-2xs dark:shadow-none',
+        secondary: 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700',
+        ghost: 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
+        link: 'text-blue-600 dark:text-blue-400 underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-10 px-4 py-2',

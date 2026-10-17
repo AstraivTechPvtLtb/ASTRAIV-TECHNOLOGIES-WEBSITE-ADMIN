@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AdminSidebar } from '@/views/layouts/admin-sidebar';
 import { getAdminUser } from '@/controllers/auth.controller';
+import { ThemeProvider } from '@/providers/theme-provider';
+import { SidebarProvider } from '@/views/layouts/sidebar-context';
 
 export const metadata: Metadata = {
   title: 'Astraiv Admin Portal | Operations, Moderation & CMS',
@@ -28,12 +30,21 @@ export default async function RootLayout({
   const admin = await getAdminUser();
 
   return (
-    <html lang="en" className="dark h-full">
-      <body className="bg-slate-950 text-slate-100 h-screen flex overflow-hidden antialiased">
-        {admin && <AdminSidebar user={{ name: admin.fullName, email: admin.email, role: admin.role }} />}
-        <div className="flex-1 flex flex-col min-w-0 h-full bg-slate-950 overflow-y-auto">
-          {children}
-        </div>
+    <html lang="en" suppressHydrationWarning className="h-full">
+      <body className="bg-background text-foreground h-screen flex overflow-hidden antialiased selection:bg-blue-600/20">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SidebarProvider>
+            {admin && <AdminSidebar user={{ name: admin.fullName, email: admin.email, role: admin.role }} />}
+            <div className="flex-1 flex flex-col min-w-0 h-full bg-background overflow-y-auto">
+              {children}
+            </div>
+          </SidebarProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

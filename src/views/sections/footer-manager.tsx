@@ -277,15 +277,15 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
   return (
     <div className="space-y-6">
       {/* Top Banner & Client Quick Link */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-xl">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-bold text-white tracking-tight">Footer Management Console</h3>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">Footer Management Console</h3>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
               Live Sync
             </span>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Control the client footer in real time: social media channels, contact numbers, email, physical address, and maps location.
           </p>
         </div>
@@ -295,10 +295,10 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
             href="http://localhost:3000#footer"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 transition-all duration-150 shadow-xs group"
+            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-2 transition-all duration-150 shadow-xs group"
           >
             <span>Preview Client Website</span>
-            <ExternalLink className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-400 transition-colors" />
+            <ExternalLink className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors" />
           </a>
 
           {activeTab === 'socials' && (
@@ -314,15 +314,15 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
         <button
           type="button"
           onClick={() => setActiveTab('socials')}
           className={cn(
-            'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all',
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer',
             activeTab === 'socials'
               ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
           )}
         >
           <Share2 className="h-4 w-4" />
@@ -332,7 +332,7 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
               'ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono',
               activeTab === 'socials'
                 ? 'bg-blue-700 text-blue-100'
-                : 'bg-slate-800 text-slate-400'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
             )}
           >
             {activeSocialsCount}/{socials.length}
@@ -343,10 +343,10 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
           type="button"
           onClick={() => setActiveTab('contact')}
           className={cn(
-            'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all',
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer',
             activeTab === 'contact'
               ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
           )}
         >
           <Building2 className="h-4 w-4" />
@@ -357,10 +357,10 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
           type="button"
           onClick={() => setActiveTab('preview')}
           className={cn(
-            'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all',
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer',
             activeTab === 'preview'
               ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60'
           )}
         >
           <Sparkles className="h-4 w-4" />
@@ -373,26 +373,26 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
       {/* ============================================================ */}
       {activeTab === 'socials' && (
         <div className="space-y-4">
-          <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-xl">
-            <div className="p-4 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between">
+          <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs dark:shadow-xl">
+            <div className="p-4 bg-slate-50 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h4 className="text-sm font-bold text-white">Configured Social Channels</h4>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Accounts marked as <span className="text-emerald-400 font-semibold">Visible</span> are immediately rendered in the client footer. Use the eye icon to hide or unhide.
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Configured Social Channels</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Accounts marked as <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Visible</span> are immediately rendered in the client footer. Use the eye icon to hide or unhide.
                 </p>
               </div>
               <Button
                 size="sm"
                 onClick={openCreateModal}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center gap-1.5 text-xs h-8 px-3"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 text-xs h-8 px-3 cursor-pointer shrink-0"
               >
                 <Plus className="h-3.5 w-3.5" /> Add Account
               </Button>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950/80 border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                <thead className="bg-slate-100/75 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                   <tr>
                     <th className="py-3.5 px-4 w-16 text-center">Order</th>
                     <th className="py-3.5 px-4">Platform & Icon</th>
@@ -402,10 +402,10 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                     <th className="py-3.5 px-4 text-right w-36">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                   {socials.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-slate-500 font-medium">
+                      <td colSpan={6} className="py-12 text-center text-slate-400 dark:text-slate-500 font-medium">
                         No social accounts configured yet. Click &quot;+ Add Social Account&quot; to add one.
                       </td>
                     </tr>
@@ -414,8 +414,8 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                       <tr
                         key={item.id}
                         className={cn(
-                          'hover:bg-slate-800/40 transition-colors',
-                          !item.active && 'opacity-65 bg-slate-950/40'
+                          'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors',
+                          !item.active && 'opacity-65 bg-slate-50/50 dark:bg-slate-950/40'
                         )}
                       >
                         {/* Order & Reorder Controls */}
@@ -426,7 +426,7 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                                 type="button"
                                 onClick={() => handleReorderSocial(item.id, 'up')}
                                 disabled={idx === 0}
-                                className="text-slate-500 hover:text-slate-200 disabled:opacity-20 disabled:cursor-not-allowed p-0.5"
+                                className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 disabled:opacity-20 disabled:cursor-not-allowed p-0.5 cursor-pointer"
                                 title="Move Up"
                               >
                                 <ChevronUp className="h-3 w-3" />
@@ -435,13 +435,13 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                                 type="button"
                                 onClick={() => handleReorderSocial(item.id, 'down')}
                                 disabled={idx === socials.length - 1}
-                                className="text-slate-500 hover:text-slate-200 disabled:opacity-20 disabled:cursor-not-allowed p-0.5"
+                                className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 disabled:opacity-20 disabled:cursor-not-allowed p-0.5 cursor-pointer"
                                 title="Move Down"
                               >
                                 <ChevronDown className="h-3 w-3" />
                               </button>
                             </div>
-                            <span className="font-mono text-xs text-slate-400 font-semibold ml-1">
+                            <span className="font-mono text-xs text-slate-500 dark:text-slate-400 font-semibold ml-1">
                               #{idx + 1}
                             </span>
                           </div>
@@ -450,18 +450,18 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                         {/* Icon & Platform */}
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 shrink-0 shadow-xs">
+                            <div className="h-9 w-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 shrink-0 shadow-xs">
                               <SocialPlatformIcon platform={item.platform || item.icon} className="h-4 w-4" />
                             </div>
                             <div>
-                              <div className="font-bold text-white capitalize">{item.platform}</div>
+                              <div className="font-bold text-slate-900 dark:text-white capitalize">{item.platform}</div>
                               <span className="text-[10px] text-slate-500 font-mono">icon: {item.icon}</span>
                             </div>
                           </div>
                         </td>
 
                         {/* Display Label */}
-                        <td className="py-3 px-4 font-medium text-slate-200">
+                        <td className="py-3 px-4 font-medium text-slate-900 dark:text-slate-200">
                           {item.name}
                         </td>
 
@@ -471,7 +471,7 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                             href={item.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-blue-400 hover:text-blue-300 truncate max-w-[280px] font-mono text-[11px] hover:underline"
+                            className="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 truncate max-w-[280px] font-mono text-[11px] hover:underline"
                             title={item.url}
                           >
                             <span className="truncate">{item.url}</span>
@@ -488,8 +488,8 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                             className={cn(
                               'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer border',
                               item.active
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-                                : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
                             )}
                             title={item.active ? 'Click to Hide from client' : 'Click to Unhide on client'}
                           >
@@ -511,7 +511,7 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                               variant="ghost"
                               size="sm"
                               onClick={() => openEditModal(item)}
-                              className="h-8 w-8 p-0 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-lg cursor-pointer"
+                              className="h-8 w-8 p-0 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer"
                               title="Edit account"
                             >
                               <Edit className="h-3.5 w-3.5" />
@@ -520,7 +520,7 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteSocial(item.id, item.name)}
-                              className="h-8 w-8 p-0 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg cursor-pointer"
+                              className="h-8 w-8 p-0 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer"
                               title="Delete account"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -543,11 +543,11 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
       {activeTab === 'contact' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Edit Form */}
-          <div className="lg:col-span-2 rounded-2xl bg-slate-900/80 border border-slate-800 p-6 shadow-xl">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+          <div className="lg:col-span-2 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-6 shadow-xs dark:shadow-xl">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 mb-6">
               <div>
-                <h4 className="text-sm font-bold text-white">Client Footer Contact Details</h4>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Client Footer Contact Details</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Update the official phone number, email address, physical location, and Google Maps pin.
                 </p>
               </div>
@@ -561,14 +561,14 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                 className={cn(
                   'p-4 rounded-xl mb-6 flex items-start gap-3 text-xs',
                   settingsStatus.type === 'success'
-                    ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
-                    : 'bg-rose-500/10 text-rose-300 border border-rose-500/20'
+                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                    : 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20'
                 )}
               >
                 {settingsStatus.type === 'success' ? (
-                  <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-400" />
+                  <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-500 dark:text-emerald-400" />
                 ) : (
-                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-400" />
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-500 dark:text-rose-400" />
                 )}
                 <span>{settingsStatus.message}</span>
               </div>
@@ -578,8 +578,8 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Phone / Mobile */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                    <Phone className="h-3.5 w-3.5 text-blue-400" />
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Phone className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
                     <span>Mobile / Phone Number</span>
                   </label>
                   <Input
@@ -588,15 +588,15 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+91 8167409664"
                     required
-                    className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-10"
+                    className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus:border-blue-500 text-slate-900 dark:text-white text-xs h-10"
                   />
                   <p className="text-[10px] text-slate-500">Rendered in the &quot;Call Us&quot; footer card.</p>
                 </div>
 
                 {/* Email Address */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                    <Mail className="h-3.5 w-3.5 text-blue-400" />
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Mail className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
                     <span>Email Address</span>
                   </label>
                   <Input
@@ -605,7 +605,7 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="info@astraivtechnologies.com"
                     required
-                    className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-10"
+                    className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus:border-blue-500 text-slate-900 dark:text-white text-xs h-10"
                   />
                   <p className="text-[10px] text-slate-500">Rendered in the &quot;Send Email&quot; footer card.</p>
                 </div>
@@ -613,8 +613,8 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
 
               {/* Physical Address */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5 text-blue-400" />
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
                   <span>Physical Address / Office Location</span>
                 </label>
                 <Input
@@ -623,15 +623,15 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="Ashoknagar, Kolkata"
                   required
-                  className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-10"
+                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus:border-blue-500 text-slate-900 dark:text-white text-xs h-10"
                 />
                 <p className="text-[10px] text-slate-500">Physical headquarters or city location shown in the footer.</p>
               </div>
 
               {/* Google Maps / Location URL */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                  <LinkIcon className="h-3.5 w-3.5 text-blue-400" />
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <LinkIcon className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
                   <span>Location Map Link (Google Maps URL)</span>
                 </label>
                 <div className="flex gap-2">
@@ -640,14 +640,14 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                     value={mapUrl}
                     onChange={(e) => setMapUrl(e.target.value)}
                     placeholder="https://maps.google.com/?q=Ashoknagar,+Kolkata"
-                    className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-10 font-mono"
+                    className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus:border-blue-500 text-slate-900 dark:text-white text-xs h-10 font-mono"
                   />
                   {mapUrl && (
                     <a
                       href={mapUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="h-10 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-300 shrink-0 transition-colors"
+                      className="h-10 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 shrink-0 transition-colors cursor-pointer"
                       title="Test Map Link"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
@@ -659,7 +659,7 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
 
               {/* Brand Tagline */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Brand Tagline & Mission Statement
                 </label>
                 <textarea
@@ -668,14 +668,14 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                   rows={3}
                   placeholder="Your trusted partner for AI, enterprise software, and scalable cloud systems."
                   required
-                  className="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-white text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 leading-relaxed"
+                  className="w-full rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 text-slate-900 dark:text-white text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 leading-relaxed shadow-2xs"
                 />
                 <p className="text-[10px] text-slate-500">Brief summary displayed beneath the Astraiv logo in the footer.</p>
               </div>
 
               {/* Copyright Notice */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Copyright Notice
                 </label>
                 <Input
@@ -683,12 +683,12 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                   value={copyrightText}
                   onChange={(e) => setCopyrightText(e.target.value)}
                   placeholder="Astraiv Technologies. All rights reserved."
-                  className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-10"
+                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus:border-blue-500 text-slate-900 dark:text-white text-xs h-10"
                 />
                 <p className="text-[10px] text-slate-500">Rendered in the bottom bar with current year automatically appended.</p>
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end">
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end">
                 <Button
                   type="submit"
                   disabled={isPendingSettings}
@@ -712,48 +712,48 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
 
           {/* Side Live Card Preview */}
           <div className="space-y-4">
-            <div className="rounded-2xl bg-slate-900/80 border border-slate-800 p-5 shadow-xl">
-              <h5 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <CheckCircle2 className="h-3.5 w-3.5 text-blue-400" />
+            <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 p-5 shadow-xs dark:shadow-xl">
+              <h5 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                 <span>Live Client Cards Preview</span>
               </h5>
 
               <div className="space-y-3.5">
                 {/* Phone Preview */}
-                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                     <Phone className="h-4 w-4" />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Call Us</span>
-                    <span className="text-xs text-white font-medium truncate">{phone || 'Not configured'}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Call Us</span>
+                    <span className="text-xs text-slate-900 dark:text-white font-medium truncate">{phone || 'Not configured'}</span>
                   </div>
                 </div>
 
                 {/* Email Preview */}
-                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                     <Mail className="h-4 w-4" />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Send Email</span>
-                    <span className="text-xs text-white font-medium truncate">{email || 'Not configured'}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Send Email</span>
+                    <span className="text-xs text-slate-900 dark:text-white font-medium truncate">{email || 'Not configured'}</span>
                   </div>
                 </div>
 
                 {/* Address Preview */}
-                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/80 flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                     <MapPin className="h-4 w-4" />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Address</span>
-                    <span className="text-xs text-white font-medium truncate">{address || 'Not configured'}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Address</span>
+                    <span className="text-xs text-slate-900 dark:text-white font-medium truncate">{address || 'Not configured'}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-5 pt-4 border-t border-slate-800 text-[11px] text-slate-500 leading-relaxed">
+              <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 leading-relaxed">
                 When you click &quot;Save Contact Settings&quot;, the database is updated and Next.js revalidates the cache instantly.
               </div>
             </div>
@@ -765,17 +765,17 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
       {/* TAB 3: FULL LIVE FOOTER PREVIEW                             */}
       {/* ============================================================ */}
       {activeTab === 'preview' && (
-        <div className="rounded-2xl bg-slate-950 border border-slate-800 p-8 shadow-2xl">
-          <div className="flex items-center justify-between pb-6 border-b border-slate-900 mb-8">
+        <div className="rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-8 shadow-xs dark:shadow-2xl">
+          <div className="flex items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-900 mb-8">
             <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-bold text-slate-300">Client Footer Simulation</span>
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Client Footer Simulation</span>
             </div>
             <a
               href="http://localhost:3000"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1.5"
+              className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold flex items-center gap-1.5"
             >
               <span>Open live website</span>
               <ExternalLink className="h-3.5 w-3.5" />
@@ -786,10 +786,10 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-start">
             {/* Brand + Socials */}
             <div className="space-y-4 md:col-span-2">
-              <div className="text-lg font-black tracking-tight text-white flex items-center gap-2">
-                <span className="text-blue-500">ASTRAIV</span> TECHNOLOGIES
+              <div className="text-lg font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                <span className="text-blue-600 dark:text-blue-500">ASTRAIV</span> TECHNOLOGIES
               </div>
-              <p className="text-xs text-slate-400 max-w-md leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md leading-relaxed">
                 {brandTagline || settings.brandTagline}
               </p>
 
@@ -802,7 +802,7 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                       href={s.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="h-8 w-8 rounded-lg bg-slate-900 border border-slate-800 hover:border-blue-500 text-slate-400 hover:text-white flex items-center justify-center transition-all shadow-xs"
+                      className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-all shadow-xs"
                       title={s.name}
                     >
                       <SocialPlatformIcon platform={s.platform || s.icon} className="h-3.5 w-3.5" />
@@ -813,43 +813,43 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
 
             {/* Quick Contacts Simulation */}
             <div className="space-y-3.5 md:col-span-2">
-              <h5 className="text-xs font-bold uppercase tracking-wider text-slate-200">Contact Coordinates</h5>
+              <h5 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200">Contact Coordinates</h5>
 
               <div className="space-y-2.5">
-                <div className="flex items-center gap-3 text-slate-300 text-xs">
-                  <div className="h-8 w-8 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
+                <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300 text-xs">
+                  <div className="h-8 w-8 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                     <Phone className="h-3.5 w-3.5" />
                   </div>
                   <div>
                     <span className="text-[10px] uppercase text-slate-500 block font-bold">Call Us</span>
-                    <span className="text-white font-medium">{phone || settings.phone}</span>
+                    <span className="text-slate-900 dark:text-white font-medium">{phone || settings.phone}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-slate-300 text-xs">
-                  <div className="h-8 w-8 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
+                <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300 text-xs">
+                  <div className="h-8 w-8 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                     <Mail className="h-3.5 w-3.5" />
                   </div>
                   <div>
                     <span className="text-[10px] uppercase text-slate-500 block font-bold">Send Email</span>
-                    <span className="text-white font-medium">{email || settings.email}</span>
+                    <span className="text-slate-900 dark:text-white font-medium">{email || settings.email}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-slate-300 text-xs">
-                  <div className="h-8 w-8 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
+                <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300 text-xs">
+                  <div className="h-8 w-8 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                     <MapPin className="h-3.5 w-3.5" />
                   </div>
                   <div>
                     <span className="text-[10px] uppercase text-slate-500 block font-bold">Address</span>
-                    <span className="text-white font-medium">{address || settings.address}</span>
+                    <span className="text-slate-900 dark:text-white font-medium">{address || settings.address}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-900 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
+          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-900 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
             <span>&copy; {new Date().getFullYear()} {copyrightText || settings.copyrightText}</span>
             <span>Live client sync enabled</span>
           </div>
@@ -860,18 +860,18 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
       {/* MODAL: ADD / EDIT SOCIAL ACCOUNT                            */}
       {/* ============================================================ */}
       {isSocialModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in">
+          <div className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-lg bg-blue-600/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                   <Share2 className="h-4 w-4" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                     {editingSocial ? 'Edit Social Account' : 'Add New Social Account'}
                   </h4>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     Configure account details and icon displayed in the client website footer.
                   </p>
                 </div>
@@ -879,7 +879,7 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
               <button
                 type="button"
                 onClick={() => setIsSocialModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -888,7 +888,7 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
             <form onSubmit={handleSubmitSocial} className="space-y-4">
               {/* Quick Platform Presets */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-300">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Select Social Platform Preset
                 </label>
                 <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
@@ -900,10 +900,10 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                         type="button"
                         onClick={() => handlePlatformSelect(p.value, p.label)}
                         className={cn(
-                          'px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all border',
+                          'px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all border cursor-pointer',
                           isSelected
                             ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
-                            : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                            : 'bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                         )}
                       >
                         <SocialPlatformIcon platform={p.value} className="h-3 w-3" />
@@ -916,7 +916,7 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
 
               {/* Display Name */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Display Label / Tooltip
                 </label>
                 <Input
@@ -925,13 +925,13 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                   onChange={(e) => setSocialName(e.target.value)}
                   placeholder="e.g. LinkedIn, Twitter, Instagram"
                   required
-                  className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-9"
+                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus:border-blue-500 text-slate-900 dark:text-white text-xs h-9"
                 />
               </div>
 
               {/* Destination URL */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Destination Profile URL
                 </label>
                 <Input
@@ -940,13 +940,13 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                   onChange={(e) => setSocialUrl(e.target.value)}
                   placeholder="https://linkedin.com/company/astraiv-technologies"
                   required
-                  className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-9 font-mono"
+                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus:border-blue-500 text-slate-900 dark:text-white text-xs h-9 font-mono"
                 />
               </div>
 
               {/* Icon & Live Preview */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Icon Identifier & Live Preview
                 </label>
                 <div className="flex items-center gap-3">
@@ -955,19 +955,19 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                     value={socialIcon}
                     onChange={(e) => setSocialIcon(e.target.value)}
                     placeholder="e.g. linkedin, twitter, instagram"
-                    className="bg-slate-950 border-slate-800 focus:border-blue-500 text-white text-xs h-9"
+                    className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus:border-blue-500 text-slate-900 dark:text-white text-xs h-9"
                   />
-                  <div className="h-9 w-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-blue-400 shrink-0 shadow-xs">
+                  <div className="h-9 w-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0 shadow-xs">
                     <SocialPlatformIcon platform={socialIcon} className="h-4 w-4" />
                   </div>
                 </div>
               </div>
 
               {/* Active Toggle */}
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-white block">Visible in Client Footer</span>
-                  <span className="text-[11px] text-slate-400 block">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white block">Visible in Client Footer</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
                     If disabled, this account remains saved in the database but is hidden from visitors.
                   </span>
                 </div>
@@ -977,8 +977,8 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
                   className={cn(
                     'px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer',
                     socialActive
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                      : 'bg-slate-800 text-slate-400 border-slate-700'
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                      : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-400 border-slate-300 dark:border-slate-700'
                   )}
                 >
                   {socialActive ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
@@ -987,13 +987,13 @@ export function FooterManager({ initialSettings, initialSocials }: FooterManager
               </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsSocialModalOpen(false)}
-                  className="text-slate-400 hover:text-white rounded-xl text-xs h-9"
+                  className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl text-xs h-9 cursor-pointer"
                 >
                   Cancel
                 </Button>

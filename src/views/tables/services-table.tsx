@@ -295,11 +295,11 @@ export function ServicesTable({ initialData }: ServicesTableProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-lg">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-lg">
         <div>
-          <h3 className="text-sm font-bold text-white">Services & Capabilities Catalog</h3>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Total configured: <span className="text-blue-400 font-bold">{data.length} services</span> synced in real-time with the client website.
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">Services & Capabilities Catalog</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Total configured: <span className="text-blue-600 dark:text-blue-400 font-bold">{data.length} services</span> synced in real-time with the client website.
           </p>
         </div>
         <div className="flex items-center gap-2.5">
@@ -307,7 +307,7 @@ export function ServicesTable({ initialData }: ServicesTableProps) {
             href="http://localhost:3000/en/services"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
           >
             <span>Preview Client Website</span>
             <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
@@ -322,197 +322,198 @@ export function ServicesTable({ initialData }: ServicesTableProps) {
         </div>
       </div>
 
-
-      <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-xl">
-        <table className="w-full text-left text-xs text-slate-300">
-          <thead className="bg-slate-950/80 border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            <tr>
-              <th className="py-4 px-4 w-20">Order</th>
-              <th className="py-4 px-4">Service & Icon</th>
-              <th className="py-4 px-4 max-w-sm">Brief Description (Card)</th>
-              <th className="py-4 px-4">Large Description (Detail Page)</th>
-              <th className="py-4 px-4">Status</th>
-              <th className="py-4 px-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800/60">
-            {data.length === 0 ? (
+      <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs dark:shadow-xl">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+            <thead className="bg-slate-100/75 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
               <tr>
-                <td colSpan={6} className="py-12 text-center text-slate-500 font-medium">
-                  No services configured yet in database.
-                </td>
+                <th className="py-4 px-4 w-20">Order</th>
+                <th className="py-4 px-4">Service & Icon</th>
+                <th className="py-4 px-4 max-w-sm">Brief Description (Card)</th>
+                <th className="py-4 px-4">Large Description (Detail Page)</th>
+                <th className="py-4 px-4">Status</th>
+                <th className="py-4 px-4 text-right">Actions</th>
               </tr>
-            ) : (
-              data.map((srv, idx) => {
-                const IconComponent = getServiceIconComponent(srv.icon);
-                return (
-                  <tr key={srv.id} className="hover:bg-slate-800/30 transition-colors">
-                    {/* Order Column */}
-                    <td className="py-4 px-4 font-mono font-bold text-slate-400">
-                      <div className="flex items-center gap-1.5">
-                        <div className="flex flex-col">
-                          <button
-                            type="button"
-                            onClick={() => handleReorder(srv.id, 'up')}
-                            disabled={idx === 0}
-                            className="text-slate-500 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                            title="Move Up"
-                          >
-                            <ChevronUp className="h-3 w-3" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleReorder(srv.id, 'down')}
-                            disabled={idx === data.length - 1}
-                            className="text-slate-500 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                            title="Move Down"
-                          >
-                            <ChevronDown className="h-3 w-3" />
-                          </button>
-                        </div>
-                        <span className="text-slate-300">#{srv.display_order}</span>
-                      </div>
-                    </td>
-
-                    {/* Service & Icon Column */}
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
-                          <IconComponent className="h-5 w-5" />
-                        </div>
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-white text-sm tracking-tight">{srv.title}</span>
-                            {srv.badge && (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 border border-blue-500/30 text-blue-400">
-                                {srv.badge}
-                              </span>
-                            )}
+            </thead>
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
+              {data.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400 dark:text-slate-500 font-medium">
+                    No services configured yet in database.
+                  </td>
+                </tr>
+              ) : (
+                data.map((srv, idx) => {
+                  const IconComponent = getServiceIconComponent(srv.icon);
+                  return (
+                    <tr key={srv.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                      {/* Order Column */}
+                      <td className="py-4 px-4 font-mono font-bold text-slate-500 dark:text-slate-400">
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex flex-col">
+                            <button
+                              type="button"
+                              onClick={() => handleReorder(srv.id, 'up')}
+                              disabled={idx === 0}
+                              className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                              title="Move Up"
+                            >
+                              <ChevronUp className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleReorder(srv.id, 'down')}
+                              disabled={idx === data.length - 1}
+                              className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                              title="Move Down"
+                            >
+                              <ChevronDown className="h-3 w-3" />
+                            </button>
                           </div>
-                          <span className="text-[11px] text-slate-400 font-mono mt-0.5">
-                            /services/{srv.slug} <span className="text-slate-600">•</span> {srv.category || 'Engineering'}
-                          </span>
+                          <span className="text-slate-700 dark:text-slate-300">#{srv.display_order}</span>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {/* Brief Description (Card) */}
-                    <td className="py-4 px-4 text-slate-300 max-w-sm">
-                      <p className="line-clamp-2 text-xs leading-relaxed">
-                        {srv.shortDesc || 'No brief description provided.'}
-                      </p>
-                    </td>
+                      {/* Service & Icon Column */}
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                            <IconComponent className="h-5 w-5" />
+                          </div>
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-900 dark:text-white text-sm tracking-tight">{srv.title}</span>
+                              {srv.badge && (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 border border-blue-500/30 text-blue-600 dark:text-blue-400">
+                                  {srv.badge}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                              /services/{srv.slug} <span className="text-slate-400 dark:text-slate-600">•</span> {srv.category || 'Engineering'}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
 
-                    {/* Large Description (Detail Page) */}
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-slate-400">
-                          {(srv.fullDesc || '').length} chars
-                        </span>
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] bg-slate-800 text-slate-300 border-slate-700"
-                        >
-                          Detailed
-                        </Badge>
-                      </div>
-                    </td>
+                      {/* Brief Description (Card) */}
+                      <td className="py-4 px-4 text-slate-600 dark:text-slate-300 max-w-sm">
+                        <p className="line-clamp-2 text-xs leading-relaxed">
+                          {srv.shortDesc || 'No brief description provided.'}
+                        </p>
+                      </td>
 
-                    {/* Status Column (Interactive Client Visibility Toggle) */}
-                    <td className="py-4 px-4">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleVisibility(srv)}
-                        disabled={togglingId === srv.id}
-                        title={
-                          srv.status === 'active'
-                            ? 'Currently VISIBLE to client. Click to HIDE this service card.'
-                            : 'Currently HIDDEN from client. Click to UNHIDE (make visible).'
-                        }
-                        className={cn(
-                          'group inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed',
-                          srv.status === 'active'
-                            ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:border-emerald-500/50 shadow-sm shadow-emerald-500/10'
-                            : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/30 hover:border-amber-500/50 shadow-sm shadow-amber-500/10'
-                        )}
-                      >
-                        {togglingId === srv.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" />
-                        ) : srv.status === 'active' ? (
-                          <Eye className="h-3.5 w-3.5 text-emerald-400 transition-transform group-hover:scale-110" />
-                        ) : (
-                          <EyeOff className="h-3.5 w-3.5 text-amber-400 transition-transform group-hover:scale-110" />
-                        )}
+                      {/* Large Description (Detail Page) */}
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
+                            {(srv.fullDesc || '').length} chars
+                          </span>
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+                          >
+                            Detailed
+                          </Badge>
+                        </div>
+                      </td>
 
-                        <span>{srv.status === 'active' ? 'Active (Visible)' : 'Draft (Hidden)'}</span>
-
-                        <span
-                          className={cn(
-                            'w-2 h-2 rounded-full transition-all',
+                      {/* Status Column (Interactive Client Visibility Toggle) */}
+                      <td className="py-4 px-4">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleVisibility(srv)}
+                          disabled={togglingId === srv.id}
+                          title={
                             srv.status === 'active'
-                              ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]'
-                              : 'bg-amber-400/80 shadow-[0_0_8px_rgba(251,191,36,0.6)]'
+                              ? 'Currently VISIBLE to client. Click to HIDE this service card.'
+                              : 'Currently HIDDEN from client. Click to UNHIDE (make visible).'
+                          }
+                          className={cn(
+                            'group inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed',
+                            srv.status === 'active'
+                              ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:border-emerald-500/50 shadow-xs'
+                              : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:border-amber-500/50 shadow-xs'
                           )}
-                        />
-                      </button>
-                    </td>
+                        >
+                          {togglingId === srv.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" />
+                          ) : srv.status === 'active' ? (
+                            <Eye className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 transition-transform group-hover:scale-110" />
+                          ) : (
+                            <EyeOff className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 transition-transform group-hover:scale-110" />
+                          )}
 
-                    {/* Actions Column */}
-                    <td className="py-4 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <a
-                          href={`http://localhost:3000/en/services/${srv.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-blue-400 hover:bg-slate-800 transition-colors"
-                          title="View on Client Website"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => openEditModal(srv)}
-                          className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
-                          title="Edit Service"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleDelete(srv.id)}
-                          className="h-8 w-8 text-slate-400 hover:text-destructive hover:bg-destructive/10 cursor-pointer"
-                          title="Delete Service"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                          <span>{srv.status === 'active' ? 'Active (Visible)' : 'Draft (Hidden)'}</span>
+
+                          <span
+                            className={cn(
+                              'w-2 h-2 rounded-full transition-all',
+                              srv.status === 'active'
+                                ? 'bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]'
+                                : 'bg-amber-500 dark:bg-amber-400/80 shadow-[0_0_8px_rgba(251,191,36,0.6)]'
+                            )}
+                          />
+                        </button>
+                      </td>
+
+                      {/* Actions Column */}
+                      <td className="py-4 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <a
+                            href={`http://localhost:3000/en/services/${srv.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            title="View on Client Website"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => openEditModal(srv)}
+                            className="h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                            title="Edit Service"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleDelete(srv.id)}
+                            className="h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                            title="Delete Service"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Modal Dialog */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl p-6 sm:p-8 space-y-6 shadow-2xl my-8">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-2xl p-6 sm:p-8 space-y-6 shadow-2xl my-8">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-2.5">
                 <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white">
                   <Sparkles className="h-4 w-4" />
                 </div>
-                <h3 className="text-lg font-bold text-white">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                   {editingService ? 'Edit Service Offering' : 'Add New Service Offering'}
                 </h3>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -521,56 +522,56 @@ export function ServicesTable({ initialData }: ServicesTableProps) {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400">Service Title</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Service Title</label>
                   <Input
                     value={title}
                     onChange={(e) => handleTitleChange(e.target.value)}
                     placeholder="e.g. Custom Software"
                     required
-                    className="mt-1 bg-slate-950 border-slate-800"
+                    className="mt-1 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400">URL Slug</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">URL Slug</label>
                   <Input
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
                     placeholder="e.g. custom-software"
                     required
-                    className="mt-1 bg-slate-950 border-slate-800 font-mono text-xs"
+                    className="mt-1 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono text-xs"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400">Category</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Category</label>
                   <Input
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     placeholder="e.g. Engineering, AI, Design"
                     required
-                    className="mt-1 bg-slate-950 border-slate-800"
+                    className="mt-1 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400">Badge Tag</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Badge Tag</label>
                   <Input
                     value={badge}
                     onChange={(e) => setBadge(e.target.value)}
                     placeholder="e.g. Enterprise, Popular, Core"
-                    className="mt-1 bg-slate-950 border-slate-800"
+                    className="mt-1 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400">Icon</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Icon</label>
                   <select
                     value={icon}
                     onChange={(e) => setIcon(e.target.value)}
-                    className="w-full mt-1 h-10 px-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full mt-1 h-10 px-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                   >
                     {ICON_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -583,7 +584,7 @@ export function ServicesTable({ initialData }: ServicesTableProps) {
 
               <div>
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold uppercase text-slate-400">
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">
                     Brief Description (Card on Homepage)
                   </label>
                   <span className="text-[10px] text-slate-500">{shortDesc.length} chars</span>
@@ -594,13 +595,13 @@ export function ServicesTable({ initialData }: ServicesTableProps) {
                   onChange={(e) => setShortDesc(e.target.value)}
                   placeholder="Short, punchy summary shown on the main homepage service cards..."
                   required
-                  className="w-full mt-1 p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 leading-relaxed"
+                  className="w-full mt-1 p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 leading-relaxed shadow-2xs"
                 />
               </div>
 
               <div>
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold uppercase text-slate-400">
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">
                     Large Description (Detail Page Content)
                   </label>
                   <span className="text-[10px] text-slate-500">{fullDesc.length} chars (Markdown supported)</span>
@@ -611,12 +612,12 @@ export function ServicesTable({ initialData }: ServicesTableProps) {
                   onChange={(e) => setFullDesc(e.target.value)}
                   placeholder="Full markdown-formatted description rendered on /services/[slug] (supports ## Headers, bullet lists, etc.)..."
                   required
-                  className="w-full mt-1 p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs resize-y focus:outline-none focus:ring-1 focus:ring-blue-500 leading-relaxed font-mono"
+                  className="w-full mt-1 p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs resize-y focus:outline-none focus:ring-1 focus:ring-blue-500 leading-relaxed font-mono shadow-2xs"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold uppercase text-slate-400">
+                <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">
                   Key Features & Highlights (One per line)
                 </label>
                 <textarea
@@ -624,19 +625,19 @@ export function ServicesTable({ initialData }: ServicesTableProps) {
                   value={featuresText}
                   onChange={(e) => setFeaturesText(e.target.value)}
                   placeholder="e.g.&#10;Custom LLM Pipelines&#10;Enterprise RAG Systems&#10;Autonomous Agent Swarms"
-                  className="w-full mt-1 p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full mt-1 p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400">
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">
                     Status (Client Visibility)
                   </label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as 'active' | 'draft')}
-                    className="w-full mt-1 h-10 px-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full mt-1 h-10 px-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
                   >
                     <option value="active">Active (Visible to Client)</option>
                     <option value="draft">Draft (Hidden from Client)</option>
@@ -644,29 +645,29 @@ export function ServicesTable({ initialData }: ServicesTableProps) {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-slate-400">Display Order</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400">Display Order</label>
                   <Input
                     type="number"
                     value={displayOrder}
                     onChange={(e) => setDisplayOrder(parseInt(e.target.value, 10) || 0)}
-                    className="mt-1 bg-slate-950 border-slate-800"
+                    className="mt-1 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end gap-2.5 border-t border-slate-800">
+              <div className="pt-4 flex justify-end gap-2.5 border-t border-slate-200 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsModalOpen(false)}
-                  className="border-slate-800 text-slate-300 hover:bg-slate-800 rounded-xl"
+                  className="border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md shadow-blue-600/20"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md shadow-blue-600/20 cursor-pointer"
                 >
                   {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Service'}
                 </Button>

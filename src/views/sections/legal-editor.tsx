@@ -213,28 +213,28 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
   return (
     <div className="space-y-6">
       {/* Top Banner with Document Identity and Live Status */}
-      <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-white tracking-tight">{doc.title}</span>
-            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px] font-mono">
+            <span className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{doc.title}</span>
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px] font-mono">
               Live Version {currentRev?.versionNumber || 1}
             </Badge>
             {doc.draftRevision && (
-              <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-[10px] font-mono">
+              <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] font-mono">
                 Draft V{doc.draftRevision.versionNumber} in Progress
               </Badge>
             )}
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {doc.description || 'Mandatory compliance document with immutable publication records.'}
           </p>
-          <div className="flex items-center gap-4 text-[11px] text-slate-500 pt-1">
-            <span>Effective Date: <strong className="text-slate-300">{currentRev?.effectiveDate || 'September 2026'}</strong></span>
+          <div className="flex items-center gap-4 text-[11px] text-slate-400 dark:text-slate-500 pt-1">
+            <span>Effective Date: <strong className="text-slate-700 dark:text-slate-300">{currentRev?.effectiveDate || 'September 2026'}</strong></span>
             <span>•</span>
-            <span>Published: <strong className="text-slate-300">{currentRev?.publishedAt ? new Date(currentRev.publishedAt).toLocaleDateString() : 'Active'}</strong></span>
+            <span>Published: <strong className="text-slate-700 dark:text-slate-300">{currentRev?.publishedAt ? new Date(currentRev.publishedAt).toLocaleDateString() : 'Active'}</strong></span>
             <span>•</span>
-            <span>Author: <strong className="text-slate-300">{currentRev?.authorName || 'Legal Governance'}</strong></span>
+            <span>Author: <strong className="text-slate-700 dark:text-slate-300">{currentRev?.authorName || 'Legal Governance'}</strong></span>
           </div>
         </div>
 
@@ -243,7 +243,7 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
             href={`http://localhost:3000/en/${doc.slug}`}
             target="_blank"
             rel="noreferrer"
-            className="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-colors"
+            className="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <span>View Live Page</span>
             <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
@@ -262,17 +262,17 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
 
       {/* Feedback Alert */}
       {feedback && (
-        <div className={`p-4 rounded-xl text-xs font-medium flex items-center gap-2.5 ${feedback.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30'}`}>
+        <div className={`p-4 rounded-xl text-xs font-medium flex items-center gap-2.5 ${feedback.type === 'success' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30'}`}>
           {feedback.type === 'success' ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <AlertTriangle className="h-4 w-4 shrink-0" />}
           <span>{feedback.message}</span>
         </div>
       )}
 
       {/* Mode Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
         <button
           onClick={() => setActiveTab('editor')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 ${activeTab === 'editor' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-400 hover:text-white hover:bg-slate-900'}`}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer ${activeTab === 'editor' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'}`}
         >
           <FileText className="h-3.5 w-3.5" />
           <span>Draft Editor</span>
@@ -280,7 +280,7 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
 
         <button
           onClick={() => setActiveTab('live')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 ${activeTab === 'live' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-400 hover:text-white hover:bg-slate-900'}`}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer ${activeTab === 'live' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'}`}
         >
           <Eye className="h-3.5 w-3.5" />
           <span>Current Live Version</span>
@@ -288,7 +288,7 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
 
         <button
           onClick={() => setActiveTab('history')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 ${activeTab === 'history' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-400 hover:text-white hover:bg-slate-900'}`}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer ${activeTab === 'history' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900'}`}
         >
           <History className="h-3.5 w-3.5" />
           <span>Revision History ({doc.revisions.length})</span>
@@ -298,15 +298,15 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
       {/* TAB 1: DRAFT EDITOR */}
       {activeTab === 'editor' && (
         <div className="space-y-6">
-          <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800/60">
-              <span className="text-sm font-bold text-white">Document Metadata & Changelog</span>
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 shadow-xs space-y-4 transition-colors">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800/60">
+              <span className="text-sm font-bold text-slate-900 dark:text-white">Document Metadata & Changelog</span>
               <div className="flex items-center gap-2">
                 <Button
                   onClick={handleSaveDraft}
                   disabled={isSaving}
                   variant="outline"
-                  className="bg-slate-800 hover:bg-slate-700 text-white text-xs border-slate-700 flex items-center gap-1.5 cursor-pointer"
+                  className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white text-xs border-slate-200 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer"
                 >
                   {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                   <span>Save Working Draft</span>
@@ -316,32 +316,32 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Document Title</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Document Title</label>
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Privacy Policy"
-                  className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Effective Date</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Effective Date</label>
                 <Input
                   value={effectiveDate}
                   onChange={(e) => setEffectiveDate(e.target.value)}
                   placeholder="e.g. October 2026"
-                  className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs"
                 />
               </div>
 
               <div className="space-y-1.5 md:col-span-2">
-                <label className="text-xs font-semibold text-slate-300">Changelog Note (Reason for revision)</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Changelog Note (Reason for revision)</label>
                 <Input
                   value={changelog}
                   onChange={(e) => setChangelog(e.target.value)}
                   placeholder="e.g. Updated third-party cloud subprocessors and clarified data retention SLA."
-                  className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs"
                 />
               </div>
             </div>
@@ -351,13 +351,13 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-white">Document Sections & Clauses ({sections.length})</h3>
-                <p className="text-xs text-slate-400">Structured sections formatted to render directly on the public client layout.</p>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Document Sections & Clauses ({sections.length})</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Structured sections formatted to render directly on the public client layout.</p>
               </div>
 
               <Button
                 onClick={handleAddSection}
-                className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 text-xs font-semibold rounded-xl flex items-center gap-1.5 cursor-pointer"
+                className="bg-blue-500/10 dark:bg-blue-600/20 hover:bg-blue-500/20 dark:hover:bg-blue-600/30 text-blue-600 dark:text-blue-400 border border-blue-500/30 text-xs font-semibold rounded-xl flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>Add Section</span>
@@ -368,17 +368,17 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
               {sections.map((sec, idx) => {
                 const IconComp = getLegalIconComponent(sec.icon);
                 return (
-                  <div key={idx} className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-3 relative group">
+                  <div key={idx} className="p-5 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 shadow-xs space-y-3 relative group transition-colors">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 flex-1">
-                        <div className="h-8 w-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                        <div className="h-8 w-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
                           <IconComp className="h-4 w-4" />
                         </div>
                         <Input
                           value={sec.title}
                           onChange={(e) => handleUpdateSection(idx, 'title', e.target.value)}
                           placeholder="Section Title (e.g. 1. Information We Collect)"
-                          className="bg-slate-950 border-slate-800 text-slate-100 text-xs font-semibold flex-1"
+                          className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs font-semibold flex-1"
                         />
                       </div>
 
@@ -387,7 +387,7 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
                           value={sec.icon || 'ShieldCheck'}
                           onChange={(e) => handleUpdateSection(idx, 'icon', e.target.value)}
                           aria-label="Section Icon"
-                          className="bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-blue-500"
+                          className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-300 text-xs rounded-xl px-2.5 py-1.5 focus:outline-hidden focus:border-blue-500"
                         >
                           {AVAILABLE_ICONS.map(ic => (
                             <option key={ic.value} value={ic.value}>{ic.label}</option>
@@ -398,7 +398,7 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
                           size="icon"
                           variant="ghost"
                           onClick={() => handleRemoveSection(idx)}
-                          className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-500/10 cursor-pointer"
+                          className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-500/10 cursor-pointer"
                           title="Delete Section"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -407,13 +407,13 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-slate-400">Content / Clauses (Supports Markdown formatting & bullet points)</label>
+                      <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Content / Clauses (Supports Markdown formatting & bullet points)</label>
                       <textarea
                         rows={6}
                         value={sec.content}
                         onChange={(e) => handleUpdateSection(idx, 'content', e.target.value)}
                         placeholder="Enter terms, legal commitments, bulleted sub-clauses..."
-                        className="w-full rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs p-3 leading-relaxed font-mono focus:outline-none focus:border-blue-500"
+                        className="w-full rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs p-3 leading-relaxed font-mono focus:outline-hidden focus:border-blue-500"
                       />
                     </div>
                   </div>
@@ -427,13 +427,13 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
       {/* TAB 2: CURRENT LIVE VERSION */}
       {activeTab === 'live' && (
         <div className="space-y-6">
-          <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 shadow-xs space-y-4 transition-colors">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <div>
-                <h3 className="text-sm font-bold text-white">Immutable Published Revision (V{currentRev?.versionNumber || 1})</h3>
-                <p className="text-xs text-slate-400">This exact version is currently served to all public visitors.</p>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Immutable Published Revision (V{currentRev?.versionNumber || 1})</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">This exact version is currently served to all public visitors.</p>
               </div>
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+              <Badge className="bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
                 Live & Active
               </Badge>
             </div>
@@ -442,12 +442,12 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
               {currentRev?.sections.map((sec, idx) => {
                 const IconComp = getLegalIconComponent(sec.icon);
                 return (
-                  <div key={idx} className="p-5 rounded-xl bg-slate-950/60 border border-slate-800/60 space-y-2">
-                    <div className="flex items-center gap-2.5 text-white text-xs font-bold">
-                      <IconComp className="h-4 w-4 text-blue-400" />
+                  <div key={idx} className="p-5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/60 space-y-2">
+                    <div className="flex items-center gap-2.5 text-slate-900 dark:text-white text-xs font-bold">
+                      <IconComp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       <span>{sec.title}</span>
                     </div>
-                    <p className="text-xs text-slate-300 whitespace-pre-line leading-relaxed font-sans pl-6">
+                    <p className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed font-sans pl-6">
                       {sec.content}
                     </p>
                   </div>
@@ -461,23 +461,23 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
       {/* TAB 3: REVISION HISTORY */}
       {activeTab === 'history' && (
         <div className="space-y-4">
-          <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 shadow-xs space-y-4 transition-colors">
             <div>
-              <h3 className="text-sm font-bold text-white">Complete Legal Audit Trail</h3>
-              <p className="text-xs text-slate-400">Historical legal revisions are preserved immutably for compliance auditability.</p>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Complete Legal Audit Trail</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Historical legal revisions are preserved immutably for compliance auditability.</p>
             </div>
 
-            <div className="divide-y divide-slate-800">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
               {doc.revisions.map((rev) => {
                 const isLive = rev.id === doc.currentRevisionId || rev.status === 'published';
                 return (
                   <div key={rev.id} className="py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-white">Version {rev.versionNumber}</span>
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">Version {rev.versionNumber}</span>
                         <Badge
                           variant="outline"
-                          className={isLive ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : rev.status === 'draft' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'}
+                          className={isLive ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : rev.status === 'draft' ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'}
                         >
                           {isLive ? 'LIVE' : rev.status.toUpperCase()}
                         </Badge>
@@ -485,8 +485,8 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
                           {rev.effectiveDate}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400">{rev.changelog || 'Standard revision update.'}</p>
-                      <span className="text-[10px] text-slate-500 block">
+                      <p className="text-xs text-slate-600 dark:text-slate-400">{rev.changelog || 'Standard revision update.'}</p>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 block">
                         Saved by {rev.authorName || 'Admin'} on {new Date(rev.createdAt).toLocaleString()}
                       </span>
                     </div>
@@ -497,7 +497,7 @@ export function LegalEditor({ initialDocument }: LegalEditorProps) {
                           onClick={() => handleRestore(rev.id)}
                           disabled={restoringId === rev.id}
                           variant="outline"
-                          className="bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700 text-xs flex items-center gap-1.5 cursor-pointer"
+                          className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 text-xs flex items-center gap-1.5 cursor-pointer"
                         >
                           {restoringId === rev.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
                           <span>Restore as New Draft</span>

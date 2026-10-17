@@ -13,10 +13,10 @@ export default function AdminNotFound() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight text-white font-heading">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-heading">
             Admin View Not Found
           </h1>
-          <p className="text-slate-400 text-sm leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
             The administrative resource, table view, or settings page you requested does not exist or has been moved.
           </p>
         </div>

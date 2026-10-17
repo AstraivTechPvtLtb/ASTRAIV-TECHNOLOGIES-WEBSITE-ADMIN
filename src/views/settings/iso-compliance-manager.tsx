@@ -223,24 +223,24 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
   };
 
   return (
-    <Card id="iso-compliance-section" className="bg-slate-900/80 border-slate-800 text-slate-100 shadow-xl overflow-hidden">
+    <Card id="iso-compliance-section" className="bg-white dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 shadow-xs dark:shadow-xl overflow-hidden transition-colors">
       <CardContent className="p-6 sm:p-8 space-y-6">
         {/* Header with Title and Quick Action */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-3.5">
-            <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+            <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
               <ShieldCheck className="h-6 w-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
                   Client Website — ISO & Compliance Section
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                   Live Sync
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Manage your ISO certification seal, customize the ISO number and label, or hide the section from the client website.
               </p>
             </div>
@@ -251,7 +251,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
               href="http://localhost:3000/en#stats"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-all shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-all shrink-0"
             >
               <span>View Client Section</span>
               <ExternalLink className="h-3.5 w-3.5" />
@@ -262,8 +262,8 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
         {/* Live Client Website Visual Preview */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
               Live Visual Preview (As Seen on Client Website)
             </span>
             <span className="text-[11px] text-slate-500 font-mono">
@@ -274,8 +274,8 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
           <div className={cn(
             'p-6 sm:p-8 rounded-2xl border transition-all duration-300 relative overflow-hidden',
             showIsoSection
-              ? 'bg-slate-950/80 border-slate-800'
-              : 'bg-slate-950/40 border-dashed border-slate-800/80 opacity-60'
+              ? 'bg-slate-950 text-white border-slate-800 shadow-inner'
+              : 'bg-slate-900/40 border-dashed border-slate-700/80 opacity-60'
           )}>
             {/* Top Scanning beam */}
             <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-blue-500/50 to-transparent pointer-events-none" />
@@ -314,7 +314,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
             {/* Entire Section Hidden Notice */}
             {!showIsoSection ? (
               <div className="py-8 text-center space-y-2">
-                <EyeOff className="h-8 w-8 mx-auto text-slate-600" />
+                <EyeOff className="h-8 w-8 mx-auto text-slate-500" />
                 <h4 className="text-sm font-bold text-slate-400">Performance Metrics & ISO Section is Hidden</h4>
                 <p className="text-xs text-slate-500 max-w-md mx-auto">
                   Public visitors to your client website will not see this entire section while this toggle is OFF.
@@ -368,13 +368,13 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
           <div className={cn(
             'p-4 rounded-2xl flex items-center gap-3 text-xs animate-in fade-in',
             notice.type === 'success'
-              ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-300'
-              : 'bg-rose-500/10 border border-rose-500/20 text-rose-300'
+              ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300'
+              : 'bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300'
           )}>
             {notice.type === 'success' ? (
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
             ) : (
-              <AlertCircle className="h-5 w-5 shrink-0 text-rose-400" />
+              <AlertCircle className="h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
             )}
             <span className="font-semibold">{notice.message}</span>
           </div>
@@ -388,28 +388,28 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
             <div
               onClick={handleToggleIsoBadge}
               className={cn(
-                'p-4 rounded-2xl border cursor-pointer transition-all duration-200 flex items-center justify-between select-none',
+                'p-4 rounded-2xl border cursor-pointer transition-all duration-200 flex items-center justify-between select-none shadow-xs',
                 showIsoBadge
-                  ? 'bg-slate-950/80 border-blue-500/30 hover:border-blue-500/50'
-                  : 'bg-slate-950/40 border-slate-800 hover:border-slate-700'
+                  ? 'bg-blue-50/50 dark:bg-slate-950/80 border-blue-200 dark:border-blue-500/30 hover:border-blue-300 dark:hover:border-blue-500/50'
+                  : 'bg-slate-50/60 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
               )}
             >
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-white">ISO Number Seal Badge</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">ISO Number Seal Badge</span>
                   <Badge
                     variant="outline"
                     className={cn(
                       'text-[10px] font-bold px-2 py-0',
                       showIsoBadge
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                        : 'bg-slate-800 text-slate-400 border-slate-700'
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                     )}
                   >
                     {showIsoBadge ? 'Visible' : 'Hidden'}
                   </Badge>
                 </div>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   Controls the floating ISO certification seal on the metrics container. Auto-saves live.
                 </p>
               </div>
@@ -417,7 +417,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
               {/* Custom Toggle Switch */}
               <div className={cn(
                 'w-11 h-6 rounded-full p-0.5 transition-colors shrink-0 ml-3',
-                showIsoBadge ? 'bg-blue-600' : 'bg-slate-800'
+                showIsoBadge ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-800'
               )}>
                 <div className={cn(
                   'w-5 h-5 rounded-full bg-white transition-transform transform shadow-md',
@@ -430,28 +430,28 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
             <div
               onClick={handleToggleIsoSection}
               className={cn(
-                'p-4 rounded-2xl border cursor-pointer transition-all duration-200 flex items-center justify-between select-none',
+                'p-4 rounded-2xl border cursor-pointer transition-all duration-200 flex items-center justify-between select-none shadow-xs',
                 showIsoSection
-                  ? 'bg-slate-950/80 border-blue-500/30 hover:border-blue-500/50'
-                  : 'bg-slate-950/40 border-slate-800 hover:border-slate-700'
+                  ? 'bg-blue-50/50 dark:bg-slate-950/80 border-blue-200 dark:border-blue-500/30 hover:border-blue-300 dark:hover:border-blue-500/50'
+                  : 'bg-slate-50/60 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
               )}
             >
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-white">Entire Metrics & ISO Section</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">Entire Metrics & ISO Section</span>
                   <Badge
                     variant="outline"
                     className={cn(
                       'text-[10px] font-bold px-2 py-0',
                       showIsoSection
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                        : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
                     )}
                   >
                     {showIsoSection ? 'Active' : 'Section Hidden'}
                   </Badge>
                 </div>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   Controls visibility of the entire metrics block on the client website.
                 </p>
               </div>
@@ -459,7 +459,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
               {/* Custom Toggle Switch */}
               <div className={cn(
                 'w-11 h-6 rounded-full p-0.5 transition-colors shrink-0 ml-3',
-                showIsoSection ? 'bg-blue-600' : 'bg-slate-800'
+                showIsoSection ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-800'
               )}>
                 <div className={cn(
                   'w-5 h-5 rounded-full bg-white transition-transform transform shadow-md',
@@ -470,22 +470,22 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
           </div>
 
           {/* ISO Details Inputs */}
-          <div className="space-y-4 p-5 rounded-2xl bg-slate-950/60 border border-slate-800">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-400" />
+          <div className="space-y-4 p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-300 flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               ISO Certification Credentials
             </h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-1.5">
                   ISO Certification Number / Code
                 </label>
                 <Input
                   value={isoNumber}
                   onChange={(e) => setIsoNumber(e.target.value)}
                   placeholder="e.g. ISO 27001:2022 or ISO 9001:2015"
-                  className="bg-slate-900 border-slate-800 text-slate-200 placeholder:text-slate-600 font-mono text-xs rounded-xl h-10"
+                  className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 font-mono text-xs rounded-xl h-10"
                 />
                 <span className="text-[10px] text-slate-500 mt-1 block">
                   Displayed in bold capital font on the client seal badge.
@@ -493,14 +493,14 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
               </div>
 
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-1.5">
                   Certification Status / Subtitle Label
                 </label>
                 <Input
                   value={isoLabel}
                   onChange={(e) => setIsoLabel(e.target.value)}
                   placeholder="e.g. Certified or Architecture"
-                  className="bg-slate-900 border-slate-800 text-slate-200 placeholder:text-slate-600 text-xs rounded-xl h-10"
+                  className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 text-xs rounded-xl h-10"
                 />
                 <span className="text-[10px] text-slate-500 mt-1 block">
                   Optional status label beside the ISO number (leave blank to omit).
@@ -510,22 +510,22 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
           </div>
 
           {/* Performance Metrics Inputs */}
-          <div className="space-y-4 p-5 rounded-2xl bg-slate-950/60 border border-slate-800">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <SlidersHorizontal className="h-4 w-4 text-blue-400" />
+          <div className="space-y-4 p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-300 flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               Key Performance Metrics Tiles
             </h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Metric 1 */}
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-2">
-                <span className="text-[10px] font-bold uppercase text-slate-400 block">Metric 1</span>
+              <div className="p-3 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 space-y-2 shadow-xs">
+                <span className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 block">Metric 1</span>
                 <div>
                   <label className="text-[10px] text-slate-500 block mb-1">Value</label>
                   <Input
                     value={uptimeValue}
                     onChange={(e) => setUptimeValue(e.target.value)}
-                    className="bg-slate-900 border-slate-800 text-slate-200 text-xs rounded-lg h-8"
+                    className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-lg h-8"
                   />
                 </div>
                 <div>
@@ -533,20 +533,20 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
                   <Input
                     value={uptimeLabel}
                     onChange={(e) => setUptimeLabel(e.target.value)}
-                    className="bg-slate-900 border-slate-800 text-slate-200 text-xs rounded-lg h-8"
+                    className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-lg h-8"
                   />
                 </div>
               </div>
 
               {/* Metric 2 */}
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-2">
-                <span className="text-[10px] font-bold uppercase text-slate-400 block">Metric 2</span>
+              <div className="p-3 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 space-y-2 shadow-xs">
+                <span className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 block">Metric 2</span>
                 <div>
                   <label className="text-[10px] text-slate-500 block mb-1">Value</label>
                   <Input
                     value={savingsValue}
                     onChange={(e) => setSavingsValue(e.target.value)}
-                    className="bg-slate-900 border-slate-800 text-slate-200 text-xs rounded-lg h-8"
+                    className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-lg h-8"
                   />
                 </div>
                 <div>
@@ -554,20 +554,20 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
                   <Input
                     value={savingsLabel}
                     onChange={(e) => setSavingsLabel(e.target.value)}
-                    className="bg-slate-900 border-slate-800 text-slate-200 text-xs rounded-lg h-8"
+                    className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-lg h-8"
                   />
                 </div>
               </div>
 
               {/* Metric 3 */}
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-2">
-                <span className="text-[10px] font-bold uppercase text-slate-400 block">Metric 3</span>
+              <div className="p-3 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 space-y-2 shadow-xs">
+                <span className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 block">Metric 3</span>
                 <div>
                   <label className="text-[10px] text-slate-500 block mb-1">Value</label>
                   <Input
                     value={actionsValue}
                     onChange={(e) => setActionsValue(e.target.value)}
-                    className="bg-slate-900 border-slate-800 text-slate-200 text-xs rounded-lg h-8"
+                    className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-lg h-8"
                   />
                 </div>
                 <div>
@@ -575,20 +575,20 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
                   <Input
                     value={actionsLabel}
                     onChange={(e) => setActionsLabel(e.target.value)}
-                    className="bg-slate-900 border-slate-800 text-slate-200 text-xs rounded-lg h-8"
+                    className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-lg h-8"
                   />
                 </div>
               </div>
 
               {/* Metric 4 */}
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-2">
-                <span className="text-[10px] font-bold uppercase text-slate-400 block">Metric 4</span>
+              <div className="p-3 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 space-y-2 shadow-xs">
+                <span className="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-400 block">Metric 4</span>
                 <div>
                   <label className="text-[10px] text-slate-500 block mb-1">Value</label>
                   <Input
                     value={slaValue}
                     onChange={(e) => setSlaValue(e.target.value)}
-                    className="bg-slate-900 border-slate-800 text-slate-200 text-xs rounded-lg h-8"
+                    className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-lg h-8"
                   />
                 </div>
                 <div>
@@ -596,7 +596,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
                   <Input
                     value={slaLabel}
                     onChange={(e) => setSlaLabel(e.target.value)}
-                    className="bg-slate-900 border-slate-800 text-slate-200 text-xs rounded-lg h-8"
+                    className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-lg h-8"
                   />
                 </div>
               </div>
@@ -604,14 +604,14 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
           </div>
 
           {/* Partner Company Logos & Circular Profile Pictures */}
-          <div className="pt-5 border-t border-slate-800 space-y-4">
+          <div className="pt-5 border-t border-slate-200 dark:border-slate-800 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <Building2 className="h-3.5 w-3.5 text-cyan-400" />
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Building2 className="h-3.5 w-3.5 text-blue-600 dark:text-cyan-400" />
                   Client Company Logos & Profile Pictures (Proof Ticker)
                 </span>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Customize the client company logos displayed in small circular profile picture avatars below the metrics. Provide a picture URL or leave empty to use authentic vector icons.
                 </p>
               </div>
@@ -627,7 +627,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
                     { id: newId, name: 'NEW PARTNER', iconKey: '', imageUrl: '' },
                   ]);
                 }}
-                className="border-slate-800 bg-slate-900/80 text-cyan-400 hover:text-cyan-300 text-xs font-semibold gap-1.5 rounded-xl h-8 self-start sm:self-auto"
+                className="border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 text-blue-600 dark:text-cyan-400 hover:text-blue-700 dark:hover:text-cyan-300 text-xs font-semibold gap-1.5 rounded-xl h-8 self-start sm:self-auto cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>Add Company</span>
@@ -639,10 +639,10 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
               {clientLogos.map((item, idx) => (
                 <div
                   key={item.id || idx}
-                  className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center gap-3.5 hover:border-slate-700 transition-colors"
+                  className="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-xs"
                 >
                   {/* Small Circle Profile Picture Preview */}
-                  <div className="w-10 h-10 aspect-square rounded-full bg-[#101726] border border-slate-700/80 flex items-center justify-center overflow-hidden shrink-0 shadow-inner ring-1 ring-white/10">
+                  <div className="w-10 h-10 aspect-square rounded-full bg-slate-200 dark:bg-[#101726] border border-slate-300 dark:border-slate-700/80 flex items-center justify-center overflow-hidden shrink-0 shadow-inner ring-1 ring-black/5 dark:ring-white/10">
                     {item.imageUrl ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
@@ -654,7 +654,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
                         }}
                       />
                     ) : (
-                      <span className="text-xs font-bold text-cyan-400 font-mono">
+                      <span className="text-xs font-bold text-blue-600 dark:text-cyan-400 font-mono">
                         {item.name ? item.name.charAt(0).toUpperCase() : '?'}
                       </span>
                     )}
@@ -670,10 +670,10 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
                         next[idx] = { ...next[idx], name: e.target.value };
                         setClientLogos(next);
                       }}
-                      className="bg-slate-900 border-slate-800 text-slate-200 text-xs rounded-lg h-7 font-semibold"
+                      className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-lg h-7 font-semibold"
                     />
                     <div className="flex items-center gap-1.5">
-                      <ImageIcon className="h-3 w-3 text-slate-500 shrink-0" />
+                      <ImageIcon className="h-3 w-3 text-slate-400 dark:text-slate-500 shrink-0" />
                       <Input
                         placeholder="Image / Logo URL (optional)"
                         value={item.imageUrl || ''}
@@ -682,7 +682,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
                           next[idx] = { ...next[idx], imageUrl: e.target.value };
                           setClientLogos(next);
                         }}
-                        className="bg-slate-900 border-slate-800 text-slate-400 text-[11px] rounded-lg h-6 font-mono"
+                        className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-[11px] rounded-lg h-6 font-mono"
                       />
                     </div>
                   </div>
@@ -694,7 +694,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
                       setClientLogos((prev) => prev.filter((_, i) => i !== idx));
                     }}
                     title="Remove Company"
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors shrink-0 cursor-pointer"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -710,7 +710,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
               variant="outline"
               size="sm"
               onClick={handleResetDefaults}
-              className="border-slate-800 bg-slate-900/60 text-slate-400 hover:text-white text-xs font-semibold gap-1.5 rounded-xl h-9"
+              className="border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-semibold gap-1.5 rounded-xl h-9 cursor-pointer"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span>Reset Defaults</span>
@@ -719,7 +719,7 @@ export function IsoComplianceManager({ initialSettings }: IsoComplianceManagerPr
             <Button
               type="submit"
               disabled={isSaving}
-              className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs gap-2 rounded-xl h-10 px-6 shadow-lg shadow-blue-600/20"
+              className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs gap-2 rounded-xl h-10 px-6 shadow-lg shadow-blue-600/20 cursor-pointer"
             >
               {isSaving ? (
                 <>

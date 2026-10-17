@@ -441,16 +441,16 @@ export function BlogTable({ initialData }: BlogTableProps) {
       {/* ========================================================================= */}
       {/* 1. EDITORIAL HEADER & ACTION BAR (MIRRORING CLIENT LAYOUT) */}
       {/* ========================================================================= */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-800">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-semibold uppercase tracking-wider mb-2">
             <Sparkles className="h-3.5 w-3.5" />
             <span>Admin CMS & Publications</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-white">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
             Insights & Engineering Publications
           </h1>
-          <p className="text-sm text-slate-400 font-normal mt-1 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-normal mt-1 max-w-2xl leading-relaxed">
             Manage live publications, edit drafts, upload imagery, and categorize technical articles.
             Changes sync immediately with the public client website.
           </p>
@@ -460,18 +460,18 @@ export function BlogTable({ initialData }: BlogTableProps) {
         <div className="flex flex-wrap items-center gap-3">
           {/* Search bar */}
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search articles..."
-              className="pl-9 pr-8 h-10 bg-slate-900 border-slate-800 text-slate-200 placeholder:text-slate-500 rounded-xl text-xs focus:ring-1 focus:ring-blue-500"
+              className="pl-9 pr-8 h-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl text-xs shadow-sm focus:ring-1 focus:ring-blue-500"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-slate-300"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -481,7 +481,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
           {/* Add New Blog Button */}
           <Button
             onClick={() => openCreateModal()}
-            className="h-10 px-4 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-blue-950/50 flex items-center gap-2 cursor-pointer transition-all"
+            className="h-10 px-4 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-blue-600/20 flex items-center gap-2 cursor-pointer transition-all"
           >
             <Plus className="h-4 w-4" />
             <span>
@@ -498,11 +498,11 @@ export function BlogTable({ initialData }: BlogTableProps) {
             href="http://localhost:3000/en/insights"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl text-xs font-medium text-slate-300 bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors shadow-sm"
           >
-            <Globe className="h-3.5 w-3.5 text-blue-400" />
+            <Globe className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
             <span>Live Website</span>
-            <ExternalLink className="h-3 w-3 text-slate-500 ml-0.5" />
+            <ExternalLink className="h-3 w-3 text-slate-400 ml-0.5" />
           </a>
         </div>
       </div>
@@ -510,7 +510,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
       {/* ========================================================================= */}
       {/* 2. PLACE-BASED SECTION SWITCHER TABS (IDENTICAL TO CLIENT) */}
       {/* ========================================================================= */}
-      <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-900/90 border border-slate-800 rounded-2xl w-fit">
+      <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl w-fit shadow-xs">
         {/* Tab 1: Engineering Blog */}
         <button
           type="button"
@@ -520,8 +520,8 @@ export function BlogTable({ initialData }: BlogTableProps) {
           }}
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
             activeTab === 'engineering'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-900/30 scale-102'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-900/30'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800/60'
           }`}
         >
           <BookOpen className="h-3.5 w-3.5" />
@@ -530,12 +530,12 @@ export function BlogTable({ initialData }: BlogTableProps) {
             className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
               activeTab === 'engineering'
                 ? 'bg-white/20 text-white'
-                : 'bg-slate-800 text-slate-400'
+                : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-400'
             }`}
           >
             {engineeringPosts.length}
           </span>
-          <span className="text-[10px] text-emerald-400 font-medium">({engineeringLive} live)</span>
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">({engineeringLive} live)</span>
         </button>
 
         {/* Tab 2: AI Insight and Research */}
@@ -547,8 +547,8 @@ export function BlogTable({ initialData }: BlogTableProps) {
           }}
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
             activeTab === 'ai-research'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-900/30 scale-102'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-900/30'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800/60'
           }`}
         >
           <Bot className="h-3.5 w-3.5" />
@@ -557,12 +557,12 @@ export function BlogTable({ initialData }: BlogTableProps) {
             className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
               activeTab === 'ai-research'
                 ? 'bg-white/20 text-white'
-                : 'bg-slate-800 text-slate-400'
+                : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-400'
             }`}
           >
             {aiResearchPosts.length}
           </span>
-          <span className="text-[10px] text-emerald-400 font-medium">({aiResearchLive} live)</span>
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">({aiResearchLive} live)</span>
         </button>
 
         {/* Tab 3: All Publications */}
@@ -574,8 +574,8 @@ export function BlogTable({ initialData }: BlogTableProps) {
           }}
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
             activeTab === 'all'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-900/30 scale-102'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-900/30'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800/60'
           }`}
         >
           <Layers className="h-3.5 w-3.5" />
@@ -584,7 +584,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
             className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
               activeTab === 'all'
                 ? 'bg-white/20 text-white'
-                : 'bg-slate-800 text-slate-400'
+                : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-400'
             }`}
           >
             {data.length}
@@ -601,8 +601,8 @@ export function BlogTable({ initialData }: BlogTableProps) {
           onClick={() => setSelectedCategoryFilter('all')}
           className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
             selectedCategoryFilter === 'all'
-              ? 'bg-slate-100 text-slate-900 font-semibold shadow-xs'
-              : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+              ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-semibold shadow-xs'
+              : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700'
           }`}
         >
           All Topics
@@ -618,7 +618,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
               className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                 isSelected
                   ? 'bg-blue-600 text-white font-semibold shadow-xs'
-                  : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >
               {catName}
@@ -631,26 +631,26 @@ export function BlogTable({ initialData }: BlogTableProps) {
       {/* 4. FEATURED SPOTLIGHT ARTICLE (MATCHING CLIENT 2-COLUMN SPOTLIGHT CARD) */}
       {/* ========================================================================= */}
       {spotlightPost && (
-        <div className="relative overflow-hidden rounded-[28px] border border-slate-800 bg-slate-900/60 shadow-xl group hover:border-slate-700 transition-all duration-300">
+        <div className="relative overflow-hidden rounded-[28px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm hover:shadow-md group hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300">
           <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
             {/* Image Side */}
-            <div className="lg:col-span-7 relative min-h-75 sm:min-h-[360px] lg:min-h-105 overflow-hidden bg-slate-950">
+            <div className="lg:col-span-7 relative min-h-75 sm:min-h-[360px] lg:min-h-105 overflow-hidden bg-slate-100 dark:bg-slate-950">
               {spotlightPost.cover_image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={spotlightPost.cover_image}
                   alt={spotlightPost.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103 opacity-90 group-hover:opacity-100"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103 opacity-95 group-hover:opacity-100"
                 />
               ) : (
-                <div className="w-full h-full bg-linear-to-br from-blue-900 via-indigo-950 to-slate-950 flex items-center justify-center text-slate-400 font-semibold text-sm">
+                <div className="w-full h-full bg-linear-to-br from-blue-100 via-indigo-100 to-slate-200 dark:from-blue-900 dark:via-indigo-950 dark:to-slate-950 flex items-center justify-center text-slate-600 dark:text-slate-400 font-semibold text-sm">
                   Astraiv Featured Research
                 </div>
               )}
 
               {/* Badges Over Image */}
               <div className="absolute top-4 left-4 z-10 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-black/70 backdrop-blur-md border border-white/20 text-white rounded-full">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-black/75 backdrop-blur-md border border-white/20 text-white rounded-full">
                   <Sparkles className="h-3 w-3 text-blue-400" />
                   <span>Featured Deep Dive</span>
                 </span>
@@ -681,7 +681,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                   size="sm"
                   type="button"
                   onClick={() => openEditModal(spotlightPost)}
-                  className="bg-black/80 hover:bg-black text-white border border-white/20 rounded-xl text-xs font-medium shadow-md backdrop-blur-md flex items-center gap-1.5"
+                  className="bg-black/80 hover:bg-black text-white border border-white/20 rounded-xl text-xs font-medium shadow-md backdrop-blur-md flex items-center gap-1.5 cursor-pointer"
                 >
                   <Camera className="h-3.5 w-3.5 text-blue-400" />
                   <span>Change Picture</span>
@@ -690,13 +690,13 @@ export function BlogTable({ initialData }: BlogTableProps) {
             </div>
 
             {/* Content Side with Dedicated Admin Controls Bar */}
-            <div className="lg:col-span-5 p-7 sm:p-8 flex flex-col justify-between text-left bg-linear-to-b from-slate-900/90 to-slate-950/90">
+            <div className="lg:col-span-5 p-7 sm:p-8 flex flex-col justify-between text-left bg-gradient-to-b from-slate-50 to-white dark:from-slate-900/90 dark:to-slate-950/90">
               <div>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 font-medium mb-3">
-                  <span className="px-2.5 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold uppercase text-[10.5px]">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400 font-medium mb-3">
+                  <span className="px-2.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-semibold uppercase text-[10.5px]">
                     {spotlightPost.category}
                   </span>
-                  <span className="flex items-center gap-1 text-slate-400">
+                  <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
                     <Clock className="h-3 w-3" />
                     <span>{spotlightPost.reading_time || '5 min read'}</span>
                   </span>
@@ -704,21 +704,21 @@ export function BlogTable({ initialData }: BlogTableProps) {
                   <span>{formatDate(spotlightPost.created_at || spotlightPost.published_at)}</span>
                 </div>
 
-                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white group-hover:text-blue-400 transition-colors mb-3 leading-snug">
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-3 leading-snug">
                   {spotlightPost.title}
                 </h2>
 
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed font-normal mb-4 line-clamp-3">
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-normal mb-4 line-clamp-3">
                   {spotlightPost.excerpt ||
                     spotlightPost.content.substring(0, 160).replace(/[#*_`]/g, '') + '...'}
                 </p>
 
-                <div className="flex items-center gap-2.5 mb-6 text-xs text-slate-300">
-                  <div className="w-7 h-7 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-xs">
+                <div className="flex items-center gap-2.5 mb-6 text-xs text-slate-700 dark:text-slate-300">
+                  <div className="w-7 h-7 rounded-full bg-blue-600/15 border border-blue-500/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xs">
                     {spotlightPost.author.charAt(0)}
                   </div>
                   <div>
-                    <div className="font-semibold text-white">{spotlightPost.author}</div>
+                    <div className="font-semibold text-slate-900 dark:text-white">{spotlightPost.author}</div>
                     <div className="text-[10.5px] text-slate-500">
                       {spotlightPost.author_role || 'Senior Systems Architect'}
                     </div>
@@ -727,15 +727,15 @@ export function BlogTable({ initialData }: BlogTableProps) {
               </div>
 
               {/* ADMIN CONTROLS BAR */}
-              <div className="pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
                 {/* Visibility Toggle Button */}
                 <button
                   type="button"
                   onClick={() => handleToggleVisibility(spotlightPost)}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                     spotlightPost.status === 'published'
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-                      : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
                   }`}
                   title="Click to toggle Hide / Unhide on client website"
                 >
@@ -758,9 +758,9 @@ export function BlogTable({ initialData }: BlogTableProps) {
                     size="sm"
                     variant="outline"
                     onClick={() => openEditModal(spotlightPost)}
-                    className="h-8 px-2.5 rounded-xl bg-slate-800 border-slate-700 text-slate-200 hover:text-white hover:bg-slate-700 text-xs"
+                    className="h-8 px-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 text-xs cursor-pointer"
                   >
-                    <Edit className="h-3.5 w-3.5 mr-1 text-blue-400" />
+                    <Edit className="h-3.5 w-3.5 mr-1 text-blue-600 dark:text-blue-400" />
                     <span>Edit</span>
                   </Button>
 
@@ -768,7 +768,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                     size="sm"
                     variant="outline"
                     onClick={() => handleDelete(spotlightPost.id, spotlightPost.title)}
-                    className="h-8 px-2.5 rounded-xl bg-slate-800 border-slate-700 text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 text-xs"
+                    className="h-8 px-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs cursor-pointer"
                   >
                     <Trash2 className="h-3.5 w-3.5 mr-1" />
                     <span>Delete</span>
@@ -778,7 +778,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                     href={`http://localhost:3000/en/insights/${spotlightPost.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                     title="View live article on client website"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
@@ -795,7 +795,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
       {/* ========================================================================= */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
             <span>
               {activeTab === 'ai-research'
                 ? 'AI Research Publications'
@@ -810,17 +810,17 @@ export function BlogTable({ initialData }: BlogTableProps) {
         </div>
 
         {filteredData.length === 0 ? (
-          <div className="py-20 text-center rounded-[28px] border border-slate-800 bg-slate-900/40">
-            <Sparkles className="h-10 w-10 mx-auto mb-3 opacity-40 text-blue-400" />
-            <h4 className="text-base font-semibold text-white">No publications found</h4>
-            <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+          <div className="py-20 text-center rounded-[28px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 shadow-sm">
+            <Sparkles className="h-10 w-10 mx-auto mb-3 opacity-40 text-blue-600 dark:text-blue-400" />
+            <h4 className="text-base font-semibold text-slate-900 dark:text-white">No publications found</h4>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
               {search || selectedCategoryFilter !== 'all'
                 ? 'No articles match your current search query or category filter.'
                 : `There are currently no articles in this section. Click below to write your first article.`}
             </p>
             <Button
               onClick={() => openCreateModal()}
-              className="mt-5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold"
+              className="mt-5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold shadow-sm cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5 mr-1.5" />
               <span>Create Article</span>
@@ -835,10 +835,10 @@ export function BlogTable({ initialData }: BlogTableProps) {
               return (
                 <div
                   key={post.id}
-                  className="group relative flex flex-col overflow-hidden rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-blue-500/40 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-950/20"
+                  className="group relative flex flex-col overflow-hidden rounded-2xl bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500/40 transition-all duration-300 shadow-sm hover:shadow-md"
                 >
                   {/* Card Image Header */}
-                  <div className="relative aspect-video overflow-hidden bg-slate-950">
+                  <div className="relative aspect-video overflow-hidden bg-slate-100 dark:bg-slate-950">
                     {post.cover_image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -847,26 +847,26 @@ export function BlogTable({ initialData }: BlogTableProps) {
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="w-full h-full bg-linear-to-br from-slate-900 via-blue-950/40 to-slate-950 flex items-center justify-center text-slate-600">
+                      <div className="w-full h-full bg-linear-to-br from-slate-100 via-blue-100/40 to-slate-200 dark:from-slate-900 dark:via-blue-950/40 dark:to-slate-950 flex items-center justify-center text-slate-400 dark:text-slate-600">
                         <ImageIcon className="h-8 w-8" />
                       </div>
                     )}
 
                     {/* Top Category Badge */}
-                    <div className="absolute top-3 left-3 bg-slate-950/90 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-blue-400 border border-slate-800">
+                    <div className="absolute top-3 left-3 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-800 shadow-xs">
                       {post.category}
                     </div>
 
                     {/* Top Section Badge */}
-                    <div className="absolute top-3 right-3 bg-slate-950/90 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10.5px] font-medium text-slate-300 border border-slate-800 flex items-center gap-1">
+                    <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[10.5px] font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 flex items-center gap-1 shadow-xs">
                       {postSection === 'ai-research' ? (
                         <>
-                          <Bot className="h-3 w-3 text-blue-400" />
+                          <Bot className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                           <span>AI</span>
                         </>
                       ) : (
                         <>
-                          <Code2 className="h-3 w-3 text-indigo-400" />
+                          <Code2 className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
                           <span>Eng</span>
                         </>
                       )}
@@ -879,26 +879,26 @@ export function BlogTable({ initialData }: BlogTableProps) {
                     <div className="flex items-center gap-2 text-[11px] text-slate-500 mb-2 font-normal">
                       <span>{formatDate(post.created_at || post.published_at)}</span>
                       <span>•</span>
-                      <span className="flex items-center gap-1 text-slate-400">
+                      <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
                         <Clock className="h-3 w-3" />
                         {post.reading_time || '5 min read'}
                       </span>
                     </div>
 
                     {/* Title */}
-                    <h4 className="text-base font-bold text-white group-hover:text-blue-400 transition-colors line-clamp-2 leading-snug mb-2">
+                    <h4 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2 leading-snug mb-2">
                       {post.title}
                     </h4>
 
                     {/* Excerpt */}
-                    <p className="text-xs text-slate-400 leading-relaxed line-clamp-3 flex-1 mb-4">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3 flex-1 mb-4">
                       {post.excerpt ||
                         post.content.substring(0, 140).replace(/[#*_`]/g, '') + '...'}
                     </p>
 
                     {/* Author Line */}
-                    <div className="flex items-center gap-2 text-xs text-slate-400 mb-4 pb-3 border-b border-slate-800/80">
-                      <div className="w-5 h-5 rounded-full bg-blue-600/30 flex items-center justify-center text-[10px] text-blue-400 font-bold">
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                      <div className="w-5 h-5 rounded-full bg-blue-600/15 flex items-center justify-center text-[10px] text-blue-600 dark:text-blue-400 font-bold">
                         {post.author.charAt(0)}
                       </div>
                       <span className="truncate">{post.author}</span>
@@ -912,8 +912,8 @@ export function BlogTable({ initialData }: BlogTableProps) {
                         onClick={() => handleToggleVisibility(post)}
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all cursor-pointer ${
                           isLive
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+                            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
                         }`}
                         title="Click to toggle Hide / Unhide"
                       >
@@ -936,7 +936,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                           size="sm"
                           variant="ghost"
                           onClick={() => openEditModal(post)}
-                          className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg"
+                          className="h-7 w-7 p-0 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg cursor-pointer"
                           title="Edit article"
                         >
                           <Edit className="h-3.5 w-3.5" />
@@ -946,7 +946,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDelete(post.id, post.title)}
-                          className="h-7 w-7 p-0 text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 rounded-lg"
+                          className="h-7 w-7 p-0 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg cursor-pointer"
                           title="Delete article"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -956,7 +956,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                           href={`http://localhost:3000/en/insights/${post.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="h-7 w-7 flex items-center justify-center text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-lg transition-colors"
+                          className="h-7 w-7 flex items-center justify-center text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                           title="Preview on client website"
                         >
                           <ExternalLink className="h-3.5 w-3.5" />
@@ -975,19 +975,19 @@ export function BlogTable({ initialData }: BlogTableProps) {
       {/* 6. CREATE / EDIT MODAL WITH PICTURE UPLOAD, CATEGORIES & METADATA */}
       {/* ========================================================================= */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl my-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/80 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl my-8">
             {/* Modal Header */}
-            <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                   {editingPost ? <Edit className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                     {editingPost ? 'Edit Technical Publication' : 'Create New Technical Publication'}
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Publish across Engineering Blog or AI Research with full markdown and image support.
                   </p>
                 </div>
@@ -996,7 +996,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsModalOpen(false)}
-                className="h-8 w-8 p-0 rounded-full text-slate-400 hover:text-white hover:bg-slate-800"
+                className="h-8 w-8 p-0 rounded-full text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -1006,10 +1006,10 @@ export function BlogTable({ initialData }: BlogTableProps) {
             <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
               {/* 1. Target Section Selector */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                   Destination Section *
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => {
@@ -1024,22 +1024,22 @@ export function BlogTable({ initialData }: BlogTableProps) {
                     }}
                     className={`p-3.5 rounded-2xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
                       formSection === 'engineering'
-                        ? 'bg-blue-600/15 border-blue-500 text-white ring-1 ring-blue-500/40'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                        ? 'bg-blue-50 dark:bg-blue-600/15 border-blue-500 text-blue-900 dark:text-white ring-1 ring-blue-500/40'
+                        : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}
                   >
                     <div
                       className={`p-2 rounded-xl ${
                         formSection === 'engineering'
                           ? 'bg-blue-600 text-white'
-                          : 'bg-slate-800 text-slate-400'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                       }`}
                     >
                       <Code2 className="h-4 w-4" />
                     </div>
                     <div>
                       <div className="font-bold text-xs">Engineering Blog</div>
-                      <div className="text-[10.5px] text-slate-400">
+                      <div className="text-[10.5px] text-slate-500 dark:text-slate-400">
                         Distributed Systems, Cloud & Dev
                       </div>
                     </div>
@@ -1059,22 +1059,22 @@ export function BlogTable({ initialData }: BlogTableProps) {
                     }}
                     className={`p-3.5 rounded-2xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
                       formSection === 'ai-research'
-                        ? 'bg-blue-600/15 border-blue-500 text-white ring-1 ring-blue-500/40'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                        ? 'bg-blue-50 dark:bg-blue-600/15 border-blue-500 text-blue-900 dark:text-white ring-1 ring-blue-500/40'
+                        : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}
                   >
                     <div
                       className={`p-2 rounded-xl ${
                         formSection === 'ai-research'
                           ? 'bg-blue-600 text-white'
-                          : 'bg-slate-800 text-slate-400'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                       }`}
                     >
                       <Bot className="h-4 w-4" />
                     </div>
                     <div>
                       <div className="font-bold text-xs">AI Insight & Research</div>
-                      <div className="text-[10.5px] text-slate-400">
+                      <div className="text-[10.5px] text-slate-500 dark:text-slate-400">
                         Agents, Vector RAG & LLMs
                       </div>
                     </div>
@@ -1083,21 +1083,21 @@ export function BlogTable({ initialData }: BlogTableProps) {
               </div>
 
               {/* 2. Cover Picture Management */}
-              <div className="bg-slate-950/80 p-5 rounded-2xl border border-slate-800 space-y-4">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                    <ImageIcon className="h-3.5 w-3.5 text-blue-400" />
+              <div className="bg-slate-50 dark:bg-slate-950/80 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <ImageIcon className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                     <span>Article Cover Picture</span>
                   </label>
 
-                  <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                  <div className="flex items-center gap-1 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
                     <button
                       type="button"
                       onClick={() => setImageUploadMode('url')}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
                         imageUploadMode === 'url'
                           ? 'bg-blue-600 text-white'
-                          : 'text-slate-400 hover:text-white'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Web URL
@@ -1105,10 +1105,10 @@ export function BlogTable({ initialData }: BlogTableProps) {
                     <button
                       type="button"
                       onClick={() => setImageUploadMode('upload')}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
                         imageUploadMode === 'upload'
                           ? 'bg-blue-600 text-white'
-                          : 'text-slate-400 hover:text-white'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Upload File
@@ -1116,10 +1116,10 @@ export function BlogTable({ initialData }: BlogTableProps) {
                     <button
                       type="button"
                       onClick={() => setImageUploadMode('presets')}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
                         imageUploadMode === 'presets'
                           ? 'bg-blue-600 text-white'
-                          : 'text-slate-400 hover:text-white'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Preset Photos
@@ -1134,7 +1134,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                       value={coverImage}
                       onChange={(e) => setCoverImage(e.target.value)}
                       placeholder="https://images.unsplash.com/photo-..."
-                      className="bg-slate-900 border-slate-800 text-slate-200 text-xs rounded-xl"
+                      className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl"
                     />
                     <p className="text-[10.5px] text-slate-500">
                       Paste any public image URL (Unsplash, Cloudflare, AWS S3).
@@ -1146,7 +1146,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                 {imageUploadMode === 'upload' && (
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-slate-800 hover:border-blue-500/50 bg-slate-900/50 rounded-2xl p-6 text-center cursor-pointer transition-colors group"
+                    className="border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-blue-500/50 bg-white dark:bg-slate-900/50 rounded-2xl p-6 text-center cursor-pointer transition-colors group"
                   >
                     <input
                       ref={fileInputRef}
@@ -1155,8 +1155,8 @@ export function BlogTable({ initialData }: BlogTableProps) {
                       onChange={handleFileUpload}
                       className="hidden"
                     />
-                    <Upload className="h-8 w-8 mx-auto mb-2 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                    <p className="text-xs font-semibold text-slate-300">
+                    <Upload className="h-8 w-8 mx-auto mb-2 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                       Click to browse or drop an image from your computer
                     </p>
                     <p className="text-[10.5px] text-slate-500 mt-1">
@@ -1173,10 +1173,10 @@ export function BlogTable({ initialData }: BlogTableProps) {
                         key={preset.url}
                         type="button"
                         onClick={() => setCoverImage(preset.url)}
-                        className={`relative rounded-xl overflow-hidden aspect-video border transition-all text-left group ${
+                        className={`relative rounded-xl overflow-hidden aspect-video border transition-all text-left group cursor-pointer ${
                           coverImage === preset.url
                             ? 'border-blue-500 ring-2 ring-blue-500/50'
-                            : 'border-slate-800 hover:border-slate-700'
+                            : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                         }`}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1202,7 +1202,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
 
                 {/* Picture Preview */}
                 {coverImage && (
-                  <div className="relative rounded-2xl overflow-hidden aspect-video max-h-48 border border-slate-800 bg-slate-900">
+                  <div className="relative rounded-2xl overflow-hidden aspect-video max-h-48 border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={coverImage}
@@ -1214,7 +1214,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                         size="sm"
                         type="button"
                         onClick={() => setCoverImage('')}
-                        className="h-7 px-2 bg-black/80 hover:bg-black text-rose-400 rounded-lg text-xs"
+                        className="h-7 px-2 bg-black/80 hover:bg-black text-rose-400 rounded-lg text-xs cursor-pointer"
                       >
                         <X className="h-3.5 w-3.5 mr-1" /> Remove
                       </Button>
@@ -1226,7 +1226,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
               {/* 3. Title & Slug */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     Article Title *
                   </label>
                   <Input
@@ -1244,12 +1244,12 @@ export function BlogTable({ initialData }: BlogTableProps) {
                       }
                     }}
                     placeholder="e.g. Why Cloudflare R2 is the Future of Asset Delivery"
-                    className="bg-slate-950 border-slate-800 text-slate-200 text-xs rounded-xl"
+                    className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     URL Slug *
                   </label>
                   <Input
@@ -1257,7 +1257,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
                     placeholder="cloudflare-r2-asset-delivery"
-                    className="bg-slate-950 border-slate-800 text-slate-200 text-xs rounded-xl font-mono"
+                    className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl font-mono"
                   />
                 </div>
               </div>
@@ -1265,7 +1265,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
               {/* 4. Category & Reading Time */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     Category *
                   </label>
                   <Input
@@ -1273,7 +1273,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     placeholder="Category name"
-                    className="bg-slate-950 border-slate-800 text-slate-200 text-xs rounded-xl mb-2"
+                    className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl mb-2"
                   />
                   {/* Category Pills */}
                   <div className="flex flex-wrap gap-1.5">
@@ -1285,7 +1285,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                         className={`text-[10px] px-2 py-0.5 rounded-md transition-colors cursor-pointer ${
                           category === catName
                             ? 'bg-blue-600 text-white font-semibold'
-                            : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                         }`}
                       >
                         {catName}
@@ -1295,22 +1295,22 @@ export function BlogTable({ initialData }: BlogTableProps) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     Estimated Reading Time
                   </label>
                   <Input
                     value={readingTime}
                     onChange={(e) => setReadingTime(e.target.value)}
                     placeholder="e.g. 5 min read"
-                    className="bg-slate-950 border-slate-800 text-slate-200 text-xs rounded-xl mb-2"
+                    className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl mb-2"
                   />
-                  <div className="flex gap-1.5">
+                  <div className="flex flex-wrap gap-1.5">
                     {['3 min read', '5 min read', '7 min read', '10 min read'].map((t) => (
                       <button
                         key={t}
                         type="button"
                         onClick={() => setReadingTime(t)}
-                        className="text-[10px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 hover:text-white"
+                        className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
                       >
                         {t}
                       </button>
@@ -1322,46 +1322,46 @@ export function BlogTable({ initialData }: BlogTableProps) {
               {/* 5. Author Name & Role */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     Author Name
                   </label>
                   <Input
                     value={author}
                     onChange={(e) => setAuthor(e.target.value)}
                     placeholder="Astraiv Engineering Team"
-                    className="bg-slate-950 border-slate-800 text-slate-200 text-xs rounded-xl"
+                    className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     Author Role / Title
                   </label>
                   <Input
                     value={authorRole}
                     onChange={(e) => setAuthorRole(e.target.value)}
                     placeholder="Senior Systems Architect"
-                    className="bg-slate-950 border-slate-800 text-slate-200 text-xs rounded-xl"
+                    className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl"
                   />
                 </div>
               </div>
 
               {/* 6. Visibility Status */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
                   Client Visibility Status
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setStatus('published')}
                     className={`p-3 rounded-xl border text-left flex items-center gap-2.5 transition-all cursor-pointer ${
                       status === 'published'
-                        ? 'bg-emerald-950/40 border-emerald-500 text-emerald-300 ring-1 ring-emerald-500/40'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-500/40'
+                        : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}
                   >
-                    <Eye className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <Eye className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <div>
                       <div className="font-bold text-xs">Live on Client</div>
                       <div className="text-[10.5px] text-slate-500">
@@ -1375,11 +1375,11 @@ export function BlogTable({ initialData }: BlogTableProps) {
                     onClick={() => setStatus('draft')}
                     className={`p-3 rounded-xl border text-left flex items-center gap-2.5 transition-all cursor-pointer ${
                       status === 'draft'
-                        ? 'bg-amber-950/40 border-amber-500 text-amber-300 ring-1 ring-amber-500/40'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                        ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-500 text-amber-800 dark:text-amber-300 ring-1 ring-amber-500/40'
+                        : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}
                   >
-                    <EyeOff className="h-4 w-4 text-amber-400 shrink-0" />
+                    <EyeOff className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
                     <div>
                       <div className="font-bold text-xs">Hidden Draft</div>
                       <div className="text-[10.5px] text-slate-500">
@@ -1392,7 +1392,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
 
               {/* 7. Summary / Excerpt */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Summary / Excerpt (Lead paragraph)
                 </label>
                 <textarea
@@ -1400,13 +1400,13 @@ export function BlogTable({ initialData }: BlogTableProps) {
                   value={excerpt}
                   onChange={(e) => setExcerpt(e.target.value)}
                   placeholder="A concise summary of the article appearing on cards and search results..."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 font-normal leading-relaxed"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-blue-500 font-normal leading-relaxed"
                 />
               </div>
 
               {/* 8. Full Markdown Content */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Full Article Content (Markdown) *
                 </label>
                 <textarea
@@ -1415,17 +1415,17 @@ export function BlogTable({ initialData }: BlogTableProps) {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="# Article Headline&#10;&#10;Technical deep dive paragraphs...&#10;&#10;## Architecture Overview&#10;&#10;```typescript&#10;export const example = true;&#10;```"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 font-mono leading-relaxed"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-blue-500 font-mono leading-relaxed"
                 />
               </div>
 
               {/* Actions Footer */}
-              <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsModalOpen(false)}
-                  className="bg-slate-800 border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs"
+                  className="bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-xl text-xs cursor-pointer"
                 >
                   Cancel
                 </Button>
@@ -1433,7 +1433,7 @@ export function BlogTable({ initialData }: BlogTableProps) {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold px-6 shadow-md shadow-blue-900/40"
+                  className="bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold px-6 shadow-md shadow-blue-900/40 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>

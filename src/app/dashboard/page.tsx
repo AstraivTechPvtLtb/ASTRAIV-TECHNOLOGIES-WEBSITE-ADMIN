@@ -47,15 +47,15 @@ export default async function AdminDashboardPage() {
         badge="Live System"
       />
 
-      <main className="p-6 md:p-8 space-y-8 max-w-7xl">
+      <main className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-7xl w-full mx-auto">
         {/* KPI Statistics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
           <AdminStatCard
             title="Project Leads"
             value={stats.totalLeads ?? 0}
             description={`${stats.newLeads ?? 0} new, ${stats.wonLeads ?? 0} won`}
             icon={Target}
-            iconColor="text-blue-400"
+            iconColor="text-blue-600 dark:text-blue-400"
             badge={stats.newLeads && stats.newLeads > 0 ? `${stats.newLeads} New` : undefined}
           />
           <AdminStatCard
@@ -63,7 +63,7 @@ export default async function AdminDashboardPage() {
             value={stats.totalEnquiries}
             description={`${stats.pendingEnquiries} pending review`}
             icon={MessageSquare}
-            iconColor="text-cyan-400"
+            iconColor="text-cyan-600 dark:text-cyan-400"
             badge={stats.pendingEnquiries > 0 ? `${stats.pendingEnquiries} New` : undefined}
           />
           <AdminStatCard
@@ -71,14 +71,14 @@ export default async function AdminDashboardPage() {
             value={stats.pendingEnquiries}
             description={`${stats.contactedEnquiries} contacted, ${stats.closedEnquiries} closed`}
             icon={Clock}
-            iconColor="text-amber-400"
+            iconColor="text-amber-600 dark:text-amber-400"
           />
           <AdminStatCard
             title="Total Reviews"
             value={stats.totalReviews}
             description={`${stats.approvedReviews} approved, ${stats.featuredReviews} featured`}
             icon={Star}
-            iconColor="text-yellow-400"
+            iconColor="text-yellow-600 dark:text-yellow-400"
             badge={stats.pendingReviews > 0 ? `${stats.pendingReviews} To Approve` : undefined}
           />
           <AdminStatCard
@@ -86,28 +86,28 @@ export default async function AdminDashboardPage() {
             value={stats.publishedProjects}
             description={`${stats.draftProjects} drafts in pipeline`}
             icon={FolderKanban}
-            iconColor="text-emerald-400"
+            iconColor="text-emerald-600 dark:text-emerald-400"
           />
         </div>
 
         {/* Action Banners for Pending Approvals */}
         {stats.pendingReviews > 0 && (
-          <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400">
+              <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
                 <AlertCircle className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-white">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                   {stats.pendingReviews} New Review{stats.pendingReviews > 1 ? 's' : ''} Awaiting Approval
                 </h4>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                   Submissions from Google Forms require admin approval before becoming visible on the public website.
                 </p>
               </div>
             </div>
             <Link href="/reviews?status=pending">
-              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shrink-0">
+              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shrink-0 cursor-pointer">
                 Review Submissions
               </Button>
             </Link>
@@ -117,16 +117,16 @@ export default async function AdminDashboardPage() {
         {/* 3-Column Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent Project Leads Preview */}
-          <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+          <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 flex flex-col justify-between shadow-xs dark:shadow-sm">
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <Target className="h-4.5 w-4.5 text-blue-400" />
-                  <h3 className="text-base font-bold text-white">Recent Project Leads</h3>
+                  <Target className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Recent Project Leads</h3>
                 </div>
                 <Link
                   href="/leads"
-                  className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                 >
                   <span>View All</span>
                   <ArrowUpRight className="h-3.5 w-3.5" />
@@ -140,16 +140,16 @@ export default async function AdminDashboardPage() {
                   recentLeads.map((lead) => (
                     <div
                       key={lead.id}
-                      className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between gap-3 hover:border-slate-700 transition-colors"
+                      className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-3 hover:border-blue-500/40 dark:hover:border-slate-700 transition-colors"
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-[10px] font-bold text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
+                          <span className="font-mono text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">
                             {lead.lead_number}
                           </span>
-                          <h4 className="text-xs font-bold text-slate-200 truncate">{lead.name}</h4>
+                          <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{lead.name}</h4>
                         </div>
-                        <p className="text-[11px] text-slate-400 truncate mt-0.5 font-mono">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 font-mono">
                           {lead.source_page || '/start-project'}
                         </p>
                       </div>
@@ -158,10 +158,10 @@ export default async function AdminDashboardPage() {
                         variant="outline"
                         className={
                           lead.status === 'NEW'
-                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/30 text-[10px]'
+                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 text-[10px]'
                             : lead.status === 'WON'
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px]'
-                            : 'bg-amber-500/10 text-amber-400 border-amber-500/30 text-[10px]'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px]'
+                            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px]'
                         }
                       >
                         {lead.status}
@@ -172,9 +172,9 @@ export default async function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-800/80">
+            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
               <Link href="/leads">
-                <Button variant="outline" className="w-full h-9 border-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-800">
+                <Button variant="outline" className="w-full h-9 border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
                   Manage All Leads
                 </Button>
               </Link>
@@ -182,16 +182,16 @@ export default async function AdminDashboardPage() {
           </div>
 
           {/* Recent Enquiries Table Preview */}
-          <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+          <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 flex flex-col justify-between shadow-xs dark:shadow-sm">
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <MessageSquare className="h-4.5 w-4.5 text-cyan-400" />
-                  <h3 className="text-base font-bold text-white">Recent Enquiries</h3>
+                  <MessageSquare className="h-4.5 w-4.5 text-cyan-600 dark:text-cyan-400" />
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Recent Enquiries</h3>
                 </div>
                 <Link
                   href="/enquiries"
-                  className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                 >
                   <span>View All</span>
                   <ArrowUpRight className="h-3.5 w-3.5" />
@@ -205,25 +205,25 @@ export default async function AdminDashboardPage() {
                   recentEnquiries.map((enquiry) => (
                     <div
                       key={enquiry.id}
-                      className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between gap-3 hover:border-slate-700 transition-colors"
+                      className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-3 hover:border-blue-500/40 dark:hover:border-slate-700 transition-colors"
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-bold text-slate-200 truncate">{enquiry.name}</h4>
-                          <span className="text-[10px] text-slate-500">•</span>
-                          <span className="text-[10px] text-slate-400 truncate">{enquiry.service}</span>
+                          <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{enquiry.name}</h4>
+                          <span className="text-[10px] text-slate-400">•</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{enquiry.service}</span>
                         </div>
-                        <p className="text-[11px] text-slate-400 truncate mt-0.5">{enquiry.email}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">{enquiry.email}</p>
                       </div>
 
                       <Badge
                         variant="outline"
                         className={
                           enquiry.status === 'pending'
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/30 text-[10px] capitalize'
+                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] capitalize'
                             : enquiry.status === 'contacted'
-                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/30 text-[10px] capitalize'
-                            : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px] capitalize'
+                            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 text-[10px] capitalize'
+                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px] capitalize'
                         }
                       >
                         {enquiry.status}
@@ -234,9 +234,9 @@ export default async function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-800/80">
+            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
               <Link href="/enquiries">
-                <Button variant="outline" className="w-full h-9 border-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-800">
+                <Button variant="outline" className="w-full h-9 border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
                   Manage All Enquiries
                 </Button>
               </Link>
@@ -244,16 +244,16 @@ export default async function AdminDashboardPage() {
           </div>
 
           {/* Pending Reviews Preview */}
-          <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between">
+          <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 flex flex-col justify-between shadow-xs dark:shadow-sm">
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <Star className="h-4.5 w-4.5 text-yellow-400" />
-                  <h3 className="text-base font-bold text-white">Pending Client Reviews</h3>
+                  <Star className="h-4.5 w-4.5 text-yellow-500" />
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Pending Client Reviews</h3>
                 </div>
                 <Link
                   href="/reviews"
-                  className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                 >
                   <span>Review Queue</span>
                   <ArrowUpRight className="h-3.5 w-3.5" />
@@ -264,25 +264,25 @@ export default async function AdminDashboardPage() {
                 {pendingReviews.length === 0 ? (
                   <div className="py-6 text-center">
                     <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2 opacity-80" />
-                    <p className="text-xs text-slate-400 font-medium">All review submissions have been processed!</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">All review submissions have been processed!</p>
                   </div>
                 ) : (
                   pendingReviews.map((rev) => (
                     <div
                       key={rev.id}
-                      className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-start justify-between gap-3 hover:border-slate-700 transition-colors"
+                      className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 flex items-start justify-between gap-3 hover:border-blue-500/40 dark:hover:border-slate-700 transition-colors"
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-bold text-slate-200 truncate">{rev.client_name}</h4>
-                          <span className="text-[10px] text-yellow-400 font-bold">★ {rev.rating}/5</span>
+                          <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{rev.client_name}</h4>
+                          <span className="text-[10px] text-yellow-600 dark:text-yellow-400 font-bold">★ {rev.rating}/5</span>
                         </div>
-                        <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5 italic">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5 italic">
                           &ldquo;{rev.review}&rdquo;
                         </p>
                       </div>
 
-                      <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-[10px] shrink-0">
+                      <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] shrink-0">
                         Pending
                       </Badge>
                     </div>
@@ -291,9 +291,9 @@ export default async function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-slate-800/80">
+            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
               <Link href="/reviews">
-                <Button variant="outline" className="w-full h-9 border-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-800">
+                <Button variant="outline" className="w-full h-9 border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
                   Open Reviews Manager
                 </Button>
               </Link>

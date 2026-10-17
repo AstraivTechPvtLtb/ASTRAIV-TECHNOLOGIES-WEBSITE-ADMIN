@@ -104,23 +104,23 @@ export function RelationshipExplorer({ initialGraph }: RelationshipExplorerProps
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Entity List Selector */}
-        <div className="lg:col-span-4 p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-4">
+        <div className="lg:col-span-4 p-5 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 shadow-xs space-y-4 transition-colors">
           <div className="space-y-1">
-            <span className="text-xs font-bold text-white block">Focus Entity</span>
-            <span className="text-[11px] text-slate-400">Select any entity to inspect connected dependencies</span>
+            <span className="text-xs font-bold text-slate-900 dark:text-white block">Focus Entity</span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400">Select any entity to inspect connected dependencies</span>
           </div>
 
           <div className="relative">
-            <Search className="h-3.5 w-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Filter entities..."
-              className="bg-slate-950 border-slate-800 text-xs pl-8"
+              className="bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs pl-8"
             />
           </div>
 
-          <div className="divide-y divide-slate-800/60 max-h-[500px] overflow-y-auto pr-1">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800/60 max-h-[500px] overflow-y-auto pr-1">
             {filteredEntities.map((ent) => {
               const Icon = getEntityIcon(ent.type);
               const isSelected = ent.id === selectedEntityId;
@@ -130,14 +130,14 @@ export function RelationshipExplorer({ initialGraph }: RelationshipExplorerProps
                 <button
                   key={ent.id}
                   onClick={() => setSelectedEntityId(ent.id)}
-                  className={`w-full text-left py-2.5 px-3 rounded-xl flex items-center justify-between transition-colors my-0.5 ${isSelected ? 'bg-blue-600 text-white font-bold' : 'hover:bg-slate-800/60 text-slate-300'}`}
+                  className={`w-full text-left py-2.5 px-3 rounded-xl flex items-center justify-between transition-colors my-0.5 cursor-pointer ${isSelected ? 'bg-blue-600 text-white font-bold shadow-xs' : 'hover:bg-slate-100 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'}`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <Icon className="h-3.5 w-3.5 shrink-0" />
                     <span className="text-xs truncate">{ent.title}</span>
                   </div>
 
-                  <Badge variant="outline" className={`text-[9px] font-mono shrink-0 ml-2 ${isSelected ? 'border-white/40 text-white' : 'border-slate-700 text-slate-400'}`}>
+                  <Badge variant="outline" className={`text-[9px] font-mono shrink-0 ml-2 ${isSelected ? 'border-white/40 text-white' : 'border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400'}`}>
                     {connCount} links
                   </Badge>
                 </button>
@@ -149,20 +149,20 @@ export function RelationshipExplorer({ initialGraph }: RelationshipExplorerProps
         {/* Focused Entity Graph & Linked Connections */}
         <div className="lg:col-span-8 space-y-4">
           {selectedEntity ? (
-            <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-6">
+            <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 shadow-xs space-y-6 transition-colors">
               {/* Focused Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px] uppercase font-mono">
+                    <Badge className="bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30 text-[10px] uppercase font-mono">
                       {selectedEntity.type}
                     </Badge>
-                    <h2 className="text-base font-bold text-white tracking-tight">{selectedEntity.title}</h2>
+                    <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">{selectedEntity.title}</h2>
                   </div>
-                  <span className="text-[11px] text-slate-400 font-mono">Canonical slug: /{selectedEntity.slug}</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">Canonical slug: /{selectedEntity.slug}</span>
                 </div>
 
-                <Badge className={selectedEntity.status === 'published' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-slate-800 text-slate-400'}>
+                <Badge className={selectedEntity.status === 'published' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'}>
                   {selectedEntity.status}
                 </Badge>
               </div>
@@ -170,11 +170,11 @@ export function RelationshipExplorer({ initialGraph }: RelationshipExplorerProps
               {/* Connections Breakdown */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-200">Active Relational Connections ({outgoing.length + incoming.length})</span>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Active Relational Connections ({outgoing.length + incoming.length})</span>
                 </div>
 
                 {outgoing.length === 0 && incoming.length === 0 ? (
-                  <div className="p-8 text-center rounded-xl bg-slate-950/60 border border-slate-800/60 text-slate-500 text-xs">
+                  <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/60 text-slate-500 text-xs">
                     No explicit connections registered for this entity yet.
                   </div>
                 ) : (
@@ -185,13 +185,13 @@ export function RelationshipExplorer({ initialGraph }: RelationshipExplorerProps
                       const TargetIcon = getEntityIcon(target.type);
 
                       return (
-                        <div key={idx} className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/60 flex items-center justify-between gap-3">
+                        <div key={idx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/60 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2.5 text-xs">
-                            <span className="text-slate-400 font-mono text-[10px] uppercase">{selectedEntity.type}</span>
-                            <ArrowRight className="h-3 w-3 text-blue-400" />
-                            <TargetIcon className="h-3.5 w-3.5 text-blue-400" />
-                            <span className="text-white font-semibold">{target.title}</span>
-                            <Badge variant="outline" className="text-[9px] text-slate-400 border-slate-800 uppercase font-mono">
+                            <span className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">{selectedEntity.type}</span>
+                            <ArrowRight className="h-3 w-3 text-blue-500 dark:text-blue-400" />
+                            <TargetIcon className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                            <span className="text-slate-900 dark:text-white font-semibold">{target.title}</span>
+                            <Badge variant="outline" className="text-[9px] text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 uppercase font-mono">
                               {target.type}
                             </Badge>
                           </div>
@@ -201,7 +201,7 @@ export function RelationshipExplorer({ initialGraph }: RelationshipExplorerProps
                               size="sm"
                               variant="ghost"
                               onClick={() => handleUnlinkTech(selectedEntity.id, target.id)}
-                              className="h-7 text-[11px] text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                              className="h-7 text-[11px] text-red-500 dark:text-red-400 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300 cursor-pointer"
                             >
                               <Unlink className="h-3 w-3 mr-1" /> Unlink
                             </Button>
@@ -216,12 +216,12 @@ export function RelationshipExplorer({ initialGraph }: RelationshipExplorerProps
                       const SourceIcon = getEntityIcon(source.type);
 
                       return (
-                        <div key={'in-' + idx} className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/60 flex items-center justify-between gap-3">
+                        <div key={'in-' + idx} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/60 flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2.5 text-xs">
-                            <SourceIcon className="h-3.5 w-3.5 text-emerald-400" />
-                            <span className="text-white font-semibold">{source.title}</span>
-                            <ArrowRight className="h-3 w-3 text-emerald-400" />
-                            <span className="text-slate-400 font-mono text-[10px] uppercase">{selectedEntity.type}</span>
+                            <SourceIcon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                            <span className="text-slate-900 dark:text-white font-semibold">{source.title}</span>
+                            <ArrowRight className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                            <span className="text-slate-500 dark:text-slate-400 font-mono text-[10px] uppercase">{selectedEntity.type}</span>
                           </div>
                         </div>
                       );
@@ -232,17 +232,17 @@ export function RelationshipExplorer({ initialGraph }: RelationshipExplorerProps
 
               {/* Quick Connect Technology Helper */}
               {selectedEntity.type === 'service' && (
-                <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3 pt-3">
-                  <span className="text-xs font-bold text-white block">Connect Production Technology</span>
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 space-y-3 pt-3">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white block">Connect Production Technology</span>
                   <div className="flex flex-wrap gap-1.5">
                     {graph.entities.filter(e => e.type === 'technology' && !outgoing.some(o => o.toId === e.id)).map(tech => (
                       <button
                         key={tech.id}
                         onClick={() => handleLinkTech(selectedEntity.id, tech.id)}
                         disabled={isLinking}
-                        className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                       >
-                        <Plus className="h-3 w-3 text-blue-400" />
+                        <Plus className="h-3 w-3 text-blue-500 dark:text-blue-400" />
                         <span>{tech.title}</span>
                       </button>
                     ))}
@@ -251,7 +251,7 @@ export function RelationshipExplorer({ initialGraph }: RelationshipExplorerProps
               )}
             </div>
           ) : (
-            <div className="p-12 text-center rounded-2xl bg-slate-900/40 border border-slate-800 text-slate-500 text-xs">
+            <div className="p-12 text-center rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 text-slate-500 text-xs shadow-xs">
               Select an entity from the left list to explore its relational graph.
             </div>
           )}

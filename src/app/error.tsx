@@ -25,14 +25,14 @@ export default function AdminError({ error, reset }: ErrorProps) {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-heading">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-heading">
             Operation Failed
           </h1>
-          <p className="text-slate-400 text-sm leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
             An unexpected error occurred while loading this administrative view.
           </p>
           {error.digest && (
-            <p className="font-mono text-xs text-slate-500">
+            <p className="font-mono text-xs text-slate-500 dark:text-slate-500">
               Digest: {error.digest}
             </p>
           )}

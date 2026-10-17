@@ -504,26 +504,26 @@ export function PricingTable({
   return (
     <div className="space-y-8">
       {/* 1. Engagement Models Informational Header */}
-      <div className="p-6 rounded-2xl bg-linear-to-r from-slate-900 via-slate-900/95 to-slate-900 border border-slate-800 shadow-xl relative overflow-hidden">
+      <div className="p-6 rounded-2xl bg-gradient-to-r from-blue-50/80 via-slate-50 to-blue-50/50 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
           <div className="space-y-2 max-w-2xl">
             <div className="flex items-center gap-2.5">
-              <span className="p-1.5 rounded-lg bg-blue-600/10 border border-blue-500/20 text-blue-400">
+              <span className="p-1.5 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-600/10 dark:border dark:border-blue-500/20 dark:text-blue-400">
                 <Briefcase className="h-4 w-4" />
               </span>
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                 Engagement Models & Delivery Framework
               </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30">
                 Live Dynamic Sync
               </span>
             </div>
 
-            <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
               Transparent, Tailored Technology Engagements
             </h3>
 
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
               Astraiv builds enterprise and custom software projects with bespoke pricing calculated per project scope and milestones. The client website presents clear engagement structures, delivery guarantees, and a direct quotation workflow without public price tags.
             </p>
           </div>
@@ -533,41 +533,41 @@ export function PricingTable({
               href="http://localhost:3000/en/pricing"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 transition-colors shadow-sm"
+              className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-750 dark:border-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-2 transition-colors shadow-xs"
             >
               <span>View Live Client Page</span>
-              <ExternalLink className="h-3.5 w-3.5 text-blue-400" />
+              <ExternalLink className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
             </a>
-            <span className="text-[11px] text-slate-500 font-medium">
-              Synchronized with <span className="font-mono text-slate-400">/pricing</span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+              Synchronized with <span className="font-mono text-slate-700 dark:text-slate-300">/pricing</span>
             </span>
           </div>
         </div>
       </div>
 
       {/* 2. Admin Page Image & Visual Asset Manager Area */}
-      <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
           <div>
             <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-blue-600/10 border border-blue-500/20 text-blue-400">
+              <span className="p-1.5 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-600/10 dark:border dark:border-blue-500/20 dark:text-blue-400">
                 <ImageIcon className="h-4 w-4" />
               </span>
-              <h3 className="text-base font-bold text-white tracking-tight">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
                 Engagement Models Page Image
               </h3>
               <span
                 className={cn(
                   'px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border',
                   pageSettings.showHeroImage && pageSettings.heroImageUrl
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                    : 'bg-slate-800 text-slate-400 border-slate-700'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30'
+                    : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
                 )}
               >
                 {pageSettings.showHeroImage && pageSettings.heroImageUrl ? 'Visible on Website' : 'Hidden'}
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
               Admin-managed hero illustration rendered between the hero headline and the engagement models catalog on the client website.
             </p>
           </div>
@@ -597,8 +597,8 @@ export function PricingTable({
             className={cn(
               'p-3.5 rounded-xl border text-xs flex items-center gap-2.5',
               settingsFeedback.type === 'success'
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                : 'bg-red-500/10 text-red-400 border-red-500/30'
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30'
+                : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/30'
             )}
           >
             {settingsFeedback.type === 'success' ? (
@@ -613,7 +613,7 @@ export function PricingTable({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Image Preview Box */}
           <div className="lg:col-span-6 space-y-3">
-            <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70 aspect-16/9 flex items-center justify-center group shadow-inner">
+            <div className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950/70 aspect-16/9 flex items-center justify-center group shadow-inner">
               {pageSettings.heroImageUrl ? (
                 <>
                   <Image
@@ -636,9 +636,9 @@ export function PricingTable({
                 </>
               ) : (
                 <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-slate-500">
-                  <ImageIcon className="h-10 w-10 text-slate-600 stroke-1" />
-                  <p className="text-xs font-semibold">No Image Selected</p>
-                  <p className="text-[11px] text-slate-600 max-w-xs">
+                  <ImageIcon className="h-10 w-10 text-slate-400 dark:text-slate-600 stroke-1" />
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">No Image Selected</p>
+                  <p className="text-[11px] text-slate-500 max-w-xs">
                     Upload an image or choose an existing asset from the Media Library.
                   </p>
                 </div>
@@ -647,16 +647,16 @@ export function PricingTable({
 
             {/* Actual Asset Metrics Bar */}
             {pageSettings.heroImageUrl && (
-              <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400">
                 <div className="flex items-center gap-3">
                   <span>
-                    Dimensions: <strong className="text-slate-200 font-mono">{pageSettings.imageWidth || 1792} × {pageSettings.imageHeight || 1008} px</strong>
+                    Dimensions: <strong className="text-slate-900 dark:text-slate-200 font-mono">{pageSettings.imageWidth || 1792} × {pageSettings.imageHeight || 1008} px</strong>
                   </span>
                   <span>
-                    Size: <strong className="text-slate-200 font-mono">{pageSettings.imageSizeLabel || '734 KB'}</strong>
+                    Size: <strong className="text-slate-900 dark:text-slate-200 font-mono">{pageSettings.imageSizeLabel || '734 KB'}</strong>
                   </span>
                 </div>
-                <span className="font-mono text-blue-400">Aspect 16:9</span>
+                <span className="font-mono text-blue-600 dark:text-blue-400 font-semibold">Aspect 16:9</span>
               </div>
             )}
           </div>
@@ -664,9 +664,9 @@ export function PricingTable({
           {/* Image Settings & Actions */}
           <div className="lg:col-span-6 space-y-4">
             {/* Recommended Specs Box */}
-            <div className="p-3.5 rounded-xl bg-slate-950/50 border border-slate-800 space-y-1 text-xs">
-              <span className="font-bold text-slate-300 block">Recommended Specifications:</span>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 space-y-1 text-xs">
+              <span className="font-bold text-slate-700 dark:text-slate-300 block">Recommended Specifications:</span>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
                 <strong>Dimensions:</strong> 1920 × 1080 px (16:9 widescreen) • <strong>Formats:</strong> WEBP, PNG, JPG, SVG • <strong>Max Upload:</strong> 2.5 MB
               </p>
             </div>
@@ -684,7 +684,7 @@ export function PricingTable({
                 type="button"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 font-bold rounded-xl text-xs flex items-center gap-1.5 h-9 cursor-pointer"
+                className="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-600/10 dark:hover:bg-blue-600/20 dark:text-blue-400 dark:border-blue-500/20 font-bold rounded-xl text-xs flex items-center gap-1.5 h-9 cursor-pointer"
               >
                 <UploadCloud className="h-4 w-4" /> Upload Image
               </Button>
@@ -694,9 +694,9 @@ export function PricingTable({
                 size="sm"
                 variant="outline"
                 onClick={() => setIsMediaPickerOpen(true)}
-                className="border-slate-700 bg-slate-800/80 hover:bg-slate-750 text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 h-9 cursor-pointer"
+                className="border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 h-9 cursor-pointer"
               >
-                <FolderOpen className="h-4 w-4 text-slate-400" /> Choose from Media Library
+                <FolderOpen className="h-4 w-4 text-slate-500 dark:text-slate-400" /> Choose from Media Library
               </Button>
 
               {pageSettings.heroImageUrl && (
@@ -705,7 +705,7 @@ export function PricingTable({
                   size="sm"
                   variant="ghost"
                   onClick={handleRemoveImage}
-                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 text-xs font-semibold rounded-xl flex items-center gap-1.5 h-9 cursor-pointer ml-auto"
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-500/10 text-xs font-semibold rounded-xl flex items-center gap-1.5 h-9 cursor-pointer ml-auto"
                 >
                   <Trash2 className="h-3.5 w-3.5" /> Remove Image
                 </Button>
@@ -714,7 +714,7 @@ export function PricingTable({
 
             {/* Alt Text Input */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-300 flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                 <span>Image Alt Text (SEO & Accessibility)</span>
                 <span className="text-[10px] text-slate-500">Screen reader text</span>
               </label>
@@ -725,17 +725,17 @@ export function PricingTable({
                   setPageSettings((prev) => ({ ...prev, heroImageAlt: e.target.value }))
                 }
                 placeholder="e.g. Astraiv Technologies engineering team collaborating on system architecture and milestone roadmaps"
-                className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs"
               />
             </div>
 
             {/* Show / Hide Toggle */}
-            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
               <div>
-                <span className="text-xs font-bold text-slate-200 block">
+                <span className="text-xs font-bold text-slate-900 dark:text-slate-200 block">
                   Show Image on Public Website
                 </span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-600 dark:text-slate-400">
                   When toggled OFF, the image and container are completely removed without blank space.
                 </span>
               </div>
@@ -747,7 +747,7 @@ export function PricingTable({
                   disabled={isSavingSettings}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+                <div className="w-11 h-6 bg-slate-300 dark:bg-slate-800 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
               </label>
             </div>
           </div>
@@ -755,81 +755,81 @@ export function PricingTable({
       </div>
 
       {/* 3. Telemetry KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center justify-between shadow-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-xs dark:shadow-lg">
           <div>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Total Models
             </span>
-            <span className="text-2xl font-extrabold text-white mt-1 block">
+            <span className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1 block">
               {data.length}
             </span>
             <span className="text-[11px] text-slate-500 mt-0.5 block">
               Configured engagement tiers
             </span>
           </div>
-          <div className="h-11 w-11 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+          <div className="h-11 w-11 rounded-xl bg-blue-100 dark:bg-blue-600/10 border border-blue-200 dark:border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
             <Layers className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center justify-between shadow-lg">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-xs dark:shadow-lg">
           <div>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Published Tiers
             </span>
-            <span className="text-2xl font-extrabold text-emerald-400 mt-1 block">
+            <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">
               {activeCount}
             </span>
-            <span className="text-[11px] text-emerald-500/80 mt-0.5 block">
+            <span className="text-[11px] text-emerald-600/80 dark:text-emerald-500/80 mt-0.5 block font-medium">
               Active on client website
             </span>
           </div>
-          <div className="h-11 w-11 rounded-xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+          <div className="h-11 w-11 rounded-xl bg-emerald-100 dark:bg-emerald-600/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center justify-between shadow-lg">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-xs dark:shadow-lg">
           <div>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Featured Flagship
             </span>
-            <span className="text-base font-bold text-blue-400 mt-1 block truncate max-w-[150px]">
+            <span className="text-base font-bold text-blue-600 dark:text-blue-400 mt-1 block truncate max-w-[150px]">
               {popularPlan ? popularPlan.name : 'None selected'}
             </span>
             <span className="text-[11px] text-slate-500 mt-0.5 block">
               Marked &quot;MOST POPULAR&quot;
             </span>
           </div>
-          <div className="h-11 w-11 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+          <div className="h-11 w-11 rounded-xl bg-blue-100 dark:bg-blue-600/10 border border-blue-200 dark:border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
             <Sparkles className="h-5 w-5" />
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center justify-between shadow-lg">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-xs dark:shadow-lg">
           <div>
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Quotation CTA Flow
             </span>
-            <span className="text-base font-bold text-slate-200 mt-1 block truncate max-w-[150px]">
+            <span className="text-base font-bold text-slate-800 dark:text-slate-200 mt-1 block truncate max-w-[150px]">
               Start Project CRM
             </span>
             <span className="text-[11px] text-slate-500 mt-0.5 block">
               Route: /start-project
             </span>
           </div>
-          <div className="h-11 w-11 rounded-xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+          <div className="h-11 w-11 rounded-xl bg-purple-100 dark:bg-purple-600/10 border border-purple-200 dark:border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400">
             <ArrowRight className="h-5 w-5" />
           </div>
         </div>
       </div>
 
       {/* 4. Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-lg">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-lg">
         <div>
-          <h3 className="text-sm font-bold text-white">Engagement Models Catalog</h3>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">Engagement Models Catalog</h3>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
             Single canonical management module for website engagement structures and quotation cards.
           </p>
         </div>
@@ -848,24 +848,24 @@ export function PricingTable({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Live Client Website Card Preview
             </span>
-            <span className="px-2 py-0.5 text-[10px] font-semibold rounded bg-slate-800 text-slate-300 border border-slate-700">
+            <span className="px-2 py-0.5 text-[10px] font-semibold rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               Engagement Models View
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {data.map((plan) => (
             <div
               key={plan.id}
               className={cn(
                 'p-6 rounded-2xl flex flex-col justify-between transition-all relative',
                 plan.isPopular
-                  ? 'bg-slate-900 border-2 border-blue-500 shadow-xl shadow-blue-500/10'
-                  : 'bg-slate-900/70 border border-slate-800'
+                  ? 'bg-white dark:bg-slate-900 border-2 border-blue-500 shadow-md dark:shadow-xl dark:shadow-blue-500/10'
+                  : 'bg-slate-50/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 shadow-xs'
               )}
             >
               {plan.isPopular && (
@@ -876,26 +876,26 @@ export function PricingTable({
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-lg font-bold text-white">{plan.name}</h4>
+                  <h4 className="text-lg font-bold text-slate-900 dark:text-white">{plan.name}</h4>
                   {!plan.active && (
-                    <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <span className="px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
                       Draft
                     </span>
                   )}
                 </div>
 
-                <p className="text-xs text-slate-400 leading-relaxed mb-4">
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
                   {plan.description}
                 </p>
 
                 {/* Features Checklist */}
-                <div className="space-y-2.5 mb-6 pt-2 border-t border-slate-800/80">
-                  <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                <div className="space-y-2.5 mb-6 pt-2 border-t border-slate-200 dark:border-slate-800/80">
+                  <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
                     What&apos;s Included:
                   </span>
                   {(plan.features || []).map((f, i) => (
-                    <div key={i} className="flex items-start gap-2.5 text-xs text-slate-300 leading-snug">
-                      <Check className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
+                    <div key={i} className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300 leading-snug">
+                      <Check className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                       <span>{f}</span>
                     </div>
                   ))}
@@ -903,21 +903,21 @@ export function PricingTable({
               </div>
 
               <div className="space-y-3 pt-2">
-                <div className="w-full py-2.5 rounded-xl text-xs font-bold text-center bg-blue-600/10 text-blue-400 border border-blue-500/20">
+                <div className="w-full py-2.5 rounded-xl text-xs font-bold text-center bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-600/10 dark:text-blue-400 dark:border-blue-500/20">
                   {plan.buttonText || 'Request a Quote'} &rarr;
                 </div>
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800 text-xs">
+                <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800 text-xs">
                   <button
                     type="button"
                     onClick={() => openEditModal(plan)}
-                    className="text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 cursor-pointer"
+                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold flex items-center gap-1 cursor-pointer"
                   >
                     <Edit className="h-3.5 w-3.5" /> Edit Model & Scope
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDelete(plan.id, plan.name)}
-                    className="text-red-400 hover:text-red-300 font-semibold flex items-center gap-1 cursor-pointer"
+                    className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 font-semibold flex items-center gap-1 cursor-pointer"
                   >
                     <Trash2 className="h-3.5 w-3.5" /> Remove
                   </button>
@@ -929,18 +929,18 @@ export function PricingTable({
       </div>
 
       {/* 6. Detailed Data Table */}
-      <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-xl">
-        <div className="p-4 border-b border-slate-800 bg-slate-950/40 flex items-center justify-between">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+      <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs dark:shadow-xl">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 flex items-center justify-between">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             All Configured Engagement Models
           </h4>
-          <span className="text-[11px] text-slate-400 font-medium">
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
             Use arrows to adjust display priority
           </span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-950/80 border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+            <thead className="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               <tr>
                 <th className="py-4 px-4 w-20">Order</th>
                 <th className="py-4 px-4">Model Name & Summary</th>
@@ -950,18 +950,18 @@ export function PricingTable({
                 <th className="py-4 px-4 text-right w-32">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
               {data.map((plan, idx) => (
-                <tr key={plan.id} className="hover:bg-slate-800/30 transition-colors">
+                <tr key={plan.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                   {/* Order */}
-                  <td className="py-4 px-4 font-mono font-bold text-slate-400">
+                  <td className="py-4 px-4 font-mono font-bold text-slate-500 dark:text-slate-400">
                     <div className="flex items-center gap-1.5">
                       <div className="flex flex-col">
                         <button
                           type="button"
                           onClick={() => handleReorder(plan.id, 'up')}
                           disabled={idx === 0}
-                          className="text-slate-500 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                          className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                           title="Move Up"
                         >
                           <ChevronUp className="h-3 w-3" />
@@ -970,13 +970,13 @@ export function PricingTable({
                           type="button"
                           onClick={() => handleReorder(plan.id, 'down')}
                           disabled={idx === data.length - 1}
-                          className="text-slate-500 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                          className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                           title="Move Down"
                         >
                           <ChevronDown className="h-3 w-3" />
                         </button>
                       </div>
-                      <span className="text-slate-300">#{plan.orderIndex}</span>
+                      <span className="text-slate-700 dark:text-slate-300">#{plan.orderIndex}</span>
                     </div>
                   </td>
 
@@ -984,14 +984,14 @@ export function PricingTable({
                   <td className="py-4 px-4">
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-100 text-sm">{plan.name}</span>
+                        <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">{plan.name}</span>
                         {plan.isPopular && (
-                          <span className="px-2 py-0.5 rounded text-[9.5px] font-black uppercase tracking-wider bg-blue-600/20 text-blue-400 border border-blue-500/30">
+                          <span className="px-2 py-0.5 rounded text-[9.5px] font-black uppercase tracking-wider bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-600/20 dark:text-blue-400 dark:border-blue-500/30">
                             {plan.badge || 'POPULAR'}
                           </span>
                         )}
                       </div>
-                      <span className="text-slate-400 text-[11px] line-clamp-2 max-w-md">
+                      <span className="text-slate-600 dark:text-slate-400 text-[11px] line-clamp-2 max-w-md">
                         {plan.description}
                       </span>
                     </div>
@@ -999,7 +999,7 @@ export function PricingTable({
 
                   {/* Features */}
                   <td className="py-4 px-4">
-                    <span className="px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 font-semibold text-[11px] border border-slate-700">
+                    <span className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[11px] border border-slate-200 dark:border-slate-700">
                       {(plan.features || []).length} deliverables
                     </span>
                   </td>
@@ -1007,8 +1007,8 @@ export function PricingTable({
                   {/* CTA */}
                   <td className="py-4 px-4">
                     <div className="flex flex-col">
-                      <span className="font-bold text-slate-200">{plan.buttonText || 'Request a Quote'}</span>
-                      <span className="text-[10px] text-blue-400 font-mono line-clamp-1">{plan.buttonUrl || '/start-project'}</span>
+                      <span className="font-bold text-slate-850 dark:text-slate-200">{plan.buttonText || 'Request a Quote'}</span>
+                      <span className="text-[10px] text-blue-600 dark:text-blue-400 font-mono line-clamp-1">{plan.buttonUrl || '/start-project'}</span>
                     </div>
                   </td>
 
@@ -1021,8 +1021,8 @@ export function PricingTable({
                       className={cn(
                         'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer',
                         plan.active
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
-                          : 'bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-750'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 dark:hover:bg-emerald-500/20'
+                          : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-750'
                       )}
                     >
                       {togglingId === plan.id ? (
@@ -1045,7 +1045,7 @@ export function PricingTable({
                       <button
                         type="button"
                         onClick={() => openEditModal(plan)}
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:hover:text-white transition-colors cursor-pointer"
                         title="Edit Model"
                       >
                         <Edit className="h-3.5 w-3.5" />
@@ -1054,7 +1054,7 @@ export function PricingTable({
                         type="button"
                         onClick={() => handleDelete(plan.id, plan.name)}
                         disabled={isSubmitting}
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 dark:bg-slate-800 dark:hover:bg-red-500/20 dark:text-slate-300 dark:hover:text-red-400 transition-colors cursor-pointer"
                         title="Remove Model"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -1070,22 +1070,22 @@ export function PricingTable({
 
       {/* 7. Media Library Selector Modal */}
       {isMediaPickerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden my-8">
-            <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-950/60">
+        <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden my-8">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60">
               <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                <div className="h-9 w-9 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-600/10 dark:border dark:border-blue-500/20 dark:text-blue-400 flex items-center justify-center">
                   <FolderOpen className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Choose Asset from Media Library</h3>
-                  <p className="text-xs text-slate-400">Select an existing verified media asset for the hero image.</p>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Choose Asset from Media Library</h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">Select an existing verified media asset for the hero image.</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsMediaPickerOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1094,9 +1094,9 @@ export function PricingTable({
             <div className="p-6 max-h-[60vh] overflow-y-auto">
               {mediaAssets.length === 0 ? (
                 <div className="text-center py-12 text-slate-500 space-y-2">
-                  <ImageIcon className="h-10 w-10 mx-auto text-slate-600 stroke-1" />
-                  <p className="text-xs font-semibold">No assets found in Media Library</p>
-                  <p className="text-[11px] text-slate-600">Please upload a new image directly from the main area.</p>
+                  <ImageIcon className="h-10 w-10 mx-auto text-slate-400 dark:text-slate-600 stroke-1" />
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">No assets found in Media Library</p>
+                  <p className="text-[11px] text-slate-500">Please upload a new image directly from the main area.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -1105,11 +1105,11 @@ export function PricingTable({
                       key={asset.id}
                       onClick={() => handleSelectMediaAsset(asset)}
                       className={cn(
-                        'group p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-blue-500/60 hover:bg-slate-900 transition-all cursor-pointer flex flex-col justify-between gap-2',
+                        'group p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/60 hover:border-blue-500/60 hover:bg-blue-50/30 dark:hover:bg-slate-900 transition-all cursor-pointer flex flex-col justify-between gap-2',
                         pageSettings.heroImageUrl === asset.url && 'ring-2 ring-blue-500 border-blue-500'
                       )}
                     >
-                      <div className="relative aspect-16/9 rounded-lg overflow-hidden bg-slate-900 border border-slate-800/80">
+                      <div className="relative aspect-16/9 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80">
                         <Image
                           src={asset.url}
                           alt={asset.altText || asset.filename}
@@ -1119,10 +1119,10 @@ export function PricingTable({
                         />
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-slate-200 block truncate">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
                           {asset.filename}
                         </span>
-                        <span className="text-[10px] text-slate-400 block font-mono">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">
                           {asset.width && asset.height ? `${asset.width}×${asset.height}px` : 'Vector'} • {Math.round(asset.sizeBytes / 1024)} KB
                         </span>
                       </div>
@@ -1132,12 +1132,12 @@ export function PricingTable({
               )}
             </div>
 
-            <div className="flex items-center justify-end p-4 border-t border-slate-800 bg-slate-950/40">
+            <div className="flex items-center justify-end p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => setIsMediaPickerOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               >
                 Cancel
               </Button>
@@ -1148,18 +1148,18 @@ export function PricingTable({
 
       {/* 8. Create / Edit Engagement Model Modal Dialog */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden my-8">
-            <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-950/60">
+        <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden my-8">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60">
               <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                <div className="h-9 w-9 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-600/10 dark:border dark:border-blue-500/20 dark:text-blue-400 flex items-center justify-center">
                   <Layers className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
                     {editingPlan ? 'Edit Engagement Model' : 'Add New Engagement Model'}
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
                     {editingPlan
                       ? 'Adjust model name, scope inclusions, and quotation CTA flow.'
                       : 'Create a new engagement tier for the client website.'}
@@ -1169,7 +1169,7 @@ export function PricingTable({
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1179,8 +1179,8 @@ export function PricingTable({
               {/* Model Name & Popular Badge */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1.5 sm:col-span-2">
-                  <label className="text-xs font-bold text-slate-300">
-                    Engagement Model Name <span className="text-red-400">*</span>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Engagement Model Name <span className="text-red-500 dark:text-red-400">*</span>
                   </label>
                   <Input
                     type="text"
@@ -1188,26 +1188,26 @@ export function PricingTable({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Fixed-Scope Project, Ongoing Development"
-                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                    className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300">Popular Badge</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Popular Badge</label>
                   <Input
                     type="text"
                     value={badge}
                     onChange={(e) => setBadge(e.target.value)}
                     placeholder="e.g. MOST POPULAR"
-                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                    className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs"
                   />
                 </div>
               </div>
 
               {/* Description */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300">
-                  Model Summary / Suitable For <span className="text-red-400">*</span>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Model Summary / Suitable For <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
                 <Input
                   type="text"
@@ -1215,13 +1215,13 @@ export function PricingTable({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="e.g. For clearly defined deliverables with agreed timeline and fixed milestones."
-                  className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs"
                 />
               </div>
 
               {/* Scope Inclusions / Deliverables */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300 flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                   <span>Scope Inclusions & Delivery Commitments (one per line)</span>
                   <span className="text-[11px] text-slate-500">Each line renders as a checkmark</span>
                 </label>
@@ -1231,45 +1231,45 @@ export function PricingTable({
                   value={featuresText}
                   onChange={(e) => setFeaturesText(e.target.value)}
                   placeholder="Comprehensive requirements specification & roadmap&#10;Agreed milestone delivery schedule&#10;Dedicated technical architect & code reviews&#10;Complete intellectual property transfer upon signoff"
-                  className="w-full p-3 text-xs rounded-xl bg-slate-950 border border-slate-800 text-slate-100 placeholder:text-slate-500 focus:outline-hidden focus:border-blue-500 resize-none font-mono leading-relaxed"
+                  className="w-full p-3 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-hidden focus:border-blue-500 resize-none font-mono leading-relaxed"
                 />
               </div>
 
               {/* Button & Link */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300">CTA Button Text</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">CTA Button Text</label>
                   <Input
                     type="text"
                     value={buttonText}
                     onChange={(e) => setButtonText(e.target.value)}
                     placeholder="e.g. Request a Quote or Start a Project"
-                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                    className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300">CTA Destination URL</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">CTA Destination URL</label>
                   <Input
                     type="text"
                     value={buttonUrl}
                     onChange={(e) => setButtonUrl(e.target.value)}
                     placeholder="/start-project?source_page=/pricing"
-                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                    className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs"
                   />
                 </div>
               </div>
 
               {/* Flags: Popular, Order, Active */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-800">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300">Display Order</label>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Display Order</label>
                   <Input
                     type="number"
                     min={0}
                     value={orderIndex}
                     onChange={(e) => setOrderIndex(parseInt(e.target.value) || 0)}
-                    className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                    className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs"
                   />
                 </div>
 
@@ -1279,9 +1279,9 @@ export function PricingTable({
                       type="checkbox"
                       checked={isPopular}
                       onChange={(e) => setIsPopular(e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="text-xs font-semibold text-slate-200">
+                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                       Highlight as Most Popular
                     </span>
                   </label>
@@ -1293,9 +1293,9 @@ export function PricingTable({
                       type="checkbox"
                       checked={active}
                       onChange={(e) => setActive(e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="text-xs font-semibold text-slate-200">
+                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                       Active / Published
                     </span>
                   </label>
@@ -1303,12 +1303,12 @@ export function PricingTable({
               </div>
 
               {/* Modal Footer */}
-              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-800">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-200 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={() => setIsModalOpen(false)}
-                  className="text-slate-400 hover:text-white"
+                  className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 >
                   Cancel
                 </Button>

@@ -1233,7 +1233,7 @@ export function CareersRolesManager({
       )}
 
       {/* 4-Tab Navigation Bar */}
-      <div className="flex items-center justify-between p-2 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-lg overflow-x-auto">
+      <div className="flex items-center justify-between p-2 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-lg overflow-x-auto">
         <div className="flex items-center gap-1.5 min-w-max">
           <button
             type="button"
@@ -1242,7 +1242,7 @@ export function CareersRolesManager({
               'px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer',
               activeTab === 'page-content'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/80'
             )}
           >
             <Layers className="h-3.5 w-3.5" />
@@ -1256,12 +1256,12 @@ export function CareersRolesManager({
               'px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer',
               activeTab === 'categories'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/80'
             )}
           >
             <FolderTree className="h-3.5 w-3.5" />
             <span>2. Role Categories</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono">
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono">
               {categories.length}
             </span>
           </button>
@@ -1273,12 +1273,12 @@ export function CareersRolesManager({
               'px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer',
               activeTab === 'openings'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/80'
             )}
           >
             <Briefcase className="h-3.5 w-3.5" />
             <span>3. Job Openings</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-mono">
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-mono">
               {openings.length}
             </span>
           </button>
@@ -1290,7 +1290,7 @@ export function CareersRolesManager({
               'px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer',
               activeTab === 'applications'
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/80'
             )}
           >
             <Users className="h-3.5 w-3.5" />
@@ -1307,7 +1307,7 @@ export function CareersRolesManager({
           href="http://localhost:3000/en/careers"
           target="_blank"
           rel="noopener noreferrer"
-          className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 text-xs font-bold flex items-center gap-1.5 shrink-0 ml-3 transition-colors"
+          className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 shrink-0 ml-3 transition-colors border border-slate-200 dark:border-slate-700"
         >
           <span>Live Site</span>
           <ExternalLink className="h-3 w-3" />
@@ -1320,20 +1320,20 @@ export function CareersRolesManager({
       {activeTab === 'page-content' && (
         <div className="space-y-6">
           {/* Hero Section Card */}
-          <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <div className="p-2 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20">
                   <Layers className="h-4 w-4" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-white">Master Careers & Speculative Hero Section</h3>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">Master Careers & Speculative Hero Section</h3>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">
                       Syncs /careers & /contact?type=speculative
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                     Primary headline and subtitle shared across both the Careers Portal and Speculative Recruitment views.
                   </p>
                 </div>
@@ -1342,33 +1342,33 @@ export function CareersRolesManager({
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300">
-                  Hero Heading (Line breaks preserved) <span className="text-red-400">*</span>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Hero Heading (Line breaks preserved) <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
                 <textarea
                   rows={2}
                   value={pageContent.heroHeading}
                   onChange={(e) => setPageContent({ ...pageContent, heroHeading: e.target.value })}
                   placeholder="Work With Architects,&#10;Not Bureaucrats."
-                  className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs font-medium focus:border-blue-500 resize-none font-mono"
+                  className="w-full p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs font-medium focus:border-blue-500 resize-none font-mono"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300">Hero Subtitle</label>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Hero Subtitle</label>
                 <textarea
                   rows={3}
                   value={pageContent.heroSubtitle}
                   onChange={(e) => setPageContent({ ...pageContent, heroSubtitle: e.target.value })}
                   placeholder="We are a team of senior software engineers..."
-                  className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-xs focus:border-blue-500 resize-none leading-relaxed"
+                  className="w-full p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs focus:border-blue-500 resize-none leading-relaxed"
                 />
               </div>
             </div>
           </div>
 
           {/* Culture Cards (3 Values) */}
-          <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-5">
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-xl space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div>
                 <h3 className="text-sm font-bold text-white">Core Culture Cards (3 Pillars)</h3>
@@ -1466,7 +1466,7 @@ export function CareersRolesManager({
           </div>
 
           {/* Careers & Roles Page Image Card */}
-          <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-6">
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-xl space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
               <div>
                 <div className="flex items-center gap-2">
@@ -1671,7 +1671,7 @@ export function CareersRolesManager({
           </div>
 
           {/* Benefits Heading & 4 Perks */}
-          <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-5">
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-xl space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div>
                 <h3 className="text-sm font-bold text-white">Benefits & Perks Section</h3>
@@ -1750,7 +1750,7 @@ export function CareersRolesManager({
           </div>
 
           {/* Opportunities Section Copy */}
-          <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-4">
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-xl space-y-4">
             <h3 className="text-sm font-bold text-white pb-3 border-b border-slate-800">
               Open Opportunities Section & Search Copy
             </h3>
@@ -1795,7 +1795,7 @@ export function CareersRolesManager({
           </div>
 
           {/* Speculative Application Banner & Dedicated Copy */}
-          <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-4">
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-xl space-y-4">
             <h3 className="text-sm font-bold text-white pb-3 border-b border-slate-800">
               Speculative Application Banner (Careers Page Footer)
             </h3>
@@ -1846,7 +1846,7 @@ export function CareersRolesManager({
           </div>
 
           {/* Speculative Application Page & Image Settings (Contact View) */}
-          <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-6">
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-xl space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
               <div>
                 <div className="flex items-center gap-2">
@@ -2403,7 +2403,7 @@ export function CareersRolesManager({
           {/* ================================================================= */}
           {/* SECTION: JOB DETAIL PAGE SHARED TEMPLATES & STANDARDS (/careers/[slug]) */}
           {/* ================================================================= */}
-          <div className="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl space-y-6">
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-xl space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-slate-800">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
@@ -3000,18 +3000,18 @@ export function CareersRolesManager({
       {/* ========================================================================= */}
       {activeTab === 'categories' && (
         <div className="space-y-6">
-          <div className="p-4 rounded-xl bg-blue-950/40 border border-blue-500/30 text-xs text-blue-200 flex items-start gap-3">
-            <Info className="h-5 w-5 text-blue-400 shrink-0 mt-0.5" />
+          <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 dark:bg-blue-950/40 dark:border-blue-500/30 dark:text-blue-200 text-xs flex items-start gap-3">
+            <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-blue-300">Canonical Role Categories Taxonomy</p>
-              <p className="mt-0.5 leading-relaxed text-blue-200/80">
+              <p className="font-bold text-blue-800 dark:text-blue-300">Canonical Role Categories Taxonomy</p>
+              <p className="mt-0.5 leading-relaxed text-blue-700/80 dark:text-blue-200/80">
                 Categories represent engineering disciplines (such as Engineering, AI & Automation, Cloud Ops) used for public filtering. A Job Title identifies a specific opening. Renaming a category updates filters and job cards across client and admin simultaneously.
               </p>
             </div>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
               {categories.length} Canonical Categories
             </span>
             <Button
@@ -3022,9 +3022,9 @@ export function CareersRolesManager({
             </Button>
           </div>
 
-          <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-xl">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950/80 border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs dark:shadow-xl">
+            <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+              <thead className="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 <tr>
                   <th className="py-4 px-4 w-20">Order</th>
                   <th className="py-4 px-4">Category Name</th>
@@ -3034,17 +3034,17 @@ export function CareersRolesManager({
                   <th className="py-4 px-4 text-right w-32">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                 {categories.map((cat, idx) => (
-                  <tr key={cat.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="py-4 px-4 font-mono font-bold text-slate-400">
+                  <tr key={cat.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                    <td className="py-4 px-4 font-mono font-bold text-slate-500 dark:text-slate-400">
                       <div className="flex items-center gap-1.5">
                         <div className="flex flex-col">
                           <button
                             type="button"
                             onClick={() => handleReorderCategory(cat.id, 'up')}
                             disabled={idx === 0}
-                            className="text-slate-500 hover:text-slate-200 disabled:opacity-30 cursor-pointer"
+                            className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 disabled:opacity-30 cursor-pointer"
                           >
                             <ChevronUp className="h-3 w-3" />
                           </button>
@@ -3052,23 +3052,23 @@ export function CareersRolesManager({
                             type="button"
                             onClick={() => handleReorderCategory(cat.id, 'down')}
                             disabled={idx === categories.length - 1}
-                            className="text-slate-500 hover:text-slate-200 disabled:opacity-30 cursor-pointer"
+                            className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 disabled:opacity-30 cursor-pointer"
                           >
                             <ChevronDown className="h-3 w-3" />
                           </button>
                         </div>
-                        <span>#{cat.orderIndex}</span>
+                        <span className="text-slate-700 dark:text-slate-300">#{cat.orderIndex}</span>
                       </div>
                     </td>
 
                     <td className="py-4 px-4">
-                      <span className="font-bold text-slate-100 text-sm">{cat.name}</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">{cat.name}</span>
                     </td>
 
-                    <td className="py-4 px-4 font-mono text-slate-400">{cat.slug}</td>
+                    <td className="py-4 px-4 font-mono text-slate-500 dark:text-slate-400">{cat.slug}</td>
 
                     <td className="py-4 px-4">
-                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">
                         {cat.openingCount || 0} Positions
                       </span>
                     </td>
@@ -3078,8 +3078,8 @@ export function CareersRolesManager({
                         className={cn(
                           'px-2.5 py-0.5 rounded-full text-[10.5px] font-bold',
                           cat.active
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            : 'bg-slate-800 text-slate-400 border border-slate-700'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
+                            : 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
                         )}
                       >
                         {cat.active ? 'Active' : 'Archived'}
@@ -3091,7 +3091,7 @@ export function CareersRolesManager({
                         <button
                           type="button"
                           onClick={() => openEditCategory(cat)}
-                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer"
+                          className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:hover:text-white cursor-pointer"
                           title="Edit Category"
                         >
                           <Edit className="h-3.5 w-3.5" />
@@ -3099,7 +3099,7 @@ export function CareersRolesManager({
                         <button
                           type="button"
                           onClick={() => handleDeleteCategory(cat)}
-                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 cursor-pointer"
+                          className="p-1.5 rounded-lg bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 dark:bg-slate-800 dark:hover:bg-red-500/20 dark:text-slate-300 dark:hover:text-red-400 cursor-pointer"
                           title="Delete / Archive Category"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -3114,16 +3114,16 @@ export function CareersRolesManager({
 
           {/* Category Create/Edit Modal */}
           {isCatModalOpen && (
-            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                  <h3 className="text-base font-bold text-white">
+            <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
                     {editingCategory ? 'Edit Role Category' : 'Add Role Category'}
                   </h3>
                   <button
                     type="button"
                     onClick={() => setIsCatModalOpen(false)}
-                    className="text-slate-400 hover:text-white"
+                    className="text-slate-400 hover:text-slate-700 dark:hover:text-white"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -3131,14 +3131,14 @@ export function CareersRolesManager({
 
                 <form onSubmit={handleSaveCategory} className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300">Category Name</label>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Category Name</label>
                     <Input
                       type="text"
                       required
                       value={catName}
                       onChange={(e) => setCatName(e.target.value)}
                       placeholder="e.g. Distributed Systems"
-                      className="bg-slate-950 border-slate-800 text-slate-100 text-xs"
+                      className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 text-xs"
                     />
                   </div>
 
@@ -3147,17 +3147,17 @@ export function CareersRolesManager({
                       type="checkbox"
                       checked={catActive}
                       onChange={(e) => setCatActive(e.target.checked)}
-                      className="w-4 h-4 rounded bg-slate-950 border-slate-700 text-blue-600"
+                      className="w-4 h-4 rounded bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-700 text-blue-600"
                     />
-                    <span className="text-xs font-semibold text-slate-300">Visible on Client Filter</span>
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Visible on Client Filter</span>
                   </label>
 
-                  <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-800">
+                  <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={() => setIsCatModalOpen(false)}
-                      className="text-slate-400 hover:text-white"
+                      className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                     >
                       Cancel
                     </Button>
@@ -3178,7 +3178,7 @@ export function CareersRolesManager({
       {activeTab === 'openings' && (
         <div className="space-y-6">
           {/* Action & Filter Bar */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-lg">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-lg">
             <div className="flex flex-wrap items-center gap-3">
               <div className="relative min-w-[220px]">
                 <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -3187,7 +3187,7 @@ export function CareersRolesManager({
                   value={jobSearchQuery}
                   onChange={(e) => setJobSearchQuery(e.target.value)}
                   placeholder="Search openings, stack..."
-                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-slate-200 placeholder:text-slate-500 focus:outline-hidden focus:border-blue-500"
+                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-hidden focus:border-blue-500"
                 />
               </div>
 
@@ -3199,7 +3199,7 @@ export function CareersRolesManager({
                     'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap',
                     selectedDeptFilter === 'all'
                       ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-slate-800 text-slate-400 hover:text-white'
+                      : 'bg-slate-100 text-slate-600 hover:text-slate-900 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-white'
                   )}
                 >
                   All Roles ({openings.length})
@@ -3213,7 +3213,7 @@ export function CareersRolesManager({
                       'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap',
                       selectedDeptFilter === c.name
                         ? 'bg-blue-600 text-white shadow-xs'
-                        : 'bg-slate-800 text-slate-400 hover:text-white'
+                        : 'bg-slate-100 text-slate-600 hover:text-slate-900 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-white'
                     )}
                   >
                     {c.name}
@@ -3231,10 +3231,10 @@ export function CareersRolesManager({
           </div>
 
           {/* Openings Table */}
-          <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-xl">
+          <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs dark:shadow-xl">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950/80 border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   <tr>
                     <th className="py-4 px-4 w-20">Order</th>
                     <th className="py-4 px-4">Opening Title & Category</th>
@@ -3244,7 +3244,7 @@ export function CareersRolesManager({
                     <th className="py-4 px-4 text-right w-36">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                   {filteredOpenings.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="py-12 text-center text-slate-500 font-medium">
@@ -3253,15 +3253,15 @@ export function CareersRolesManager({
                     </tr>
                   ) : (
                     filteredOpenings.map((job, idx) => (
-                      <tr key={job.id} className="hover:bg-slate-800/30 transition-colors">
-                        <td className="py-4 px-4 font-mono font-bold text-slate-400">
+                      <tr key={job.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                        <td className="py-4 px-4 font-mono font-bold text-slate-500 dark:text-slate-400">
                           <div className="flex items-center gap-1.5">
                             <div className="flex flex-col">
                               <button
                                 type="button"
                                 onClick={() => handleReorderJob(job.id, 'up')}
                                 disabled={idx === 0}
-                                className="text-slate-500 hover:text-slate-200 disabled:opacity-30 cursor-pointer"
+                                className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 disabled:opacity-30 cursor-pointer"
                               >
                                 <ChevronUp className="h-3 w-3" />
                               </button>
@@ -3269,30 +3269,30 @@ export function CareersRolesManager({
                                 type="button"
                                 onClick={() => handleReorderJob(job.id, 'down')}
                                 disabled={idx === filteredOpenings.length - 1}
-                                className="text-slate-500 hover:text-slate-200 disabled:opacity-30 cursor-pointer"
+                                className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200 disabled:opacity-30 cursor-pointer"
                               >
                                 <ChevronDown className="h-3 w-3" />
                               </button>
                             </div>
-                            <span>#{job.orderIndex}</span>
+                            <span className="text-slate-700 dark:text-slate-300">#{job.orderIndex}</span>
                           </div>
                         </td>
 
                         <td className="py-4 px-4">
                           <div className="flex flex-col gap-1">
-                            <span className="font-bold text-slate-100 text-sm">{job.title}</span>
+                            <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">{job.title}</span>
                             <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                              <span className="font-semibold uppercase px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                              <span className="font-semibold uppercase px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">
                                 {job.category?.name || job.department}
                               </span>
-                              <span className="text-slate-400 font-mono text-[10px]">/{job.slug}</span>
+                              <span className="text-slate-500 dark:text-slate-400 font-mono text-[10px]">/{job.slug}</span>
                             </div>
                           </div>
                         </td>
 
                         <td className="py-4 px-4">
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-slate-200 font-medium flex items-center gap-1">
+                            <span className="text-slate-700 dark:text-slate-200 font-medium flex items-center gap-1">
                               <MapPin className="h-3 w-3 text-slate-400" />
                               {job.geographicLocation || 'Worldwide'} · {job.workMode || 'Remote'}
                             </span>
@@ -3301,7 +3301,7 @@ export function CareersRolesManager({
                         </td>
 
                         <td className="py-4 px-4">
-                          <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300">
+                          <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                             {job.experienceLevel || 'Experienced'}
                           </span>
                         </td>
@@ -3313,8 +3313,8 @@ export function CareersRolesManager({
                             className={cn(
                               'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold cursor-pointer transition-all',
                               job.active
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                : 'bg-slate-800 text-slate-400 border border-slate-700'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
+                                : 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
                             )}
                           >
                             {job.active ? (
@@ -3335,7 +3335,7 @@ export function CareersRolesManager({
                               href={`http://localhost:3000/en/careers/${job.slug}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white"
+                              className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:hover:text-white"
                               title="Preview on Client Site"
                             >
                               <ExternalLink className="h-3.5 w-3.5" />
@@ -3343,7 +3343,7 @@ export function CareersRolesManager({
                             <button
                               type="button"
                               onClick={() => openEditJobDrawer(job)}
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer"
+                              className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:hover:text-white cursor-pointer"
                               title="Edit Job Opening"
                             >
                               <Edit className="h-3.5 w-3.5" />
@@ -3351,7 +3351,7 @@ export function CareersRolesManager({
                             <button
                               type="button"
                               onClick={() => handleDeleteJob(job)}
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 cursor-pointer"
+                              className="p-1.5 rounded-lg bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 dark:bg-slate-800 dark:hover:bg-red-500/20 dark:text-slate-300 dark:hover:text-red-400 cursor-pointer"
                               title="Remove Job Opening"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -3368,10 +3368,10 @@ export function CareersRolesManager({
 
           {/* ROOMY JOB EDITOR DRAWER / MODAL */}
           {isJobDrawerOpen && (
-            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 md:p-6 overflow-y-auto">
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl shadow-2xl max-h-[90vh] flex flex-col my-auto overflow-hidden">
+            <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 md:p-6 overflow-y-auto">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-4xl shadow-2xl max-h-[90vh] flex flex-col my-auto overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-slate-800 bg-slate-950/80 shrink-0">
+                <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 shrink-0">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
                       <Briefcase className="h-5 w-5" />
@@ -3736,7 +3736,7 @@ export function CareersRolesManager({
       {activeTab === 'applications' && (
         <div className="space-y-6">
           {/* Controls */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-lg">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-lg">
             <div className="flex flex-wrap items-center gap-3">
               <div className="relative min-w-[220px]">
                 <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -3745,7 +3745,7 @@ export function CareersRolesManager({
                   value={appSearchQuery}
                   onChange={(e) => setAppSearchQuery(e.target.value)}
                   placeholder="Search candidate name, email, ref..."
-                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-slate-200 placeholder:text-slate-500 focus:outline-hidden focus:border-blue-500"
+                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-hidden focus:border-blue-500"
                 />
               </div>
 
@@ -3760,7 +3760,7 @@ export function CareersRolesManager({
                       'px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all cursor-pointer',
                       appStatusFilter === st
                         ? 'bg-blue-600 text-white shadow-xs'
-                        : 'bg-slate-800 text-slate-400 hover:text-white'
+                        : 'bg-slate-100 text-slate-600 hover:text-slate-900 dark:bg-slate-800 dark:text-slate-400 dark:hover:text-white'
                     )}
                   >
                     {st}
@@ -3772,7 +3772,7 @@ export function CareersRolesManager({
               <select
                 value={appTypeFilter}
                 onChange={(e) => setAppTypeFilter(e.target.value)}
-                className="h-8 px-2.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-300"
+                className="h-8 px-2.5 text-xs rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
               >
                 <option value="all">All Types</option>
                 <option value="job">Job Specific</option>
@@ -3780,16 +3780,16 @@ export function CareersRolesManager({
               </select>
             </div>
 
-            <span className="text-xs font-mono font-bold text-slate-400">
+            <span className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400">
               {filteredApplications.length} Candidates
             </span>
           </div>
 
           {/* Applications Table */}
-          <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-xl">
+          <div className="rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs dark:shadow-xl">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950/80 border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   <tr>
                     <th className="py-4 px-4">Ref ID & Date</th>
                     <th className="py-4 px-4">Candidate & Email</th>
@@ -3800,7 +3800,7 @@ export function CareersRolesManager({
                     <th className="py-4 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
                   {filteredApplications.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="py-12 text-center text-slate-500 font-medium">
@@ -3809,28 +3809,28 @@ export function CareersRolesManager({
                     </tr>
                   ) : (
                     filteredApplications.map((app) => (
-                      <tr key={app.id} className="hover:bg-slate-800/30 transition-colors">
+                      <tr key={app.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                         <td className="py-4 px-4 font-mono">
-                          <span className="font-bold text-slate-200 block">{app.applicationNumber}</span>
+                          <span className="font-bold text-slate-900 dark:text-slate-200 block">{app.applicationNumber}</span>
                           <span className="text-[10px] text-slate-500">
                             {new Date(app.createdAt).toLocaleDateString()}
                           </span>
                         </td>
 
                         <td className="py-4 px-4">
-                          <span className="font-bold text-white text-sm block">{app.applicantName}</span>
-                          <span className="text-slate-400">{app.email}</span>
+                          <span className="font-bold text-slate-900 dark:text-white text-sm block">{app.applicantName}</span>
+                          <span className="text-slate-500 dark:text-slate-400">{app.email}</span>
                         </td>
 
                         <td className="py-4 px-4">
-                          <span className="font-bold text-blue-400 block">{app.jobTitle}</span>
-                          <span className="text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+                          <span className="font-bold text-blue-600 dark:text-blue-400 block">{app.jobTitle}</span>
+                          <span className="text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                             {app.type === 'speculative' ? 'Speculative' : 'Opening'}
                           </span>
                         </td>
 
                         <td className="py-4 px-4">
-                          <span className="text-slate-300 block">{app.location}</span>
+                          <span className="text-slate-700 dark:text-slate-300 block">{app.location}</span>
                           <span className="text-[11px] text-slate-500 font-medium">
                             {app.experienceLevel} {app.experienceYears ? `(${app.experienceYears})` : ''}
                           </span>
@@ -3842,7 +3842,7 @@ export function CareersRolesManager({
                               href={`/api/admin/resumes/download?key=${encodeURIComponent(app.resumeStorageKey)}&filename=${encodeURIComponent(app.resumeOriginalName || 'resume.pdf')}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-600/10 border border-blue-500/30 text-blue-400 hover:bg-blue-600/20 font-bold text-[11px] transition-colors"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-600/10 dark:border-blue-500/30 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-600/20 font-bold text-[11px] transition-colors"
                             >
                               <Download className="h-3 w-3" />
                               <span>Download Resume</span>
@@ -3852,7 +3852,7 @@ export function CareersRolesManager({
                               href={app.resumeUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-600/10 border border-purple-500/30 text-purple-400 hover:bg-purple-600/20 font-bold text-[11px] transition-colors"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-600/10 dark:border-purple-500/30 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-600/20 font-bold text-[11px] transition-colors"
                             >
                               <ExternalLink className="h-3 w-3" />
                               <span>View Cloud Link</span>
@@ -3874,14 +3874,14 @@ export function CareersRolesManager({
                             className={cn(
                               'px-2 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border',
                               app.status === 'pending'
-                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30'
                                 : app.status === 'interview'
-                                ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                                ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/30'
                                 : app.status === 'offered'
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30'
                                 : app.status === 'reviewed'
-                                ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
-                                : 'bg-slate-800 text-slate-400 border-slate-700'
+                                ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/30'
+                                : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
                             )}
                           >
                             <option value="pending">Pending</option>
@@ -3898,7 +3898,7 @@ export function CareersRolesManager({
                             size="sm"
                             variant="ghost"
                             onClick={() => setSelectedApp(app)}
-                            className="text-slate-300 hover:text-white hover:bg-slate-800 h-8 text-xs font-bold"
+                            className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 h-8 text-xs font-bold"
                           >
                             View Details
                           </Button>
@@ -3913,12 +3913,12 @@ export function CareersRolesManager({
 
           {/* CANDIDATE DETAIL DRAWER */}
           {selectedApp && (
-            <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl p-6 space-y-6">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl p-6 space-y-6">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
                   <div>
-                    <h3 className="text-base font-bold text-white">{selectedApp.applicantName}</h3>
-                    <p className="text-xs text-slate-400">Ref: {selectedApp.applicationNumber}</p>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">{selectedApp.applicantName}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Ref: {selectedApp.applicationNumber}</p>
                   </div>
                   <button
                     type="button"
@@ -3994,22 +3994,22 @@ export function CareersRolesManager({
 
       {/* Media Library Selector Modal */}
       {isMediaPickerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden my-8">
-            <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-950/60">
+        <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden my-8">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60">
               <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                <div className="h-9 w-9 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-600/10 dark:border dark:border-blue-500/20 dark:text-blue-400 flex items-center justify-center">
                   <FolderOpen className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Choose Asset from Media Library</h3>
-                  <p className="text-xs text-slate-400">Select an existing verified media asset for the careers hero image.</p>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Choose Asset from Media Library</h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">Select an existing verified media asset for the careers hero image.</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsMediaPickerOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -4018,9 +4018,9 @@ export function CareersRolesManager({
             <div className="p-6 max-h-[60vh] overflow-y-auto">
               {mediaAssets.length === 0 ? (
                 <div className="text-center py-12 text-slate-500 space-y-2">
-                  <ImageIcon className="h-10 w-10 mx-auto text-slate-600 stroke-1" />
-                  <p className="text-xs font-semibold">No assets found in Media Library</p>
-                  <p className="text-[11px] text-slate-600">Please upload a new image directly from the main area.</p>
+                  <ImageIcon className="h-10 w-10 mx-auto text-slate-400 dark:text-slate-600 stroke-1" />
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">No assets found in Media Library</p>
+                  <p className="text-[11px] text-slate-500">Please upload a new image directly from the main area.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -4029,11 +4029,11 @@ export function CareersRolesManager({
                       key={asset.id}
                       onClick={() => handleSelectMediaAsset(asset)}
                       className={cn(
-                        'group p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:border-blue-500/60 hover:bg-slate-900 transition-all cursor-pointer flex flex-col justify-between gap-2',
+                        'group p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/60 hover:border-blue-500/60 hover:bg-blue-50/30 dark:hover:bg-slate-900 transition-all cursor-pointer flex flex-col justify-between gap-2',
                         pageContent.careersImage?.imageUrl === asset.url && 'ring-2 ring-blue-500 border-blue-500'
                       )}
                     >
-                      <div className="relative aspect-16/9 rounded-lg overflow-hidden bg-slate-900 border border-slate-800/80">
+                      <div className="relative aspect-16/9 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80">
                         <Image
                           src={asset.url}
                           alt={asset.altText || asset.filename}
@@ -4043,10 +4043,10 @@ export function CareersRolesManager({
                         />
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-slate-200 block truncate">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
                           {asset.filename}
                         </span>
-                        <span className="text-[10px] text-slate-400 block font-mono">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-mono">
                           {asset.width && asset.height ? `${asset.width}×${asset.height}px` : 'Vector'} • {Math.round(asset.sizeBytes / 1024)} KB
                         </span>
                       </div>
@@ -4056,12 +4056,12 @@ export function CareersRolesManager({
               )}
             </div>
 
-            <div className="flex items-center justify-end p-4 border-t border-slate-800 bg-slate-950/40">
+            <div className="flex items-center justify-end p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => setIsMediaPickerOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               >
                 Cancel
               </Button>

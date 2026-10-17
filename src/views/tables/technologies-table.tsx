@@ -182,8 +182,8 @@ export function TechnologiesTable({ initialData }: TechnologiesTableProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <span className="text-xs text-slate-400 font-medium">
-          Showing <strong className="text-slate-200">{data.length}</strong> core technologies
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+          Showing <strong className="text-slate-900 dark:text-slate-200">{data.length}</strong> core technologies
         </span>
 
         <Button
@@ -201,33 +201,33 @@ export function TechnologiesTable({ initialData }: TechnologiesTableProps) {
           return (
             <div
               key={tech.id}
-              className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition-all flex flex-col justify-between space-y-3"
+              className="p-5 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700/80 transition-all shadow-xs flex flex-col justify-between space-y-3"
             >
               <div className="space-y-2.5">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                    <div className="h-9 w-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
                       <IconComp className="h-4.5 w-4.5" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white tracking-tight">{tech.name}</h3>
-                      <span className="text-[11px] text-blue-400 font-mono">{tech.category}</span>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">{tech.name}</h3>
+                      <span className="text-[11px] text-blue-600 dark:text-blue-400 font-mono">{tech.category}</span>
                     </div>
                   </div>
 
-                  <Badge className={tech.status === 'published' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]' : 'bg-slate-800 text-slate-400 text-[10px]'}>
+                  <Badge className={tech.status === 'published' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px]' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px]'}>
                     {tech.status}
                   </Badge>
                 </div>
 
                 {tech.description && (
-                  <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
                     {tech.description}
                   </p>
                 )}
               </div>
 
-              <div className="pt-3 border-t border-slate-800/60 flex items-center justify-between">
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800/60 flex items-center justify-between">
                 <span className="text-[10px] text-slate-500 font-mono">Order: #{tech.orderIndex}</span>
 
                 <div className="flex items-center gap-1.5">
@@ -235,7 +235,7 @@ export function TechnologiesTable({ initialData }: TechnologiesTableProps) {
                     size="sm"
                     variant="ghost"
                     onClick={() => openEditModal(tech)}
-                    className="h-7 text-xs text-slate-300 hover:text-white hover:bg-slate-800"
+                    className="h-7 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                   >
                     <Edit className="h-3 w-3 mr-1" /> Edit
                   </Button>
@@ -245,7 +245,7 @@ export function TechnologiesTable({ initialData }: TechnologiesTableProps) {
                     variant="ghost"
                     onClick={() => handleDelete(tech.id)}
                     disabled={deletingId === tech.id}
-                    className="h-7 text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                    className="h-7 text-xs text-red-500 hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300 cursor-pointer"
                   >
                     {deletingId === tech.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
                   </Button>
@@ -258,20 +258,20 @@ export function TechnologiesTable({ initialData }: TechnologiesTableProps) {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4 my-8">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <h2 className="text-base font-bold text-white">
+        <div className="fixed inset-0 z-50 bg-black/60 dark:bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4 my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 {editingTech ? `Edit Technology: ${editingTech.name}` : 'Add Technology'}
               </h2>
-              <Button size="icon" variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 w-8 text-slate-400 hover:text-white">
+              <Button size="icon" variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 w-8 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer">
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Technology Name</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Technology Name</label>
                 <Input
                   value={name}
                   onChange={(e) => {
@@ -281,28 +281,28 @@ export function TechnologiesTable({ initialData }: TechnologiesTableProps) {
                     }
                   }}
                   placeholder="e.g. Next.js 16 or PostgreSQL"
-                  className="bg-slate-950 border-slate-800 text-xs"
+                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">URL / Identification Slug</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">URL / Identification Slug</label>
                 <Input
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
                   placeholder="e.g. nextjs or postgresql"
-                  className="bg-slate-950 border-slate-800 text-xs font-mono"
+                  className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs font-mono"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Category Group</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Category Group</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 cursor-pointer"
                 >
                   <option value="Frontend & Frameworks">Frontend & Frameworks</option>
                   <option value="Languages & Core">Languages & Core</option>
@@ -314,11 +314,11 @@ export function TechnologiesTable({ initialData }: TechnologiesTableProps) {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Icon Symbol</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Icon Symbol</label>
                 <select
                   value={icon}
                   onChange={(e) => setIcon(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 cursor-pointer"
                 >
                   {TECH_ICONS.map(ic => (
                     <option key={ic.value} value={ic.value}>{ic.label}</option>
@@ -327,23 +327,23 @@ export function TechnologiesTable({ initialData }: TechnologiesTableProps) {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">Architectural Role & Description</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Architectural Role & Description</label>
                 <textarea
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="e.g. Production App Router with React Server Components and ISR caching..."
-                  className="w-full rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs p-3 leading-relaxed focus:outline-none focus:border-blue-500"
+                  className="w-full rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs p-3 leading-relaxed focus:outline-none focus:border-blue-500 shadow-2xs"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Publication Status</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Publication Status</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as 'published' | 'draft' | 'archived')}
-                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 cursor-pointer"
                   >
                     <option value="published">Published</option>
                     <option value="draft">Draft</option>
@@ -352,21 +352,21 @@ export function TechnologiesTable({ initialData }: TechnologiesTableProps) {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Display Order</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Display Order</label>
                   <Input
                     type="number"
                     value={orderIndex}
                     onChange={(e) => setOrderIndex(parseInt(e.target.value) || 0)}
-                    className="bg-slate-950 border-slate-800 text-xs"
+                    className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-800">
-                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="bg-slate-800 border-slate-700 text-slate-300 text-xs">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-200 dark:border-slate-800">
+                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs cursor-pointer">
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl">
+                <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-xl cursor-pointer">
                   {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save Technology'}
                 </Button>
               </div>
