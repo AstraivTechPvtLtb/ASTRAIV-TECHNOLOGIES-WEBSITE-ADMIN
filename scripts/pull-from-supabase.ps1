@@ -59,8 +59,11 @@ try {
 
     Write-Host "`n[2/4] Ensuring local database '$LOCAL_DB' exists..." -ForegroundColor Yellow
     $env:PGPASSWORD = $LOCAL_PASS
-    $checkDb = & "$PG_DIR\psql.exe" -h $LOCAL_HOST -p $LOCAL_PORT -U $LOCAL_USER -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$LOCAL_DB';"
-    if ($checkDb.Trim() -ne "1") {
+    $checkDb = & "$PG_DIR\psql.exe" -h $LOCAL_HOST -p $LOCAL_PORT -U $LOCAL_USER -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$LOCAL_DB';" 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not connect to local PostgreSQL on $LOCAL_HOST:$LOCAL_PORT. Please ensure your local PostgreSQL service is started (e.g. run 'Start-Service postgresql-x64-18' in PowerShell as Administrator)."
+    }
+    if (-not $checkDb -or $checkDb.ToString().Trim() -ne "1") {
         Write-Host "Creating database '$LOCAL_DB'..." -ForegroundColor Cyan
         & "$PG_DIR\psql.exe" -h $LOCAL_HOST -p $LOCAL_PORT -U $LOCAL_USER -d postgres -c "CREATE DATABASE $LOCAL_DB;"
     } else {
