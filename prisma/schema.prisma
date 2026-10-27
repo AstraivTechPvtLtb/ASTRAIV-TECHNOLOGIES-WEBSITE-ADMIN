@@ -773,33 +773,35 @@ model ComplianceSetting {
 }
 
 model LegalDocument {
-  id                String   @id @default(uuid())
-  slug              String   @unique
+  id                String          @id @default(uuid())
+  slug              String          @unique
   title             String
   description       String?
-  currentRevisionId String?  @map("current_revision_id")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+  currentRevisionId String?         @map("current_revision_id")
+  revisions         LegalRevision[]
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @default(now()) @updatedAt @map("updated_at")
 
   @@map("legal_documents")
 }
 
 model LegalRevision {
-  id            String    @id @default(uuid())
-  documentId    String    @map("document_id")
-  documentSlug  String    @map("document_slug")
-  versionNumber Int       @default(1) @map("version_number")
-  effectiveDate String    @map("effective_date")
+  id            String        @id @default(uuid())
+  documentId    String        @map("document_id")
+  documentSlug  String        @map("document_slug")
+  versionNumber Int           @default(1) @map("version_number")
+  effectiveDate String        @map("effective_date")
   title         String
   summary       String?
-  sections      Json      @default("[]")
-  status        String    @default("published")
-  authorId      String?   @map("author_id")
-  authorName    String?   @map("author_name")
+  sections      Json          @default("[]")
+  status        String        @default("published")
+  authorId      String?       @map("author_id")
+  authorName    String?       @map("author_name")
   changelog     String?
-  publishedAt   DateTime? @map("published_at")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+  publishedAt   DateTime?     @map("published_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @default(now()) @updatedAt @map("updated_at")
+  document      LegalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@map("legal_revisions")
 }
