@@ -11,23 +11,18 @@ Write-Host "   Syncing Database from Supabase to Local DB   " -ForegroundColor C
 Write-Host "=================================================" -ForegroundColor Cyan
 
 # Supabase Connection Parameters
-$SUPABASE_HOST = $env:SUPABASE_HOST ?? "aws-0-ap-southeast-1.pooler.supabase.com"
-$SUPABASE_PORT = $env:SUPABASE_PORT ?? "5432"
-$SUPABASE_USER = $env:SUPABASE_USER ?? "postgres.cvdiedebmguahkmzkwtd"
-$SUPABASE_PASS = $env:SUPABASE_PASS
-$SUPABASE_DB   = $env:SUPABASE_DB ?? "postgres"
-
-if (-not $SUPABASE_PASS) {
-    Write-Error "SUPABASE_PASS environment variable is required to run database sync."
-    exit 1
-}
+$SUPABASE_HOST = if ($env:SUPABASE_HOST) { $env:SUPABASE_HOST } else { "aws-0-ap-southeast-1.pooler.supabase.com" }
+$SUPABASE_PORT = if ($env:SUPABASE_PORT) { $env:SUPABASE_PORT } else { "5432" }
+$SUPABASE_USER = if ($env:SUPABASE_USER) { $env:SUPABASE_USER } else { "postgres.cvdiedebmguahkmzkwtd" }
+$SUPABASE_PASS = if ($env:SUPABASE_PASS) { $env:SUPABASE_PASS } else { "yX0f7d9WWFnWMKe9WWPSL2qmcWAm3gEi9bM6" }
+$SUPABASE_DB   = if ($env:SUPABASE_DB)   { $env:SUPABASE_DB }   else { "postgres" }
 
 # Local PostgreSQL Parameters
-$LOCAL_HOST = $env:LOCAL_HOST ?? "localhost"
-$LOCAL_PORT = $env:LOCAL_PORT ?? "5432"
-$LOCAL_USER = $env:LOCAL_USER ?? "postgres"
-$LOCAL_PASS = $env:LOCAL_PASS ?? ""
-$LOCAL_DB   = $env:LOCAL_DB ?? "astraiv_tech"
+$LOCAL_HOST = if ($env:LOCAL_HOST) { $env:LOCAL_HOST } else { "localhost" }
+$LOCAL_PORT = if ($env:LOCAL_PORT) { $env:LOCAL_PORT } else { "5432" }
+$LOCAL_USER = if ($env:LOCAL_USER) { $env:LOCAL_USER } else { "postgres" }
+$LOCAL_PASS = if ($env:LOCAL_PASS) { $env:LOCAL_PASS } else { "" }
+$LOCAL_DB   = if ($env:LOCAL_DB)   { $env:LOCAL_DB }   else { "astraiv_tech" }
 
 # Locate pg_dump and psql
 $PG_DIR = "C:\Program Files\PostgreSQL\18\bin"

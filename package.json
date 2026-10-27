@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate",
     "db:pull-supabase": "powershell -ExecutionPolicy Bypass -File ./scripts/pull-from-supabase.ps1",
+    "db:push-supabase": "powershell -ExecutionPolicy Bypass -File ./scripts/push-to-supabase.ps1",
     "test": "node --test tests/security.test.mjs",
     "test:container": "node scripts/container-smoke-test.mjs"
   },
@@ -52,7 +53,7 @@
     "eslint-config-next": "16.4.3",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.3",
-    "prisma": "^8.0.0-rc.27",
+    "prisma": "^7.10.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

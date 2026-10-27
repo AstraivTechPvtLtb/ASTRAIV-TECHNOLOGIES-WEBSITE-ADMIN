@@ -1,40 +1,28 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["partialIndexes"]
+}
+
 datasource db {
   provider = "postgresql"
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
-// User role enum equivalent
-enum Role {
-  ADMIN
-  PROJECT_MANAGER
-  CLIENT
-  USER
-}
-
-// Better Auth standard models with added Role support
 model User {
-  id            String    @id @default(uuid())
-  name          String
-  email         String    @unique
-  emailVerified Boolean
-  image         String?
-  role          Role      @default(USER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  sessions      Session[]
-  accounts      Account[]
-  
-  // Custom platform relations
-  posts            BlogPost[]
-  tickets          ClientTicket[]  @relation("ClientTickets")
-  assignedTickets  ClientTicket[]  @relation("AssignedTickets")
-  projects         Project[]       @relation("ClientProjects")
-  managedProjects  Project[]       @relation("ManagedProjects")
-  assignedLeads    CRMLead[]       @relation("AssignedLeads")
+  id              String         @id @default(uuid())
+  name            String
+  email           String         @unique
+  emailVerified   Boolean
+  image           String?
+  role            Role           @default(USER)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  accounts        Account[]
+  posts           BlogPost[]
+  assignedTickets ClientTicket[] @relation("AssignedTickets")
+  tickets         ClientTicket[] @relation("ClientTickets")
+  projects        Project[]      @relation("ClientProjects")
+  managedProjects Project[]      @relation("ManagedProjects")
+  sessions        Session[]
 
   @@map("user")
 }
@@ -58,7 +46,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -68,6 +55,7 @@ model Account {
   password              String?
   createdAt             DateTime
   updatedAt             DateTime
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
 }
@@ -83,174 +71,167 @@ model Verification {
   @@map("verification")
 }
 
-// Blog System / Articles (CMS)
 model BlogPost {
-  id            String       @id @default(uuid())
-  title         String
-  slug          String       @unique
-  content       String       @db.Text
-  summary       String       @db.Text
-  published     Boolean      @default(false)
-  featuredImage String?
-  readingTime   String?      @map("reading_time")
-  authorName    String?      @map("author_name")
-  authorRole    String?      @map("author_role")
-  authorImage   String?      @map("author_image")
-  tags          String[]     @default([])
-  status        String       @default("published")
-  featured      Boolean      @default(false)
-  orderIndex    Int          @default(0) @map("order_index")
-  metaTitle     String?      @map("meta_title")
-  metaDescription String?    @map("meta_description") @db.Text
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  authorId      String
-  author        User         @relation(fields: [authorId], references: [id])
-  categoryId    String
-  category      BlogCategory @relation(fields: [categoryId], references: [id])
+  id              String             @id @default(uuid())
+  title           String
+  slug            String             @unique
+  content         String
+  summary         String
+  published       Boolean            @default(false)
+  featuredImage   String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  authorId        String
+  categoryId      String
+  readingTime     String?            @map("reading_time")
+  authorName      String?            @map("author_name")
+  authorRole      String?            @map("author_role")
+  authorImage     String?            @map("author_image")
+  tags            String[]           @default([])
+  status          String             @default("published")
+  featured        Boolean            @default(false)
+  orderIndex      Int                @default(0) @map("order_index")
+  metaTitle       String?            @map("meta_title")
+  metaDescription String?            @map("meta_description")
+  caseStudies     ArticleCaseStudy[]
+  industries      ArticleIndustry[]
+  services        ArticleService[]
+  solutions       ArticleSolution[]
+  author          User               @relation(fields: [authorId], references: [id])
+  category        BlogCategory       @relation(fields: [categoryId], references: [id])
 
-  // Bidirectional CMS Relations
-  services      ArticleService[]
-  solutions     ArticleSolution[]
-  industries    ArticleIndustry[]
-  caseStudies   ArticleCaseStudy[]
-
+  @@index([orderIndex], map: "idx_blog_post_order")
+  @@index([status], map: "idx_blog_post_status")
   @@map("blog_post")
 }
 
 model BlogCategory {
-  id        String     @id @default(uuid())
-  name      String
-  slug      String     @unique
-  posts     BlogPost[]
+  id    String     @id @default(uuid())
+  name  String
+  slug  String     @unique
+  posts BlogPost[]
 
   @@map("blog_category")
 }
 
-// Case Studies (Portfolio Projects)
 model PortfolioProject {
-  id                     String   @id @default(uuid())
+  id                     String                @id @default(uuid())
   title                  String
-  slug                   String   @unique
-  subtitle               String?
-  projectType            String   @default("Client Project") @map("project_type")
-  credibilityBadge       String?  @map("credibility_badge")
-  credibilityNote        String?  @map("credibility_note")
-  isRealClient           Boolean  @default(true) @map("is_real_client")
-  verifiedOutcome        Boolean  @default(true) @map("verified_outcome")
-  client                 String?
-  clientContext          String?  @map("client_context") @db.Text
-  timeline               String?
-  category               String   @default("Software Engineering")
-  categoryType           String[] @default([]) @map("category_type")
-  industrySlug           String?  @map("industry_slug")
-  industryName           String?  @map("industry_name")
-  description            String   @db.Text
-  content                String   @db.Text
+  slug                   String                @unique
+  description            String
+  content                String
   imageUrl               String?
   projectUrl             String?
-  tags                   String[] @default([])
-  challenge              String?  @db.Text
-  challengeDetails       String[] @default([]) @map("challenge_details")
-  requirements           String[] @default([])
-  solutionDetails        String[] @default([]) @map("solution_details")
-  architectureApproach   String?  @map("architecture_approach") @db.Text
-  architectureHighlights Json?    @default("[]") @map("architecture_highlights")
-  developmentProcess     Json?    @default("[]") @map("development_process")
-  measurableResults      Json?    @default("[]") @map("measurable_results")
-  techStackByCategory    Json?    @default("[]") @map("tech_stack_by_category")
-  testimonialId          String?  @map("testimonial_id")
-  published              Boolean  @default(false)
-  status                 String   @default("published")
-  featured               Boolean  @default(false)
-  orderIndex             Int      @default(0) @map("order_index")
-  metaTitle              String?  @map("meta_title")
-  metaDescription        String?  @map("meta_description") @db.Text
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-
-  // Bidirectional CMS Relations
+  tags                   String[]
+  published              Boolean               @default(false)
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  subtitle               String?
+  projectType            String                @default("Client Project") @map("project_type")
+  credibilityBadge       String?               @default("Production Verified") @map("credibility_badge")
+  credibilityNote        String?               @map("credibility_note")
+  isRealClient           Boolean               @default(true) @map("is_real_client")
+  verifiedOutcome        Boolean               @default(true) @map("verified_outcome")
+  client                 String?
+  clientContext          String?               @map("client_context")
+  timeline               String?
+  category               String                @default("Software Engineering")
+  categoryType           String[]              @default([]) @map("category_type")
+  industrySlug           String?               @map("industry_slug")
+  industryName           String?               @map("industry_name")
+  challenge              String?
+  challengeDetails       String[]              @default([]) @map("challenge_details")
+  requirements           String[]              @default([])
+  solutionDetails        String[]              @default([]) @map("solution_details")
+  architectureApproach   String?               @map("architecture_approach")
+  architectureHighlights Json?                 @default("[]") @map("architecture_highlights")
+  developmentProcess     Json?                 @default("[]") @map("development_process")
+  measurableResults      Json?                 @default("[]") @map("measurable_results")
+  techStackByCategory    Json?                 @default("[]") @map("tech_stack_by_category")
+  testimonialId          String?               @map("testimonial_id")
+  status                 String                @default("published")
+  featured               Boolean               @default(false)
+  orderIndex             Int                   @default(0) @map("order_index")
+  metaTitle              String?               @map("meta_title")
+  metaDescription        String?               @map("meta_description")
+  articles               ArticleCaseStudy[]
+  industries             CaseStudyIndustry[]
   services               CaseStudyService[]
   solutions              CaseStudySolution[]
-  industries             CaseStudyIndustry[]
   technologies           CaseStudyTechnology[]
-  articles               ArticleCaseStudy[]
 
+  @@index([orderIndex], map: "idx_portfolio_project_order")
+  @@index([status], map: "idx_portfolio_project_status")
   @@map("portfolio_project")
 }
 
-// Client Support System (Ticket System)
 model ClientTicket {
   id           String   @id @default(uuid())
   subject      String
-  description  String   @db.Text
-  status       String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
-  priority     String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  description  String
+  status       String   @default("OPEN")
+  priority     String   @default("MEDIUM")
   clientId     String
-  client       User     @relation("ClientTickets", fields: [clientId], references: [id])
   assignedToId String?
-  assignedTo   User?    @relation("AssignedTickets", fields: [assignedToId], references: [id])
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  assignedTo   User?    @relation("AssignedTickets", fields: [assignedToId], references: [id])
+  client       User     @relation("ClientTickets", fields: [clientId], references: [id])
 
   @@map("client_ticket")
 }
 
-// Project Management System
 model Project {
   id          String    @id @default(uuid())
   name        String
-  description String?   @db.Text
-  status      String    @default("PLANNING") // PLANNING, ACTIVE, COMPLETED, ON_HOLD
+  description String?
+  status      String    @default("PLANNING")
   startDate   DateTime?
   endDate     DateTime?
   budget      Float?
   clientId    String
-  client      User      @relation("ClientProjects", fields: [clientId], references: [id])
   managerId   String?
-  manager     User?     @relation("ManagedProjects", fields: [managerId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  client      User      @relation("ClientProjects", fields: [clientId], references: [id])
+  manager     User?     @relation("ManagedProjects", fields: [managerId], references: [id])
 
   @@map("project")
 }
 
-// CRM Lead Management
 model CRMLead {
-  id                 String    @id @default(uuid())
-  leadNumber         String?   @unique @map("lead_number")
-  name               String
-  email              String
-  phone              String?
-  company            String?
-  serviceId          String?   @map("service_id")
-  solutionId         String?   @map("solution_id")
-  industryId         String?   @map("industry_id")
-  projectDescription String?   @map("project_description") @db.Text
-  budgetRange        String?   @map("budget_range")
-  timeline           String?
-  sourcePage         String?   @map("source_page")
-  utmSource          String?   @map("utm_source")
-  utmMedium          String?   @map("utm_medium")
-  utmCampaign        String?   @map("utm_campaign")
-  status             String    @default("NEW") // NEW, QUALIFIED, CONTACTED, PROPOSAL, NEGOTIATION, WON, LOST
-  assignedTo         String?   @map("assigned_to")
-  assignedUser       User?     @relation("AssignedLeads", fields: [assignedTo], references: [id])
-  source             String?   // WEBSITE_START_PROJECT, REFERRAL, SOCIAL_MEDIA, OUTREACH
-  notes              String?   @db.Text
-  portalApproved     Boolean   @default(false) @map("portal_approved")
-  portalPassword     String?   @map("portal_password")
-  approvedAt         DateTime? @map("approved_at")
-  firstLoginExpiresAt DateTime? @map("first_login_expires_at")
-  hasLoggedIn        Boolean   @default(false) @map("has_logged_in")
-  firstLoggedInAt    DateTime? @map("first_logged_in_at")
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id                  String    @id @default(uuid())
+  name                String
+  email               String
+  phone               String?
+  company             String?
+  status              String    @default("NEW")
+  source              String?
+  notes               String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  leadNumber          String?   @unique @map("lead_number")
+  serviceId           String?   @map("service_id")
+  solutionId          String?   @map("solution_id")
+  industryId          String?   @map("industry_id")
+  projectDescription  String?   @map("project_description")
+  budgetRange         String?   @map("budget_range")
+  timeline            String?
+  sourcePage          String?   @map("source_page")
+  utmSource           String?   @map("utm_source")
+  utmMedium           String?   @map("utm_medium")
+  utmCampaign         String?   @map("utm_campaign")
+  assignedTo          String?   @map("assigned_to")
+  portalApproved      Boolean?  @default(false) @map("portal_approved")
+  portalPassword      String?   @map("portal_password")
+  approvedAt          DateTime? @map("approved_at") @db.Timestamp(6)
+  firstLoginExpiresAt DateTime? @map("first_login_expires_at") @db.Timestamp(6)
+  hasLoggedIn         Boolean?  @default(false) @map("has_logged_in")
+  firstLoggedInAt     DateTime? @map("first_logged_in_at") @db.Timestamp(6)
 
   @@map("crm_lead")
 }
 
-// Contact Form Submissions
 model ContactSubmission {
   id        String   @id @default(uuid())
   name      String
@@ -258,199 +239,186 @@ model ContactSubmission {
   email     String
   phone     String?
   service   String   @default("General Inquiry")
-  message   String   @db.Text
-  status    String   @default("pending") // pending, contacted, closed, spam
+  message   String
+  status    String   @default("pending")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("contact_submissions")
 }
 
-// Client Reviews & Testimonials
 model Review {
-  id                          String    @id @default(uuid())
-  sourceSubmissionId          String?   @unique @map("source_submission_id")
-  reviewId                    String?   @map("review_id")
-  clientName                  String    @map("client_name")
-  companyName                 String?   @map("company_name")
-  company                     String?
-  designation                 String?
-  projectName                 String?   @map("project_name")
-  email                       String?
-
-  overallServiceRating        Int?      @map("overall_service_rating")
-  softwareQualityRating       Int?      @map("software_quality_rating")
-  communicationSupportRating  Int?      @map("communication_support_rating")
-
-  averageRating               Decimal   @default(5.00) @db.Decimal(3, 2) @map("average_rating")
-  displayRating               Int       @default(5) @map("display_rating")
-  rating                      Int       @default(5)
-
-  likedMost                   String?   @map("liked_most") @db.Text
-  wouldRecommend              String?   @map("would_recommend")
-  improvementFeedback         String?   @map("improvement_feedback") @db.Text
-
-  originalReview              String    @default("") @map("original_review") @db.Text
-  reviewText                  String    @default("") @map("review_text") @db.Text
-  review                      String    @default("") @db.Text
-  imageUrl                    String?   @map("image_url")
-
-  projectId                   String?   @map("project_id")
-  serviceId                   String?   @map("service_id")
-  industryId                  String?   @map("industry_id")
-
-  websitePublishPermission    String?   @map("website_publish_permission")
-  canPublishReview            Boolean   @default(false) @map("can_publish_review")
-  identityDisplayPermission   String?   @default("Yes") @map("identity_display_permission")
-
-  status                      String    @default("pending") // pending, approved, rejected
-  featured                    Boolean   @default(false)
-  orderIndex                  Int       @default(0) @map("order_index")
-  adminNote                   String?   @map("admin_note") @db.Text
-
-  submittedAt                 DateTime? @map("submitted_at")
-  publishedAt                 DateTime? @map("published_at")
-  createdAt                   DateTime  @default(now()) @map("created_at")
-  updatedAt                   DateTime  @updatedAt @map("updated_at")
+  id                         String    @id @default(uuid())
+  reviewId                   String?   @map("review_id")
+  clientName                 String    @map("client_name")
+  company                    String?
+  designation                String?
+  review                     String
+  rating                     Int       @default(5)
+  imageUrl                   String?   @map("image_url")
+  status                     String    @default("pending")
+  featured                   Boolean   @default(false)
+  adminNote                  String?   @map("admin_note")
+  publishedAt                DateTime? @map("published_at")
+  createdAt                  DateTime  @default(now()) @map("created_at")
+  updatedAt                  DateTime  @updatedAt @map("updated_at")
+  sourceSubmissionId         String?   @unique @map("source_submission_id")
+  companyName                String?   @map("company_name")
+  projectName                String?   @map("project_name")
+  email                      String?
+  overallServiceRating       Int?      @map("overall_service_rating")
+  softwareQualityRating      Int?      @map("software_quality_rating")
+  communicationSupportRating Int?      @map("communication_support_rating")
+  averageRating              Decimal?  @default(5.00) @map("average_rating") @db.Decimal(3, 2)
+  displayRating              Int?      @default(5) @map("display_rating")
+  likedMost                  String?   @map("liked_most")
+  wouldRecommend             String?   @map("would_recommend")
+  improvementFeedback        String?   @map("improvement_feedback")
+  originalReview             String?   @default("") @map("original_review")
+  reviewText                 String?   @default("") @map("review_text")
+  websitePublishPermission   String?   @map("website_publish_permission")
+  canPublishReview           Boolean?  @default(false) @map("can_publish_review")
+  identityDisplayPermission  String?   @default("Yes") @map("identity_display_permission")
+  submittedAt                DateTime? @map("submitted_at") @db.Timestamptz(6)
+  orderIndex                 Int       @default(0) @map("order_index")
+  projectId                  String?   @map("project_id")
+  serviceId                  String?   @map("service_id")
+  industryId                 String?   @map("industry_id")
 
   @@map("reviews")
 }
 
-// Services Management (WHAT ASTRAIV DOES)
 model ServiceItem {
-  id              String   @id @default(uuid())
+  id              String              @id @default(uuid())
   title           String
-  slug            String   @unique
-  category        String   @default("Development")
-  shortDesc       String   @map("short_desc") @db.Text
-  fullDesc        String   @map("full_desc") @db.Text
-  features        String[] @default([])
+  slug            String              @unique
+  category        String              @default("Development")
+  shortDesc       String              @map("short_desc")
+  fullDesc        String              @map("full_desc")
+  features        String[]
   badge           String?
-  icon            String   @default("Code2")
-  active          Boolean  @default(true)
-  status          String   @default("published") // published, draft, archived
-  featured        Boolean  @default(false)
-  orderIndex      Int      @default(0) @map("order_index")
-  metaTitle       String?  @map("meta_title")
-  metaDescription String?  @map("meta_description") @db.Text
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-
-  // Bidirectional CMS Relations
-  solutions       ServiceSolution[]
-  industries      ServiceIndustry[]
-  technologies    ServiceTechnology[]
-  caseStudies     CaseStudyService[]
+  icon            String              @default("Code2")
+  active          Boolean             @default(true)
+  orderIndex      Int                 @default(0) @map("order_index")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+  status          String              @default("published")
+  featured        Boolean             @default(false)
+  metaTitle       String?             @map("meta_title")
+  metaDescription String?             @map("meta_description")
   articles        ArticleService[]
+  caseStudies     CaseStudyService[]
+  industries      ServiceIndustry[]
+  solutions       ServiceSolution[]
+  technologies    ServiceTechnology[]
 
   @@map("services")
 }
 
-// Solutions Management (WHAT BUSINESS PROBLEMS ASTRAIV SOLVES)
 model SolutionItem {
-  id              String   @id @default(uuid())
+  id              String              @id @default(dbgenerated("(gen_random_uuid())::text"))
   title           String
-  slug            String   @unique
-  category        String   @default("intelligent-systems")
-  categoryLabel   String?  @map("category_label")
+  slug            String              @unique
+  category        String              @default("intelligent-systems")
+  categoryLabel   String?             @map("category_label")
   tagline         String?
-  shortDesc       String   @map("short_desc") @db.Text
-  fullDesc        String?  @map("full_desc") @db.Text
-  metricValue     String?  @map("metric_value")
-  metricLabel     String?  @map("metric_label")
-  features        String[] @default([])
-  technologies    String[] @default([])
-  capabilities    Json?    @default("[]")
-  businessProblem Json?    @default("{}") @map("business_problem")
-  astraivApproach Json?    @default("{}") @map("astraiv_approach")
-  active          Boolean  @default(true)
-  status          String   @default("published")
-  featured        Boolean  @default(false)
-  orderIndex      Int      @default(0) @map("order_index")
-  metaTitle       String?  @map("meta_title")
-  metaDescription String?  @map("meta_description") @db.Text
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-
-  // Bidirectional CMS Relations
+  shortDesc       String              @map("short_desc")
+  fullDesc        String?             @map("full_desc")
+  metricValue     String?             @map("metric_value")
+  metricLabel     String?             @map("metric_label")
+  features        String[]            @default([])
+  technologies    String[]            @default([])
+  capabilities    Json?               @default("[]")
+  businessProblem Json?               @default("{}") @map("business_problem")
+  astraivApproach Json?               @default("{}") @map("astraiv_approach")
+  active          Boolean             @default(true)
+  status          String              @default("published")
+  featured        Boolean             @default(false)
+  orderIndex      Int                 @default(0) @map("order_index")
+  metaTitle       String?             @map("meta_title")
+  metaDescription String?             @map("meta_description")
+  createdAt       DateTime            @default(dbgenerated("timezone('utc'::text, now())")) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime            @default(dbgenerated("timezone('utc'::text, now())")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  articles        ArticleSolution[]
+  caseStudies     CaseStudySolution[]
   services        ServiceSolution[]
   industries      SolutionIndustry[]
-  caseStudies     CaseStudySolution[]
-  articles        ArticleSolution[]
 
+  @@index([orderIndex], map: "idx_solutions_order")
+  @@index([slug], map: "idx_solutions_slug")
+  @@index([status], map: "idx_solutions_status")
   @@map("solutions")
 }
 
-// Industries Management (VERTICAL DOMAINS)
 model IndustryItem {
-  id              String   @id @default(uuid())
-  slug            String   @unique
+  id              String              @id @default(dbgenerated("(gen_random_uuid())::text"))
+  slug            String              @unique
   code            String?
   label           String
   tagline         String?
   headline        String?
   image           String?
-  imageAlt        String?  @map("image_alt")
-  accentColor     String?  @map("accent_color")
-  statusText      String?  @map("status_text")
-  complianceBadge String?  @map("compliance_badge")
-  challenge       String?  @db.Text
-  solution        String?  @db.Text
-  pillars         Json?    @default("[]")
-  techStack       String[] @default([]) @map("tech_stack")
-  kpis            Json?    @default("[]")
-  active          Boolean  @default(true)
-  status          String   @default("published")
-  featured        Boolean  @default(false)
-  orderIndex      Int      @default(0) @map("order_index")
-  metaTitle       String?  @map("meta_title")
-  metaDescription String?  @map("meta_description") @db.Text
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-
-  // Bidirectional CMS Relations
+  imageAlt        String?             @map("image_alt")
+  accentColor     String?             @map("accent_color")
+  statusText      String?             @map("status_text")
+  complianceBadge String?             @map("compliance_badge")
+  challenge       String?
+  solution        String?
+  pillars         Json?               @default("[]")
+  techStack       String[]            @default([]) @map("tech_stack")
+  kpis            Json?               @default("[]")
+  active          Boolean             @default(true)
+  status          String              @default("published")
+  featured        Boolean             @default(false)
+  orderIndex      Int                 @default(0) @map("order_index")
+  metaTitle       String?             @map("meta_title")
+  metaDescription String?             @map("meta_description")
+  createdAt       DateTime            @default(dbgenerated("timezone('utc'::text, now())")) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime            @default(dbgenerated("timezone('utc'::text, now())")) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  articles        ArticleIndustry[]
+  caseStudies     CaseStudyIndustry[]
   services        ServiceIndustry[]
   solutions       SolutionIndustry[]
-  caseStudies     CaseStudyIndustry[]
-  articles        ArticleIndustry[]
 
+  @@index([orderIndex], map: "idx_industries_order")
+  @@index([slug], map: "idx_industries_slug")
+  @@index([status], map: "idx_industries_status")
   @@map("industries")
 }
 
-// Technologies Management (PRODUCTION PRIMITIVES)
 model TechnologyItem {
-  id              String   @id @default(uuid())
+  id              String                @id @default(dbgenerated("(gen_random_uuid())::text"))
   name            String
-  slug            String   @unique
+  slug            String                @unique
   category        String
-  icon            String   @default("Cpu")
-  description     String?  @db.Text
-  active          Boolean  @default(true)
-  status          String   @default("published")
-  featured        Boolean  @default(false)
-  orderIndex      Int      @default(0) @map("order_index")
-  metaTitle       String?  @map("meta_title")
-  metaDescription String?  @map("meta_description") @db.Text
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-
-  // Bidirectional CMS Relations
-  services        ServiceTechnology[]
+  icon            String                @default("Cpu")
+  description     String?
+  active          Boolean               @default(true)
+  status          String                @default("published")
+  featured        Boolean               @default(false)
+  orderIndex      Int                   @default(0) @map("order_index")
+  metaTitle       String?               @map("meta_title")
+  metaDescription String?               @map("meta_description")
+  createdAt       DateTime              @default(dbgenerated("timezone('utc'::text, now())")) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime              @default(dbgenerated("timezone('utc'::text, now())")) @updatedAt @map("updated_at") @db.Timestamptz(6)
   caseStudies     CaseStudyTechnology[]
+  services        ServiceTechnology[]
 
+  @@index([category], map: "idx_technologies_category")
+  @@index([slug], map: "idx_technologies_slug")
+  @@index([status], map: "idx_technologies_status")
   @@map("technologies")
 }
 
-// Awards & Accolades
 model AwardItem {
-  id                String   @id @default(uuid())
-  type              String   @default("award") // award, certification, partnership, recognition
+  id                String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  type              String   @default("award")
   title             String
   organization      String
   year              String
   category          String
-  description       String   @db.Text
-  achievement       String   @db.Text
+  description       String
+  achievement       String
   verificationUrl   String?  @map("verification_url")
   verificationLabel String?  @map("verification_label")
   badgeText         String   @map("badge_text")
@@ -460,52 +428,52 @@ model AwardItem {
   orderIndex        Int      @default(0) @map("order_index")
   icon              String   @default("Award")
   highlights        String[] @default([])
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  createdAt         DateTime @default(dbgenerated("timezone('utc'::text, now())")) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @default(dbgenerated("timezone('utc'::text, now())")) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
+  @@index([orderIndex], map: "idx_awards_order")
+  @@index([status], map: "idx_awards_status")
   @@map("awards")
 }
 
-// Frequently Asked Questions
 model FaqItem {
-  id         String   @id @default(uuid())
-  category   String   @default("general") // general, services, pricing, engineering, process
+  id         String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  category   String   @default("general")
   question   String
-  answer     String   @db.Text
+  answer     String
   isFeatured Boolean  @default(false) @map("is_featured")
   status     String   @default("published")
   orderIndex Int      @default(0) @map("order_index")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  createdAt  DateTime @default(dbgenerated("timezone('utc'::text, now())")) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @default(dbgenerated("timezone('utc'::text, now())")) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
+  @@index([category], map: "idx_faqs_category")
+  @@index([orderIndex], map: "idx_faqs_order")
+  @@index([status], map: "idx_faqs_status")
   @@map("faqs")
 }
 
-// -----------------------------------------------------------------------------
-// RELATIONAL JOIN MODELS (All 12 Bidirectional Cross-Entity Connectors)
-// -----------------------------------------------------------------------------
-
 model ServiceSolution {
-  serviceId   String       @map("service_id")
-  solutionId  String       @map("solution_id")
-  orderIndex  Int          @default(0) @map("order_index")
-
-  service     ServiceItem  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  solution    SolutionItem @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  serviceId  String       @map("service_id")
+  solutionId String       @map("solution_id")
+  orderIndex Int          @default(0) @map("order_index")
+  service    ServiceItem  @relation(fields: [serviceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  solution   SolutionItem @relation(fields: [solutionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([serviceId, solutionId])
+  @@index([solutionId], map: "idx_service_solutions_solution")
   @@map("service_solutions")
 }
 
 model ServiceIndustry {
-  serviceId   String       @map("service_id")
-  industryId  String       @map("industry_id")
-  orderIndex  Int          @default(0) @map("order_index")
-
-  service     ServiceItem  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  industry    IndustryItem @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  serviceId  String       @map("service_id")
+  industryId String       @map("industry_id")
+  orderIndex Int          @default(0) @map("order_index")
+  industry   IndustryItem @relation(fields: [industryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  service    ServiceItem  @relation(fields: [serviceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([serviceId, industryId])
+  @@index([industryId], map: "idx_service_industries_industry")
   @@map("service_industries")
 }
 
@@ -513,11 +481,11 @@ model ServiceTechnology {
   serviceId    String         @map("service_id")
   technologyId String         @map("technology_id")
   orderIndex   Int            @default(0) @map("order_index")
-
-  service      ServiceItem    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  technology   TechnologyItem @relation(fields: [technologyId], references: [id], onDelete: Cascade)
+  service      ServiceItem    @relation(fields: [serviceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  technology   TechnologyItem @relation(fields: [technologyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([serviceId, technologyId])
+  @@index([technologyId], map: "idx_service_technologies_tech")
   @@map("service_technologies")
 }
 
@@ -525,11 +493,11 @@ model CaseStudyService {
   caseStudyId String           @map("case_study_id")
   serviceId   String           @map("service_id")
   orderIndex  Int              @default(0) @map("order_index")
-
-  caseStudy   PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
-  service     ServiceItem      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  caseStudy   PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  service     ServiceItem      @relation(fields: [serviceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([caseStudyId, serviceId])
+  @@index([serviceId], map: "idx_case_study_services_service")
   @@map("case_study_services")
 }
 
@@ -537,11 +505,11 @@ model CaseStudySolution {
   caseStudyId String           @map("case_study_id")
   solutionId  String           @map("solution_id")
   orderIndex  Int              @default(0) @map("order_index")
-
-  caseStudy   PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
-  solution    SolutionItem     @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  caseStudy   PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  solution    SolutionItem     @relation(fields: [solutionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([caseStudyId, solutionId])
+  @@index([solutionId], map: "idx_case_study_solutions_solution")
   @@map("case_study_solutions")
 }
 
@@ -549,11 +517,11 @@ model CaseStudyIndustry {
   caseStudyId String           @map("case_study_id")
   industryId  String           @map("industry_id")
   orderIndex  Int              @default(0) @map("order_index")
-
-  caseStudy   PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
-  industry    IndustryItem     @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  caseStudy   PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  industry    IndustryItem     @relation(fields: [industryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([caseStudyId, industryId])
+  @@index([industryId], map: "idx_case_study_industries_industry")
   @@map("case_study_industries")
 }
 
@@ -561,11 +529,11 @@ model CaseStudyTechnology {
   caseStudyId  String           @map("case_study_id")
   technologyId String           @map("technology_id")
   orderIndex   Int              @default(0) @map("order_index")
-
-  caseStudy    PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
-  technology   TechnologyItem   @relation(fields: [technologyId], references: [id], onDelete: Cascade)
+  caseStudy    PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  technology   TechnologyItem   @relation(fields: [technologyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([caseStudyId, technologyId])
+  @@index([technologyId], map: "idx_case_study_technologies_tech")
   @@map("case_study_technologies")
 }
 
@@ -573,11 +541,11 @@ model SolutionIndustry {
   solutionId String       @map("solution_id")
   industryId String       @map("industry_id")
   orderIndex Int          @default(0) @map("order_index")
-
-  solution   SolutionItem @relation(fields: [solutionId], references: [id], onDelete: Cascade)
-  industry   IndustryItem @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  industry   IndustryItem @relation(fields: [industryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  solution   SolutionItem @relation(fields: [solutionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([solutionId, industryId])
+  @@index([industryId], map: "idx_solution_industries_industry")
   @@map("solution_industries")
 }
 
@@ -585,11 +553,11 @@ model ArticleService {
   articleId  String      @map("article_id")
   serviceId  String      @map("service_id")
   orderIndex Int         @default(0) @map("order_index")
-
-  article    BlogPost    @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  service    ServiceItem @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  article    BlogPost    @relation(fields: [articleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  service    ServiceItem @relation(fields: [serviceId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([articleId, serviceId])
+  @@index([serviceId], map: "idx_article_services_service")
   @@map("article_services")
 }
 
@@ -597,11 +565,11 @@ model ArticleSolution {
   articleId  String       @map("article_id")
   solutionId String       @map("solution_id")
   orderIndex Int          @default(0) @map("order_index")
-
-  article    BlogPost     @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  solution   SolutionItem @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  article    BlogPost     @relation(fields: [articleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  solution   SolutionItem @relation(fields: [solutionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([articleId, solutionId])
+  @@index([solutionId], map: "idx_article_solutions_solution")
   @@map("article_solutions")
 }
 
@@ -609,11 +577,11 @@ model ArticleIndustry {
   articleId  String       @map("article_id")
   industryId String       @map("industry_id")
   orderIndex Int          @default(0) @map("order_index")
-
-  article    BlogPost     @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  industry   IndustryItem @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  article    BlogPost     @relation(fields: [articleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  industry   IndustryItem @relation(fields: [industryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([articleId, industryId])
+  @@index([industryId], map: "idx_article_industries_industry")
   @@map("article_industries")
 }
 
@@ -621,18 +589,17 @@ model ArticleCaseStudy {
   articleId   String           @map("article_id")
   caseStudyId String           @map("case_study_id")
   orderIndex  Int              @default(0) @map("order_index")
-
-  article     BlogPost         @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  caseStudy   PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+  article     BlogPost         @relation(fields: [articleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  caseStudy   PortfolioProject @relation(fields: [caseStudyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([articleId, caseStudyId])
+  @@index([caseStudyId], map: "idx_article_case_studies_case_study")
   @@map("article_case_studies")
 }
 
-// Footer & Company Information Configuration
 model FooterSetting {
   id            String   @id @default(uuid())
-  brandTagline  String   @default("Your trusted partner for AI, enterprise software, and scalable cloud systems.") @map("brand_tagline") @db.Text
+  brandTagline  String   @default("Your trusted partner for AI, enterprise software, and scalable cloud systems.") @map("brand_tagline")
   phone         String   @default("+91 8167409664")
   email         String   @default("info@astraivtechnologies.com")
   address       String   @default("Ashoknagar, Kolkata")
@@ -644,131 +611,130 @@ model FooterSetting {
   @@map("footer_settings")
 }
 
-// Social Media Links
 model SocialLink {
-  id          String   @id @default(uuid())
-  platform    String   // e.g. "twitter", "linkedin", "github", "whatsapp", "facebook", "instagram", "youtube", "discord", "telegram", etc.
-  name        String   // e.g. "Twitter", "LinkedIn", "GitHub", "WhatsApp", "Facebook", "Instagram"
-  url         String   // destination URL e.g. "https://wa.me/918167409664"
-  icon        String   @default("globe")
-  active      Boolean  @default(true)
-  orderIndex  Int      @default(0) @map("order_index")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id         String   @id @default(uuid())
+  platform   String
+  name       String
+  url        String
+  icon       String   @default("globe")
+  active     Boolean  @default(true)
+  orderIndex Int      @default(0) @map("order_index")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@map("social_links")
 }
 
-// Canonical Role Categories (Departments)
 model JobCategory {
-  id          String       @id @default(uuid())
-  name        String
-  slug        String       @unique
-  description String?      @db.Text
+  id          String       @id @default(dbgenerated("(gen_random_uuid())::text"))
+  name        String       @db.VarChar(255)
+  slug        String       @unique @db.VarChar(255)
+  description String?
   orderIndex  Int          @default(0) @map("order_index")
   active      Boolean      @default(true)
   isArchived  Boolean      @default(false) @map("is_archived")
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
-
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt   DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
   openings    JobOpening[]
 
+  @@index([orderIndex], map: "idx_job_categories_order", where: raw("((active = true) AND (is_archived = false))"))
   @@map("job_categories")
 }
 
-// Recruitment & Job Openings
 model JobOpening {
-  id                 String          @id @default(uuid())
+  id                 String           @id @default(dbgenerated("(gen_random_uuid())::text"))
   title              String
-  slug               String          @unique
-  categoryId         String?         @map("category_id")
-  category           JobCategory?    @relation(fields: [categoryId], references: [id])
-  department         String          @default("Engineering")
-  type               String          @default("Full-Time / Remote")
-  location           String          @default("Remote")
-  employmentType     String          @default("full-time") @map("employment_type")
-  workMode           String          @default("remote") @map("work_mode")
-  geographicLocation String          @default("Remote (Worldwide)") @map("geographic_location")
-  experienceLevel    String          @default("experienced") @map("experience_level")
-  minExperienceYears Int?            @map("min_experience_years")
-  maxExperienceYears Int?            @map("max_experience_years")
+  slug               String           @unique
+  department         String           @default("Engineering")
+  type               String           @default("Full-Time / Remote")
+  location           String           @default("Remote")
   experience         String?
-  description        String          @db.Text
-  skills             String[]        @default([])
+  description        String
+  skills             String[]         @default([])
   salary             String?
-  showSalary         Boolean         @default(false) @map("show_salary")
-  responsibilities   String[]        @default([])
-  requirements       String[]        @default([])
-  niceToHave         String[]        @default([]) @map("nice_to_have")
-  benefits           String[]        @default([])
-  useSharedBenefits  Boolean         @default(true) @map("use_shared_benefits")
-  interviewStages    Json?           @default("[]") @map("interview_stages")
-  useSharedInterview Boolean         @default(true) @map("use_shared_interview")
-  referralBonus      String?         @map("referral_bonus")
-  showReferral       Boolean         @default(true) @map("show_referral")
-  applyUrl           String?         @default("/contact") @map("apply_url")
-  active             Boolean         @default(true)
-  status             String          @default("active")
-  featured           Boolean         @default(false)
-  orderIndex         Int             @default(0) @map("order_index")
-  metaTitle          String?         @map("meta_title")
-  metaDescription    String?         @map("meta_description") @db.Text
-  publishedAt        DateTime?       @map("published_at")
-  createdAt          DateTime        @default(now()) @map("created_at")
-  updatedAt          DateTime        @updatedAt @map("updated_at")
-
+  applyUrl           String?          @default("/contact") @map("apply_url")
+  active             Boolean          @default(true)
+  orderIndex         Int              @default(0) @map("order_index")
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt          DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  status             String?          @default("active")
+  featured           Boolean?         @default(false)
+  metaTitle          String?          @map("meta_title")
+  metaDescription    String?          @map("meta_description")
+  categoryId         String?          @map("category_id")
+  employmentType     String           @default("full-time") @map("employment_type") @db.VarChar(100)
+  workMode           String           @default("remote") @map("work_mode") @db.VarChar(100)
+  geographicLocation String           @default("Remote (Worldwide)") @map("geographic_location") @db.VarChar(255)
+  experienceLevel    String           @default("experienced") @map("experience_level") @db.VarChar(50)
+  minExperienceYears Int?             @map("min_experience_years")
+  maxExperienceYears Int?             @map("max_experience_years")
+  showSalary         Boolean          @default(false) @map("show_salary")
+  responsibilities   String[]         @default([])
+  requirements       String[]         @default([])
+  niceToHave         String[]         @default([]) @map("nice_to_have")
+  benefits           String[]         @default([])
+  useSharedBenefits  Boolean          @default(true) @map("use_shared_benefits")
+  interviewStages    Json?            @default("[]") @map("interview_stages")
+  useSharedInterview Boolean          @default(true) @map("use_shared_interview")
+  referralBonus      String?          @map("referral_bonus") @db.VarChar(100)
+  showReferral       Boolean          @default(true) @map("show_referral")
+  publishedAt        DateTime?        @map("published_at") @db.Timestamp(6)
   applications       JobApplication[]
+  category           JobCategory?     @relation(fields: [categoryId], references: [id], onUpdate: NoAction)
 
+  @@index([active, orderIndex], map: "idx_job_openings_active_order")
+  @@index([categoryId], map: "idx_job_openings_category_id")
   @@map("job_openings")
 }
 
-// Dedicated Candidate Job Applications Engine
 model JobApplication {
-  id                     String      @id @default(uuid())
-  applicationNumber      String?     @unique @map("application_number")
-  type                   String      @default("job_specific") // 'job_specific' | 'speculative'
+  id                     String      @id @default(dbgenerated("(gen_random_uuid())::text"))
+  applicationNumber      String?     @unique @map("application_number") @db.VarChar(100)
+  type                   String      @default("job_specific") @db.VarChar(50)
   jobOpeningId           String?     @map("job_opening_id")
-  jobOpening             JobOpening? @relation(fields: [jobOpeningId], references: [id], onDelete: SetNull)
-  roleTitle              String      @map("role_title")
-  department             String?
-  candidateName          String      @map("candidate_name")
-  email                  String
-  phone                  String?
-  countryCode            String?     @map("country_code")
-  location               String?
-  experienceLevel        String      @default("experienced") @map("experience_level")
+  roleTitle              String      @map("role_title") @db.VarChar(255)
+  department             String?     @db.VarChar(100)
+  candidateName          String      @map("candidate_name") @db.VarChar(255)
+  email                  String      @db.VarChar(255)
+  phone                  String?     @db.VarChar(100)
+  countryCode            String?     @map("country_code") @db.VarChar(10)
+  location               String?     @db.VarChar(255)
+  experienceLevel        String      @default("experienced") @map("experience_level") @db.VarChar(50)
   experienceYears        Int?        @map("experience_years")
-  githubUrl              String?     @map("github_url")
-  portfolioUrl           String?     @map("portfolio_url")
-  linkedinUrl            String?     @map("linkedin_url")
-  coverNote              String?     @map("cover_note") @db.Text
-  resumeType             String      @default("upload") @map("resume_type")
+  githubUrl              String?     @map("github_url") @db.VarChar(500)
+  portfolioUrl           String?     @map("portfolio_url") @db.VarChar(500)
+  linkedinUrl            String?     @map("linkedin_url") @db.VarChar(500)
+  coverNote              String?     @map("cover_note")
+  resumeType             String      @default("upload") @map("resume_type") @db.VarChar(50)
   resumeUrl              String?     @map("resume_url")
-  resumeStorageKey       String?     @map("resume_storage_key")
-  resumeStorageProvider  String?     @default("r2") @map("resume_storage_provider")
-  resumeOriginalName     String?     @map("resume_original_name")
-  resumeMimeType         String?     @map("resume_mime_type")
+  resumeStorageKey       String?     @map("resume_storage_key") @db.VarChar(500)
+  resumeStorageProvider  String?     @default("r2") @map("resume_storage_provider") @db.VarChar(50)
+  resumeOriginalName     String?     @map("resume_original_name") @db.VarChar(255)
+  resumeMimeType         String?     @map("resume_mime_type") @db.VarChar(100)
   resumeSizeBytes        Int?        @map("resume_size_bytes")
-  resumeValidationStatus String      @default("verified") @map("resume_validation_status")
-  status                 String      @default("pending") // 'pending', 'reviewed', 'interview', 'hired', 'rejected'
-  adminNotes             String?     @map("admin_notes") @db.Text
-  ipAddress              String?     @map("ip_address")
+  resumeValidationStatus String      @default("verified") @map("resume_validation_status") @db.VarChar(50)
+  status                 String      @default("pending") @db.VarChar(50)
+  adminNotes             String?     @map("admin_notes")
+  ipAddress              String?     @map("ip_address") @db.VarChar(100)
   userAgent              String?     @map("user_agent")
-  createdAt              DateTime    @default(now()) @map("created_at")
-  updatedAt              DateTime    @updatedAt @map("updated_at")
+  createdAt              DateTime    @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt              DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+  jobOpening             JobOpening? @relation(fields: [jobOpeningId], references: [id], onUpdate: NoAction)
 
+  @@index([createdAt(sort: Desc)], map: "idx_job_applications_created")
+  @@index([jobOpeningId], map: "idx_job_applications_job_id")
+  @@index([status], map: "idx_job_applications_status")
   @@map("job_applications")
 }
 
-// Pricing & Engagement Models
 model PricingPlan {
-  id               String   @id @default(uuid())
+  id               String   @id @default(dbgenerated("(gen_random_uuid())::text"))
   name             String
   slug             String   @unique
-  description      String   @db.Text
+  description      String
   badge            String?
   isPopular        Boolean  @default(false) @map("is_popular")
-  priceType        String   @default("fixed") @map("price_type") // 'fixed' | 'custom'
+  priceType        String   @default("fixed") @map("price_type")
   priceMonthlyInr  Float?   @map("price_monthly_inr")
   priceYearlyInr   Float?   @map("price_yearly_inr")
   priceMonthlyUsd  Float?   @map("price_monthly_usd")
@@ -779,13 +745,12 @@ model PricingPlan {
   buttonUrl        String   @default("/contact") @map("button_url")
   active           Boolean  @default(true)
   orderIndex       Int      @default(0) @map("order_index")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
 
   @@map("pricing_plans")
 }
 
-// ISO Compliance & Performance Metrics Configuration
 model ComplianceSetting {
   id             String   @id @default(uuid())
   isoNumber      String   @default("ISO 27001:2022") @map("iso_number")
@@ -800,50 +765,45 @@ model ComplianceSetting {
   actionsLabel   String   @default("API ACTIONS") @map("actions_label")
   slaValue       String   @default("100%") @map("sla_value")
   slaLabel       String   @default("ON-TIME SLA DELIVERY") @map("sla_label")
-  clientLogos    String?  @map("client_logos") @db.Text
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  clientLogos    String?  @map("client_logos")
 
   @@map("compliance_settings")
 }
 
-// Mandatory Legal Management (Versioned Governance)
 model LegalDocument {
-  id                String          @id @default(uuid())
-  slug              String          @unique // 'privacy', 'terms', 'dpa', etc.
+  id                String   @id @default(uuid())
+  slug              String   @unique
   title             String
-  description       String?         @db.Text
-  currentRevisionId String?         @map("current_revision_id")
-  revisions         LegalRevision[]
-  createdAt         DateTime        @default(now()) @map("created_at")
-  updatedAt         DateTime        @updatedAt @map("updated_at")
+  description       String?
+  currentRevisionId String?  @map("current_revision_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("legal_documents")
 }
 
 model LegalRevision {
-  id            String        @id @default(uuid())
-  documentId    String        @map("document_id")
-  documentSlug  String        @map("document_slug")
-  versionNumber Int           @default(1) @map("version_number")
-  effectiveDate String        @map("effective_date")
+  id            String    @id @default(uuid())
+  documentId    String    @map("document_id")
+  documentSlug  String    @map("document_slug")
+  versionNumber Int       @default(1) @map("version_number")
+  effectiveDate String    @map("effective_date")
   title         String
-  summary       String?       @db.Text
-  sections      Json          @default("[]")
-  status        String        @default("published") // 'published', 'draft', 'archived'
-  authorId      String?       @map("author_id")
-  authorName    String?       @map("author_name")
-  changelog     String?       @db.Text
-  publishedAt   DateTime?     @map("published_at")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
-
-  document      LegalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  summary       String?
+  sections      Json      @default("[]")
+  status        String    @default("published")
+  authorId      String?   @map("author_id")
+  authorName    String?   @map("author_name")
+  changelog     String?
+  publishedAt   DateTime? @map("published_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
 
   @@map("legal_revisions")
 }
 
-// Media Library Asset Management
 model MediaAsset {
   id          String   @id @default(uuid())
   url         String
@@ -854,33 +814,31 @@ model MediaAsset {
   height      Int?
   aspectRatio String?  @map("aspect_ratio")
   altText     String?  @map("alt_text")
-  caption     String?  @db.Text
+  caption     String?
   focalPoint  String?  @map("focal_point")
   slot        String?
   isPrivate   Boolean  @default(false) @map("is_private")
   usageCount  Int      @default(0) @map("usage_count")
   createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("media_assets")
 }
 
-// Standalone Static Page Sections Content Management
 model PageContent {
   id              String   @id @default(uuid())
-  pageKey         String   @unique @map("page_key") // 'homepage', 'company', 'process', 'contact'
+  pageKey         String   @unique @map("page_key")
   title           String
   sections        Json     @default("{}")
   metaTitle       String?  @map("meta_title")
-  metaDescription String?  @map("meta_description") @db.Text
+  metaDescription String?  @map("meta_description")
   status          String   @default("published")
   createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("page_contents")
 }
 
-// SEO Slug Redirect Engine
 model SlugRedirect {
   id              String   @id @default(uuid())
   sourcePath      String   @unique @map("source_path")
@@ -890,12 +848,11 @@ model SlugRedirect {
   entityId        String?  @map("entity_id")
   active          Boolean  @default(true)
   createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("slug_redirects")
 }
 
-// Activity History & Audit Logging
 model AuditLog {
   id         String   @id @default(uuid())
   action     String
@@ -908,4 +865,11 @@ model AuditLog {
   createdAt  DateTime @default(now()) @map("created_at")
 
   @@map("audit_logs")
+}
+
+enum Role {
+  ADMIN
+  PROJECT_MANAGER
+  CLIENT
+  USER
 }
